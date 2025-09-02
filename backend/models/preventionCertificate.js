@@ -42,7 +42,11 @@ const preventionCertificateSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    price: {
+        type: Number,
+        required: true,
 
+    },
 });
 
 module.exports = mongoose.model(
