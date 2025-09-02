@@ -1,0 +1,40 @@
+{
+	"name": "fire-handling-system",
+	"version": "1.0.0",
+	"description": "e-commerce",
+	"main": "server.js",
+	"scripts": {
+		"seed": "node seed.js",
+		"seed:inventory": "node seedInventory.js",
+		"seed:reorders": "node seedInventoryReorders.js",
+		"seed:vehicle-items": "node seedInventoryVehicleItems.js",
+		"seed:vehicles": "node seedInventoryVehicles.js",
+		"start:backend": "node backend/server.js",
+		"backend:dev": "SET NODE_ENV=DEVELOPMENT& nodemon backend/server",
+		"backend:prod": "SET NODE_ENV=PRODUCTION& nodemon backend/server"
+	},
+	"author": "Thevindu_Senanayake",
+	"license": "ISC",
+	"dependencies": {
+		"bcrypt": "^6.0.0",
+		"body-parser": "^1.19.1",
+		"cookie-parser": "^1.4.6",
+		"cors": "^2.8.5",
+		"dotenv": "^10.0.0",
+		"express": "^4.17.1",
+		"express-async-handler": "^1.2.0",
+		"express-validator": "^7.2.1",
+		"google-auth-library": "^10.3.0",
+		"jsonwebtoken": "^8.5.1",
+		"mongoose": "^6.0.14",
+		"mongoose-paginate-v2": "^1.9.1",
+		"multer": "^2.0.2",
+		"nodemailer": "^7.0.6",
+		"pdfkit": "^0.17.1",
+		"twilio": "^5.8.2",
+		"validator": "^13.7.0"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.15"
+	}
+}

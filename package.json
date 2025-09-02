@@ -1,0 +1,28 @@
+{
+	"name": "fire_handling_sys",
+	"version": "0.1.0",
+	"description": "A comprehensive fire department management system with role-based access control, inventory management, staff management, and more.",
+	"main": "index.js",
+	"scripts": {
+		"backend:dev": "cd backend && npm run backend:dev",
+		"backend:prod": "cd backend && npm run backend:prod",
+		"frontend:dev": "cd frontend && npm run dev",
+		"dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+		"backend:deps": "cd backend && npm i ",
+		"frontend:deps": "cd frontend && npm i ",
+		"deps": "npm run frontend:deps && npm run backend:deps"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ViduraTheekshana/FireLink-SL.git"
+	},
+	"author": "Thevindu Senanayake",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/ViduraTheekshana/FireLink-SL/issues"
+	},
+	"homepage": "https://github.com/ViduraTheekshana/FireLink-SL#readme",
+	"devDependencies": {
+		"concurrently": "^9.2.1"
+	}
+}

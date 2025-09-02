@@ -1,0 +1,6 @@
+*.env
+node_modules/
+!*.sample.env
+**/docs/**
+*.md
+!README.md
