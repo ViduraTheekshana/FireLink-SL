@@ -4,7 +4,7 @@
 	"description": "e-commerce",
 	"main": "server.js",
 	"scripts": {
-		"seed": "node seed.js",
+		"seed": "node seeders/seedUsers.js",
 		"seed:inventory": "node seedInventory.js",
 		"seed:reorders": "node seedInventoryReorders.js",
 		"seed:vehicle-items": "node seedInventoryVehicleItems.js",
