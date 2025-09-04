@@ -44,10 +44,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Phone number is required'],
     trim: true,
-    match: [
-      /^0\d{9}$/,
-      'Phone number must start with 0 and have exactly 10 digits'
-    ]
+    match: [/^(0\d{9}|\+94\d{9})$/, 'Please provide a valid phone number']
   },
   address: {
     street: {
@@ -90,11 +87,9 @@ const userSchema = new mongoose.Schema({
     },
     phoneNumber: {
       type: String,
+      required: [true, 'Phone number is required'],
       trim: true,
-      match: [
-        /^[\+]?[1-9][\d\s\-\(\)]{0,15}$/,
-        'Please provide a valid phone number'
-      ]
+      match: [/^(0\d{9}|\+94\d{9})$/, 'Please provide a valid phone number']
     },
     email: {
       type: String,
@@ -178,12 +173,7 @@ const userSchema = new mongoose.Schema({
   }],
 
   // Account Settings
-  username: {
-    type: String,
-    unique: true,
-    trim: true,
-    maxLength: [50, 'Username cannot exceed 50 characters']
-  },
+  
   password: {
     type: String,
     required: [true, 'Password is required'],
