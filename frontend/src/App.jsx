@@ -28,6 +28,8 @@ import CreateShift from "./pages/ShiftManagement/CreateShift";
 import MyShifts from "./pages/ShiftManagement/MyShifts";
 import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
 import Messages from "./pages/ShiftManagement/Messages";
+import CivilianLogin from "./pages/UserManagement/CivilianLogin";
+import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
 
 // Main App component
 function AppContent() {
@@ -59,6 +61,26 @@ function AppContent() {
 								) : (
 									<Login />
 								)
+							}
+						/>
+
+						<Route
+							path="/civilian-login"
+							element={
+								isAuthenticated ? (
+									<Navigate to="/civilian-dashboard" replace />
+								) : (
+									<CivilianLogin />
+								)
+							}
+						/>
+
+						<Route
+							path="/civilian-dashboard"
+							element={
+								<ProtectedRoute>
+									<CivilianDashboard />
+								</ProtectedRoute>
 							}
 						/>
 

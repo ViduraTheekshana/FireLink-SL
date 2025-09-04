@@ -19,7 +19,8 @@ const roleSchema = new mongoose.Schema({
       'suppliermanager',
       'incident_commander',
       'driver_engineer',
-      'fighter'
+      'fighter',
+      'civilian'
     ]
   },
   displayName: {
@@ -59,7 +60,8 @@ roleSchema.statics.getRoleLevel = function(roleName) {
     'supplier_manager': 5,
     'crew_leader': 4,
     'driver_engineer': 4,
-    'fighter': 3
+    'fighter': 3,
+    'civilian': 1
   };
   return roleLevels[roleName] || 1;
 };
