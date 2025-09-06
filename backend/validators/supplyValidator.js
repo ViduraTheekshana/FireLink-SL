@@ -50,6 +50,14 @@ const createSupplierValidationRules = () => {
 				"Other",
 			])
 			.withMessage("Invalid supplier type provided."),
+
+		body("nic")
+			.trim()
+			.notEmpty()
+			.withMessage("NIC is required.")
+			.isLength({ min: 10, max: 12 })
+			.custom((value) => value.length !== 11)
+			.withMessage("NIC must be either 10 or 12 characters long."),
 	];
 };
 

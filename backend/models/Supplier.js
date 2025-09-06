@@ -36,6 +36,12 @@ const supplierSchema = new mongoose.Schema(
 			trim: true,
 			maxLength: [150, "Supplier name cannot exceed 150 characters"],
 		},
+		nic: {
+			type: String,
+			required: [true, "Supplier NIC is required"],
+			maxLength: [12, "Supplier NIC cannot exceed 12 characters"],
+			unique: true,
+		},
 		supplierType: {
 			type: String,
 			required: true,
