@@ -4,7 +4,7 @@
 	"description": "e-commerce",
 	"main": "server.js",
 	"scripts": {
-    "seed:roles": "node ../seedRoles.js",
+		"seed:roles": "node ../seedRoles.js",
     "seed:suppliers": "node ../seedSuppliers.js",
     "seed:users": "node ../seedUsers.js",
     "seed:inventory": "node ../seedInventory.js",
@@ -12,7 +12,10 @@
     "seed:vehicle-items": "node ../seedInventoryVehicleItems.js",
     "seed:vehicles": "node ../seedVehicles.js",
     "seed:all": "npm run seed:roles && npm run seed:suppliers && npm run seed:users && npm run seed:inventory && npm run seed:reorders && npm run seed:vehicle-items && npm run seed:vehicles"
-},
+		"start:backend": "node backend/server.js",
+		"backend:dev": "SET NODE_ENV=DEVELOPMENT& nodemon backend/server",
+		"backend:prod": "SET NODE_ENV=PRODUCTION& nodemon backend/server"
+	},
 	"author": "Thevindu_Senanayake",
 	"license": "ISC",
 	"dependencies": {
@@ -22,7 +25,6 @@
 		"cors": "^2.8.5",
 		"dotenv": "^10.0.0",
 		"express": "^4.17.1",
-		"express-async-handler": "^1.2.0",
 		"express-validator": "^7.2.1",
 		"google-auth-library": "^10.3.0",
 		"jsonwebtoken": "^8.5.1",

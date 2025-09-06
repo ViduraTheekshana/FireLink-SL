@@ -45,20 +45,14 @@ app.use("/api/v1/users", userManagement);
 
 app.use("/api/inventory", require("./routes/inventoryRoutes"));
 
-app.use(
-	"/api/inventory-reorders",
-	require("./routes/inventoryReorderRoutes")
-);
+app.use("/api/inventory-reorders", require("./routes/inventoryReorderRoutes"));
 
 app.use(
 	"/api/inventory-vehicle-items",
 	require("./routes/inventoryVehicleItemsRoutes")
 );
 
-app.use(
-	"/api/inventory-vehicles",
-	require("./routes/inventoryVehicleRoutes")
-);
+app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
 
 app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
 app.use("/api/v1/shifts", require("./routes/shiftRoutes"));
@@ -69,10 +63,11 @@ app.use(
 	require("./routes/shiftChangeRequestRoutes")
 );
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
+app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
 app.use("/api/v1/messages", require("./routes/messageRoutes"));
 
 // Prevention certificate route
-app.use("/api/prevention/certificates", preventionCertificateRoutes); 
+app.use("/api/prevention/certificates", preventionCertificateRoutes);
 
 // Middleware to handle errors
 app.use(errorMiddleware);

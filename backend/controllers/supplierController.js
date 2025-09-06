@@ -1,10 +1,10 @@
 const Supplier = require("../models/Supplier");
-const asyncHandler = require("express-async-handler");
 const sendToken = require("../utils/jsonWebToken");
-const generateUserId = require("../utils/generateSupplierId");
+const generateUserId = require("../utils/generateUniqueId");
 const ErrorHandler = require("../utils/errorHandler");
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
-const loginSupplier = asyncHandler(async (req, res, next) => {
+const loginSupplier = catchAsyncErrors(async (req, res, next) => {
 	const { email, password } = req.body;
 
 	if (!email || !password) {
@@ -26,8 +26,8 @@ const loginSupplier = asyncHandler(async (req, res, next) => {
 	sendToken(supplier, 200, res);
 });
 
-const createSupplier = asyncHandler(async (req, res, next) => {
-	const { email, password, name, phone, supplierType } = req.body;
+const createSupplier = catchAsyncErrors(async (req, res, next) => {
+	const { email, password, name, phone, supplierType, nic } = req.body;
 
 	const supplierExists = await Supplier.findOne({ email });
 
@@ -37,7 +37,7 @@ const createSupplier = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	const id = generateUserId();
+	const id = generateUserId("sup");
 
 	const supplier = await Supplier.create({
 		email,
@@ -46,6 +46,7 @@ const createSupplier = asyncHandler(async (req, res, next) => {
 		phone,
 		supplierType,
 		id,
+		nic,
 	});
 
 	if (!supplier) {
@@ -55,11 +56,11 @@ const createSupplier = asyncHandler(async (req, res, next) => {
 	sendToken(supplier, 200, res);
 });
 
-const getSupplierProfile = asyncHandler(async (req, res) => {
+const getSupplierProfile = catchAsyncErrors(async (req, res) => {
 	res.status(200).json({ supplier: req.supplier });
 });
 
-const logoutSupplier = asyncHandler(async (req, res) => {
+const logoutSupplier = catchAsyncErrors(async (req, res) => {
 	res.cookie("token", null, {
 		expires: new Date(Date.now()),
 		httpOnly: true,
@@ -69,12 +70,12 @@ const logoutSupplier = asyncHandler(async (req, res) => {
 });
 
 // Admin Routes
-const GetAllSuppliers = asyncHandler(async (req, res) => {
+const GetAllSuppliers = catchAsyncErrors(async (req, res) => {
 	const suppliers = await Supplier.find({});
 	res.json(suppliers);
 });
 
-const GetSupplierById = asyncHandler(async (req, res, next) => {
+const GetSupplierById = catchAsyncErrors(async (req, res, next) => {
 	const supplier = await Supplier.findById(req.params.id);
 
 	if (!supplier) {
@@ -84,7 +85,7 @@ const GetSupplierById = asyncHandler(async (req, res, next) => {
 	res.json(supplier);
 });
 
-const deleteSupplier = asyncHandler(async (req, res, next) => {
+const deleteSupplier = catchAsyncErrors(async (req, res, next) => {
 	const supplier = await Supplier.findById(req.params.id);
 
 	if (!supplier) {

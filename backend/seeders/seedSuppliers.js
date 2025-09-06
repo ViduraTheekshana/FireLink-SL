@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const Supplier = require("../models/Supplier");
 const connectDatabase = require("../config/database");
-const generateUniqueId = require("../utils/generateSupplierId");
+const generateUniqueId = require("../utils/generateUniqueId");
 
 dotenv.config({ path: "../config/config.env" });
 
@@ -12,6 +12,7 @@ const suppliers = [
 		email: "contact@fire-safety-equip.com",
 		password: "password123",
 		name: "Fire Safety Equipment Inc.",
+		nic: "199012345V",
 		supplierType: "Equipment",
 		phone: "555-0101",
 		rating: 4.8,
@@ -24,6 +25,7 @@ const suppliers = [
 		email: "service@heavyduty-mechanics.net",
 		password: "password123",
 		name: "Heavy Duty Mechanics",
+		nic: "198512345678",
 		supplierType: "Vehicle Maintenance",
 		phone: "555-0102",
 		rating: 4.5,
@@ -36,6 +38,7 @@ const suppliers = [
 		email: "sales@uniforms-pro.com",
 		password: "password123",
 		name: "Uniforms Pro",
+		nic: "923456789V",
 		supplierType: "Uniforms",
 		phone: "555-0103",
 		rating: 4.2,
@@ -48,6 +51,7 @@ const suppliers = [
 		email: "admin@ems-supplies.org",
 		password: "password123",
 		name: "EMS Medical Supplies Co.",
+		nic: "200112345678",
 		supplierType: "Medical Supplies",
 		phone: "555-0104",
 		rating: 5.0,
@@ -60,6 +64,7 @@ const suppliers = [
 		email: "support@pro-fire-services.com",
 		password: "password123",
 		name: "Pro Fire Services",
+		nic: "951234567V",
 		supplierType: "Services",
 		phone: "555-0105",
 		rating: 3.9,

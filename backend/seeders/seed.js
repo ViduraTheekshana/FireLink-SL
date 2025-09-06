@@ -267,9 +267,17 @@ const seedData = async () => {
 
     const adminUser = await User.create({
       name: 'System Administrator',
+      username: 'admin',  // added
       email: 'admin@fire.local',
       password: 'admin123',
-      roles: [adminRole._id]
+      roles: [adminRole._id],
+      phoneNumber: '0771234567',
+      emergencyContact: {  // added
+        name: 'Admin Emergency',
+        relationship: 'None',
+        phoneNumber: '0771234567',
+        email: 'admin.emergency@fire.local'
+      }
     });
 
     console.log('Created admin user:', adminUser.email);
@@ -281,7 +289,8 @@ const seedData = async () => {
         email: 'cfo@fire.local', 
         password: 'cfo123', 
         roleNames: ['cfo'],
-        phoneNumber: '+1-555-0101',
+        username: 'cfo123', // added
+        phoneNumber: '0712345678',
         address: {
           street: '123 Finance Ave',
           city: 'Springfield',
@@ -292,7 +301,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Sarah Johnson',
           relationship: 'Spouse',
-          phoneNumber: '+1-555-0102',
+          phoneNumber: '0712345678',
           email: 'sarah.johnson@email.com'
         },
         personalInfo: {
@@ -308,7 +317,8 @@ const seedData = async () => {
         email: 'officer@fire.local', 
         password: 'officer123', 
         roleNames: ['1st_class_officer'],
-        phoneNumber: '+1-555-0201',
+        username: 'officer', // added
+        phoneNumber: '0771234567',
         address: {
           street: '456 Officer St',
           city: 'Springfield',
@@ -319,7 +329,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Mary Smith',
           relationship: 'Wife',
-          phoneNumber: '+1-555-0202',
+          phoneNumber: '0712345678',
           email: 'mary.smith@email.com'
         },
         personalInfo: {
@@ -331,11 +341,12 @@ const seedData = async () => {
         }
       },
       { 
-        name: 'Captain Mike Johnson', 
+        name: 'Captain Mike Johnson',
+        username: 'officer', 
         email: 'captain@fire.local', 
         password: 'captain123', 
         roleNames: ['captain'],
-        phoneNumber: '+1-555-0301',
+        phoneNumber: '0712345678',
         address: {
           street: '789 Captain Dr',
           city: 'Springfield',
@@ -346,7 +357,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Lisa Johnson',
           relationship: 'Sister',
-          phoneNumber: '+1-555-0302',
+          phoneNumber: '0712345678',
           email: 'lisa.johnson@email.com'
         },
         personalInfo: {
@@ -359,10 +370,11 @@ const seedData = async () => {
       },
       { 
         name: 'Lieutenant Sarah Wilson', 
+        username: 'officer',
         email: 'lieutenant@fire.local', 
         password: 'lieutenant123', 
         roleNames: ['lieutenant'],
-        phoneNumber: '+1-555-0401',
+        phoneNumber: '0712345678',
         address: {
           street: '321 Lieutenant Ln',
           city: 'Springfield',
@@ -373,7 +385,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'David Wilson',
           relationship: 'Husband',
-          phoneNumber: '+1-555-0402',
+          phoneNumber: '0712345678',
           email: 'david.wilson@email.com'
         },
         personalInfo: {
@@ -386,10 +398,11 @@ const seedData = async () => {
       },
       { 
         name: 'Jane Doe', 
+        username: 'officer',
         email: 'finance@fire.local', 
         password: 'finance123', 
         roleNames: ['finance_manager'],
-        phoneNumber: '+1-555-0501',
+        phoneNumber: '0712345678',
         address: {
           street: '654 Finance Blvd',
           city: 'Springfield',
@@ -400,7 +413,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Robert Doe',
           relationship: 'Father',
-          phoneNumber: '+1-555-0502',
+          phoneNumber: '0712345678',
           email: 'robert.doe@email.com'
         },
         personalInfo: {
@@ -413,10 +426,11 @@ const seedData = async () => {
       },
       { 
         name: 'Tom Brown', 
+        username: 'officer',
         email: 'inventory@fire.local', 
         password: 'inventory123', 
         roleNames: ['inventory_manager'],
-        phoneNumber: '+1-555-0601',
+        phoneNumber: '0712345678',
         address: {
           street: '987 Inventory Rd',
           city: 'Springfield',
@@ -427,7 +441,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Jennifer Brown',
           relationship: 'Daughter',
-          phoneNumber: '+1-555-0602',
+          phoneNumber: '0712345678',
           email: 'jennifer.brown@email.com'
         },
         personalInfo: {
@@ -440,10 +454,11 @@ const seedData = async () => {
       },
       { 
         name: 'Sarah Thompson', 
+        username: 'officer',
         email: 'supplier@fire.local', 
         password: 'supplier123', 
         roleNames: ['suppliermanager'],
-        phoneNumber: '+1-555-0701',
+        phoneNumber: '0712345678',
         address: {
           street: '456 Supplier Ave',
           city: 'Springfield',
@@ -454,7 +469,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Michael Thompson',
           relationship: 'Husband',
-          phoneNumber: '+1-555-0702',
+          phoneNumber: '0712345678',
           email: 'michael.thompson@email.com'
         },
         personalInfo: {
@@ -467,10 +482,11 @@ const seedData = async () => {
       },
       { 
         name: 'Lisa Anderson', 
+        username: 'officer',
         email: 'records@fire.local', 
         password: 'records123', 
         roleNames: ['record_manager'],
-        phoneNumber: '+1-555-0701',
+        phoneNumber: '0712345678',
         address: {
           street: '147 Records Way',
           city: 'Springfield',
@@ -481,7 +497,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Michael Anderson',
           relationship: 'Brother',
-          phoneNumber: '+1-555-0702',
+          phoneNumber: '0712345678',
           email: 'michael.anderson@email.com'
         },
         personalInfo: {
@@ -494,10 +510,11 @@ const seedData = async () => {
       },
       { 
         name: 'David Clark', 
+        username: 'officer',
         email: 'prevention@fire.local', 
         password: 'prevention123', 
         roleNames: ['prevention_manager'],
-        phoneNumber: '+1-555-0801',
+        phoneNumber: '0712345678',
         address: {
           street: '258 Prevention Pl',
           city: 'Springfield',
@@ -508,7 +525,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Emily Clark',
           relationship: 'Wife',
-          phoneNumber: '+1-555-0802',
+          phoneNumber: '0712345678',
           email: 'emily.clark@email.com'
         },
         personalInfo: {
@@ -521,10 +538,11 @@ const seedData = async () => {
       },
       { 
         name: 'Maria Garcia', 
+        username: 'officer',
         email: 'training@fire.local', 
         password: 'training123', 
         roleNames: ['training_session_manager'],
-        phoneNumber: '+1-555-0901',
+        phoneNumber: '0712345678',
         address: {
           street: '369 Training Trl',
           city: 'Springfield',
@@ -535,7 +553,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Carlos Garcia',
           relationship: 'Husband',
-          phoneNumber: '+1-555-0902',
+          phoneNumber: '0712345678',
           email: 'carlos.garcia@email.com'
         },
         personalInfo: {
@@ -548,10 +566,11 @@ const seedData = async () => {
       },
       { 
         name: 'Commander Robert Lee', 
+        username: 'officer',
         email: 'commander@fire.local', 
         password: 'commander123', 
         roleNames: ['incident_commander'],
-        phoneNumber: '+1-555-1001',
+        phoneNumber: '0712345678',
         address: {
           street: '741 Commander Ct',
           city: 'Springfield',
@@ -562,7 +581,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Patricia Lee',
           relationship: 'Mother',
-          phoneNumber: '+1-555-1002',
+          phoneNumber: '0712345678',
           email: 'patricia.lee@email.com'
         },
         personalInfo: {
@@ -575,10 +594,11 @@ const seedData = async () => {
       },
       { 
         name: 'Engineer James Wilson', 
+        username: 'officer',
         email: 'engineer@fire.local', 
         password: 'engineer123', 
         roleNames: ['driver_engineer'],
-        phoneNumber: '+1-555-1101',
+        phoneNumber: '0712345678',
         address: {
           street: '852 Engineer Est',
           city: 'Springfield',
@@ -589,7 +609,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Rachel Wilson',
           relationship: 'Sister',
-          phoneNumber: '+1-555-1102',
+          phoneNumber: '0712345678',
           email: 'rachel.wilson@email.com'
         },
         personalInfo: {
@@ -602,10 +622,11 @@ const seedData = async () => {
       },
       { 
         name: 'Fire Fighter Alex Turner', 
+        username: 'officer',
         email: 'fighter@fire.local', 
         password: 'fighter123', 
         roleNames: ['fighter'],
-        phoneNumber: '+1-555-1201',
+        phoneNumber: '0712345678',
         address: {
           street: '963 Fighter Fwy',
           city: 'Springfield',
@@ -616,7 +637,7 @@ const seedData = async () => {
         emergencyContact: {
           name: 'Jordan Turner',
           relationship: 'Partner',
-          phoneNumber: '+1-555-1202',
+          phoneNumber: '0712345678',
           email: 'jordan.turner@email.com'
         },
         personalInfo: {
@@ -629,13 +650,14 @@ const seedData = async () => {
       }
     ];
 
-    for (const userData of testUsers) {
+   for (const userData of testUsers) {
       const userRoles = createdRoles.filter(role =>
         userData.roleNames.includes(role.name)
       );
 
       await User.create({
         name: userData.name,
+        username: userData.username, // added
         email: userData.email,
         password: userData.password,
         roles: userRoles.map(role => role._id),
