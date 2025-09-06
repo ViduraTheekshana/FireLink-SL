@@ -9,16 +9,13 @@ const roleSchema = new mongoose.Schema({
       'admin',
       'cfo',
       '1st_class_officer',
-      'captain',
-      'lieutenant',
       'finance_manager',
       'inventory_manager',
       'record_manager',
       'prevention_manager',
       'training_session_manager',
       'suppliermanager',
-      'incident_commander',
-      'driver_engineer',
+      'Team_captain',
       'fighter',
       'civilian'
     ]
