@@ -30,9 +30,13 @@ import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
 import Messages from "./pages/ShiftManagement/Messages";
 import CivilianLogin from "./pages/UserManagement/CivilianLogin";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+import SupplierLogin from "./pages/UserManagement/supplierLogin";
 
 // Main App component
 function AppContent() {
+	
+	
+
 	const { loading, isAuthenticated } = useAuth();
 
 	if (loading) {
@@ -300,7 +304,7 @@ function AppContent() {
 								)
 							}
 						/>
-						
+						<Route path="/supplierlogin" element={<SupplierLogin />} />
 					</Routes>
 				</main>
 			</div>

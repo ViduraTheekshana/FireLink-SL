@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 const Login = () => {
 	const [formData, setFormData] = useState({
@@ -165,6 +166,12 @@ const Login = () => {
 						className="text-blue-300 hover:text-white text-sm underline transition-colors"
 					>
 						Login as a Civilian
+					</Link>
+					<Link 
+						to="/supplierlogin" 
+						className="text-blue-300 hover:text-white text-sm underline transition-colors"
+					>
+						Login as a Supplier
 					</Link>
 				</div>
 
