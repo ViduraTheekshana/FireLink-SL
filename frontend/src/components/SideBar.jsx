@@ -10,14 +10,20 @@ import {
 	Flame,
 } from "lucide-react";
 import { useAuth } from "../context/auth";
+import Loader from "./Loader";
 
 export function Sidebar({ activeTab, setActiveTab }) {
-	const { hasRole } = useAuth();
+	const { hasRole, logout, loading } = useAuth();
 
 	let menuItems = [];
 	let bottomMenuItems = [];
 
-	if (hasRole("supplier_manager")) {
+	const logoutHandler = (e) => {
+		e.preventDefault();
+		logout();
+	};
+
+	if (hasRole("supply_manager")) {
 		menuItems = [
 			{
 				id: "suppliers",
@@ -40,24 +46,27 @@ export function Sidebar({ activeTab, setActiveTab }) {
 				icon: <FileText size={20} />,
 			},
 		];
-		bottomMenuItems = [
-			{
-				id: "settings",
-				label: "Settings",
-				icon: <Settings size={20} />,
-			},
-			{
-				id: "help",
-				label: "Help & Support",
-				icon: <HelpCircle size={20} />,
-			},
-			{
-				id: "logout",
-				label: "Logout",
-				icon: <LogOut size={20} />,
-			},
-		];
 	}
+	bottomMenuItems = [
+		{
+			id: "settings",
+			label: "Settings",
+			icon: <Settings size={20} />,
+		},
+		{
+			id: "help",
+			label: "Help & Support",
+			icon: <HelpCircle size={20} />,
+		},
+		{
+			id: "logout",
+			label: "Logout",
+			icon: <LogOut size={20} />,
+		},
+	];
+
+	if (loading) return <Loader />;
+
 	return (
 		<div className="w-64 bg-gray-900 text-white flex flex-col h-full hidden md:block">
 			<div className="p-4 flex items-center gap-3">
@@ -90,6 +99,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
 					<button
 						key={item.id}
 						className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-800"
+						onClick={item.id === "logout" ? logoutHandler : undefined}
 					>
 						{item.icon}
 						<span>{item.label}</span>
