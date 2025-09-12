@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 const Login = () => {
 	const [formData, setFormData] = useState({
@@ -52,17 +52,12 @@ const Login = () => {
 	// Demo credentials component
 	const DemoCredentials = () => (
 		<div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-			<h3 className="text-sm font-medium text-gray-900 mb-3">
-			</h3>
+			<h3 className="text-sm font-medium text-gray-900 mb-3"></h3>
 			<div className="space-y-2 text-xs">
-				<div className="flex justify-between">
-				</div>
-				<div className="flex justify-between">
-				</div>
-				<div className="flex justify-between">
-				</div>
-				<div className="flex justify-between">
-				</div>
+				<div className="flex justify-between"></div>
+				<div className="flex justify-between"></div>
+				<div className="flex justify-between"></div>
+				<div className="flex justify-between"></div>
 			</div>
 		</div>
 	);
@@ -161,14 +156,14 @@ const Login = () => {
 
 				{/* Civilian Login Link */}
 				<div className="text-center">
-					<Link 
-						to="/civilian-login" 
+					<Link
+						to="/civilian-login"
 						className="text-blue-300 hover:text-white text-sm underline transition-colors"
 					>
 						Login as a Civilian
 					</Link>
-					<Link 
-						to="/supplierlogin" 
+					<Link
+						to="/supplier-login"
 						className="text-blue-300 hover:text-white text-sm underline transition-colors"
 					>
 						Login as a Supplier

@@ -30,31 +30,24 @@ import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
 import Messages from "./pages/ShiftManagement/Messages";
 import CivilianLogin from "./pages/UserManagement/CivilianLogin";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
-import SupplierLogin from "./pages/UserManagement/supplierLogin";
+import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
+import { SupplierAuthProvider } from "./context/supplierAuth";
+import { ManagementDashboard } from "./pages/SupplyManagement/ManagementDashboard";
+import Loader from "./components/Loader";
 
 // Main App component
 function AppContent() {
-	
-	
-
 	const { loading, isAuthenticated } = useAuth();
 
 	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-					<p className="mt-4 text-gray-600">Loading...</p>
-				</div>
-			</div>
-		);
+		return <Loader />;
 	}
 
 	return (
 		<Router>
 			<div className="min-h-screen bg-gray-50">
-				{isAuthenticated && <Navbar />}
-				<main className="container mx-auto px-4 py-8">
+				{/* {isAuthenticated && <Navbar />} */}
+				<main>
 					<Routes>
 						{/* Public routes */}
 						<Route
@@ -210,7 +203,6 @@ function AppContent() {
 							}
 						/>
 
-
 						<Route
 							path="/inventory/reorders"
 							element={
@@ -293,6 +285,17 @@ function AppContent() {
 							}
 						/>
 
+						<Route
+							path="/supply-management"
+							element={
+								<ProtectedRoute>
+									<ManagementDashboard />
+								</ProtectedRoute>
+							}
+						/>
+
+						<Route path="/supplier-login" element={<SupplierLogin />} />
+
 						{/* Catch all route - must be last */}
 						<Route
 							path="*"
@@ -304,7 +307,6 @@ function AppContent() {
 								)
 							}
 						/>
-						<Route path="/supplierlogin" element={<SupplierLogin />} />
 					</Routes>
 				</main>
 			</div>
@@ -316,7 +318,9 @@ function AppContent() {
 function App() {
 	return (
 		<AuthProvider>
-			<AppContent />
+			<SupplierAuthProvider>
+				<AppContent />
+			</SupplierAuthProvider>
 		</AuthProvider>
 	);
 }
