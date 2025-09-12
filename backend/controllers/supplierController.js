@@ -66,13 +66,13 @@ const logoutSupplier = catchAsyncErrors(async (req, res) => {
 		httpOnly: true,
 	});
 
-	res.status(200).json({ message: "Logout successful." });
+	res.status(200).json({ success: true, message: "Logout successful." });
 });
 
 // Admin Routes
 const GetAllSuppliers = catchAsyncErrors(async (req, res) => {
 	const suppliers = await Supplier.find({});
-	res.json(suppliers);
+	res.json({ success: true, data: suppliers });
 });
 
 const GetSupplierById = catchAsyncErrors(async (req, res, next) => {

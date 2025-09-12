@@ -8,7 +8,7 @@ dotenv.config({ path: "../config/config.env" });
 
 const suppliers = [
 	{
-		id: generateUniqueId(),
+		id: generateUniqueId("sup"),
 		email: "contact@fire-safety-equip.com",
 		password: "password123",
 		name: "Fire Safety Equipment Inc.",
@@ -21,7 +21,7 @@ const suppliers = [
 		failedSupplyCount: 2,
 	},
 	{
-		id: generateUniqueId(),
+		id: generateUniqueId("sup"),
 		email: "service@heavyduty-mechanics.net",
 		password: "password123",
 		name: "Heavy Duty Mechanics",
@@ -34,7 +34,7 @@ const suppliers = [
 		failedSupplyCount: 5,
 	},
 	{
-		id: generateUniqueId(),
+		id: generateUniqueId("sup"),
 		email: "sales@uniforms-pro.com",
 		password: "password123",
 		name: "Uniforms Pro",
@@ -47,7 +47,7 @@ const suppliers = [
 		failedSupplyCount: 15,
 	},
 	{
-		id: generateUniqueId(),
+		id: generateUniqueId("sup"),
 		email: "admin@ems-supplies.org",
 		password: "password123",
 		name: "EMS Medical Supplies Co.",
@@ -60,7 +60,7 @@ const suppliers = [
 		failedSupplyCount: 0,
 	},
 	{
-		id: generateUniqueId(),
+		id: generateUniqueId("sup"),
 		email: "support@pro-fire-services.com",
 		password: "password123",
 		name: "Pro Fire Services",
