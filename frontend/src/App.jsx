@@ -5,6 +5,7 @@ import {
 	Route,
 	Navigate,
 } from "react-router-dom";
+import { Bounce, ToastContainer } from "react-toastify";
 import { AuthProvider, useAuth } from "./context/auth";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -32,8 +33,9 @@ import CivilianLogin from "./pages/UserManagement/CivilianLogin";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 import { SupplierAuthProvider } from "./context/supplierAuth";
-import { ManagementDashboard } from "./pages/SupplyManagement/ManagementDashboard";
 import Loader from "./components/Loader";
+import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
+import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
 
 // Main App component
 function AppContent() {
@@ -286,10 +288,18 @@ function AppContent() {
 						/>
 
 						<Route
-							path="/supply-management"
+							path="/suppliers"
 							element={
 								<ProtectedRoute>
-									<ManagementDashboard />
+									<SupplierManagement />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/supply-requests"
+							element={
+								<ProtectedRoute>
+									<SupplyRequests />
 								</ProtectedRoute>
 							}
 						/>
@@ -310,6 +320,19 @@ function AppContent() {
 					</Routes>
 				</main>
 			</div>
+			<ToastContainer
+				position="bottom-right"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick={false}
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme="dark"
+				transition={Bounce}
+			/>
 		</Router>
 	);
 }

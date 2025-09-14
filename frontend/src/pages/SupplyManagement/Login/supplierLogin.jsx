@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Bounce, ToastContainer, toast } from "react-toastify";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useSupplierAuth } from "../../../context/supplierAuth";
 import { useNavigate } from "react-router-dom";
 import "./supplier.css";
@@ -20,7 +20,6 @@ const SupplierLogin = () => {
 			...formData,
 			[e.target.name]: e.target.value,
 		});
-		if (error) setError("");
 	};
 
 	const handleSubmit = async (e) => {
@@ -32,13 +31,20 @@ const SupplierLogin = () => {
 			await login(formData.email, formData.password);
 			navigate("/supplier-dashboard", { replace: true });
 		} catch (exception) {
+			console.log(exception);
 			const apiMessage = exception?.response?.data?.message;
 			setError(apiMessage || "Supplier login failed");
-			toast.error(error);
 		} finally {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		if (error) {
+			toast.error(error);
+			setError("");
+		}
+	}, [error]);
 
 	return (
 		<div className="supplier-login-container">
@@ -85,19 +91,6 @@ const SupplierLogin = () => {
 					</form>
 				</div>
 			</div>
-			<ToastContainer
-				position="bottom-right"
-				autoClose={5000}
-				hideProgressBar={false}
-				newestOnTop={false}
-				closeOnClick={false}
-				rtl={false}
-				pauseOnFocusLoss
-				draggable
-				pauseOnHover
-				theme="dark"
-				transition={Bounce}
-			/>
 		</div>
 	);
 };

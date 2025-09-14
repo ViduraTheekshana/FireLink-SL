@@ -2,8 +2,8 @@ import React from "react";
 import { Search, Bell, Menu, User } from "lucide-react";
 import { useAuth } from "../context/auth";
 
-export function Header({ searchQuery, setSearchQuery }) {
-	const { user, hasRole } = useAuth();
+const SearchBox = ({ searchQuery, setSearchQuery }) => {
+	const { user } = useAuth();
 
 	return (
 		<header className="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between">
@@ -43,4 +43,6 @@ export function Header({ searchQuery, setSearchQuery }) {
 			</div>
 		</header>
 	);
-}
+};
+
+export default SearchBox;

@@ -76,13 +76,8 @@ const suppliers = [
 
 const importData = async () => {
 	try {
-		await connectDatabase();
-
-		await Supplier.deleteMany();
 		await Supplier.create(suppliers);
-
 		console.log("Data Imported Successfully!");
-		process.exit();
 	} catch (err) {
 		console.error("Error importing data:", err);
 		process.exit(1);
@@ -93,7 +88,6 @@ const destroyData = async () => {
 	try {
 		await Supplier.deleteMany();
 		console.log("Data Destroyed Successfully!");
-		process.exit();
 	} catch (err) {
 		console.error("Error destroying data:", err);
 		process.exit(1);
@@ -103,11 +97,9 @@ const destroyData = async () => {
 const run = async () => {
 	await connectDatabase();
 
-	if (process.argv[2] === "-d") {
-		await destroyData();
-	} else {
-		await importData();
-	}
+	await destroyData();
+	await importData();
+	process.exit();
 };
 
 run();
