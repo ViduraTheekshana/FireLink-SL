@@ -41,8 +41,7 @@ const SupplyRequests = () => {
 	const filteredRequests = SupplyRequests.filter((request) => {
 		const matchesSearch =
 			searchQuery === "" ||
-			request.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			request.itemDetails.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			request.id.toLowerCase().includes(searchQuery.toLowerCase());
 		const matchesStatus =
 			filterStatus === "all" || request.status === filterStatus;
