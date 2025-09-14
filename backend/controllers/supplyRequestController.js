@@ -1,4 +1,4 @@
-const SupplyRequest = require("../models/supplierRequest");
+const SupplyRequest = require("../models/supplyRequest");
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const generateId = require("../utils/generateUniqueId");
