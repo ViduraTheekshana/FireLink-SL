@@ -4,14 +4,15 @@
 	"description": "e-commerce",
 	"main": "server.js",
 	"scripts": {
-		"seed:roles": "node ../seedRoles.js",
-		"seed:suppliers": "node ../seedSuppliers.js",
-		"seed:users": "node ../seedUsers.js",
-		"seed:inventory": "node ../seedInventory.js",
-		"seed:reorders": "node ../seedInventoryReorders.js",
-		"seed:vehicle-items": "node ../seedInventoryVehicleItems.js",
-		"seed:vehicles": "node ../seedVehicles.js",
+		
 		"seed:all": "npm run seed:roles && npm run seed:suppliers && npm run seed:users && npm run seed:inventory && npm run seed:reorders && npm run seed:vehicle-items && npm run seed:vehicles",
+		"seed:roles": "node seeders/seedRoles.js",
+		"seed:suppliers": "node seeders/seedSuppliers.js",
+		"seed:users": "node seeders/seed.js",
+		"seed:inventory": "node seeders/seedInventory.js",
+		"seed:reorders": "node seeders/seedInventoryReorders.js",
+		"seed:vehicle-items": "node seeders/seedInventoryVehicleItems.js",
+		"seed:vehicles": "node seeders/seedVehicles.js",
 		"start:backend": "node backend/server.js",
 		"backend:dev": "SET NODE_ENV=DEVELOPMENT& nodemon backend/server",
 		"backend:prod": "SET NODE_ENV=PRODUCTION& nodemon backend/server"
