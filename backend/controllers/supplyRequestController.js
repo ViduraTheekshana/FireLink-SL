@@ -55,7 +55,7 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 	}
 
 	const supplyRequests = await SupplyRequest.find(query)
-		.populate("createdBy", "name email")
+		// .populate("createdBy", "name email")
 		.sort({ createdAt: -1 });
 
 	res.status(200).json({

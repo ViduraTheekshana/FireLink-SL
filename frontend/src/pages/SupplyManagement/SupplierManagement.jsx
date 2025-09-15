@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Plus, Edit, Filter, Trash2 } from "lucide-react";
 import { getSuppliers } from "../../services/supply/supplyService";
+import { useAuth } from "../../context/auth";
 import Loader from "../../components/Loader";
 import Sidebar from "../../components/SideBar";
 import SearchBox from "../../components/SearchBox";
 
 const SupplierManagement = () => {
+	const { hasRole } = useAuth();
+	const navigate = useNavigate();
+
 	const [filterCategory, setFilterCategory] = useState("all");
 	const [loading, setLoading] = useState(true);
 	const [suppliers, setSuppliers] = useState([]);
@@ -17,6 +21,10 @@ const SupplierManagement = () => {
 	const itemsPerPage = 20;
 
 	useEffect(() => {
+		if (!hasRole("supply_manager")) {
+			navigate("/dashboard");
+			setError("Role not found! supply manager");
+		}
 		const fetchData = async () => {
 			try {
 				const res = await getSuppliers();
@@ -83,124 +91,125 @@ const SupplierManagement = () => {
 				<SearchBox searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 				<main className="flex-1 overflow-y-auto p-4 md:p-6">
 					<div className="space-y-6">
-						<div className="flex items-center justify-between"></div>
-						<h1 className="text-2xl font-bold text-gray-800">
-							Supplier Management
-						</h1>
-						<Link
-							to="/add"
-							className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md"
-						>
-							<Plus size={18} />
-							<span>Add Supplier</span>
-						</Link>
-					</div>
-					<div className="bg-white rounded-lg shadow">
-						<div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-							<div className="flex items-center gap-2">
-								<Filter size={18} className="text-gray-500" />
-								<span className="font-medium">Filters:</span>
-							</div>
-							<div className="flex flex-wrap gap-3">
-								<select
-									className="border border-gray-300 rounded-md px-3 py-1.5 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-									value={filterCategory}
-									onChange={(e) => {
-										setFilterCategory(e.target.value);
-										setCurrentPage(1);
-									}}
-								>
-									<option value="all">All Categories</option>
-									{categories.map((category) => (
-										<option key={category} value={category}>
-											{category}
-										</option>
-									))}
-								</select>
-							</div>
+						<div className="flex items-center justify-between">
+							<h1 className="text-2xl font-bold text-gray-800">
+								Supplier Management
+							</h1>
+							<Link
+								to="/add"
+								className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md"
+							>
+								<Plus size={18} />
+								<span>Add Supplier</span>
+							</Link>
 						</div>
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead className="bg-gray-50 text-gray-600 text-sm">
-									<tr>
-										<th className="py-3 px-4 text-left font-medium">
-											Supplier Name
-										</th>
-										<th className="py-3 px-4 text-left font-medium">
-											Contact Info
-										</th>
-										<th className="py-3 px-4 text-left font-medium">
-											Category
-										</th>
-										<th className="py-3 px-4 text-center font-medium">
-											Actions
-										</th>
-									</tr>
-								</thead>
-								<tbody className="divide-y divide-gray-200">
-									{currentSuppliers.map((supplier) => (
-										<tr key={supplier.id} className="hover:bg-gray-50">
-											<td className="py-3 px-4">
-												<div className="font-medium text-gray-900">
-													{supplier.name}
-												</div>
-											</td>
-											<td className="py-3 px-4">
-												<div>{supplier.contact}</div>
-												<div className="text-gray-500 text-sm">
-													{supplier.email}
-												</div>
-											</td>
-											<td className="py-3 px-4">{supplier.supplierType}</td>
-											<td className="py-3 px-4">
-												<div className="flex items-center justify-center gap-2">
-													<button className="p-1 hover:bg-gray-100 rounded">
-														<Edit size={18} className="text-blue-600" />
-													</button>
-													<button
-														className="p-1 hover:bg-red-100 rounded"
-														title="Delete"
-													>
-														<Trash2 size={18} className="text-red-500" />
-													</button>
-												</div>
-											</td>
-										</tr>
-									))}
-									{currentSuppliers.length === 0 && (
+						<div className="bg-white rounded-lg shadow">
+							<div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+								<div className="flex items-center gap-2">
+									<Filter size={18} className="text-gray-500" />
+									<span className="font-medium">Filters:</span>
+								</div>
+								<div className="flex flex-wrap gap-3">
+									<select
+										className="border border-gray-300 rounded-md px-3 py-1.5 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+										value={filterCategory}
+										onChange={(e) => {
+											setFilterCategory(e.target.value);
+											setCurrentPage(1);
+										}}
+									>
+										<option value="all">All Categories</option>
+										{categories.map((category) => (
+											<option key={category} value={category}>
+												{category}
+											</option>
+										))}
+									</select>
+								</div>
+							</div>
+							<div className="overflow-x-auto">
+								<table className="w-full">
+									<thead className="bg-gray-50 text-gray-600 text-sm">
 										<tr>
-											<td
-												colSpan={6}
-												className="py-4 text-center text-gray-500"
-											>
-												No suppliers found matching your criteria
-											</td>
+											<th className="py-3 px-4 text-left font-medium">
+												Supplier Name
+											</th>
+											<th className="py-3 px-4 text-left font-medium">
+												Contact Info
+											</th>
+											<th className="py-3 px-4 text-left font-medium">
+												Category
+											</th>
+											<th className="py-3 px-4 text-center font-medium">
+												Actions
+											</th>
 										</tr>
-									)}
-								</tbody>
-							</table>
-						</div>
-						<div className="p-4 border-t border-gray-200 flex justify-between items-center text-sm text-gray-600">
-							<div>
-								Showing {indexOfFirstItem + 1} to{" "}
-								{Math.min(indexOfLastItem, filteredSuppliers.length)} of{" "}
-								{filteredSuppliers.length} requests
+									</thead>
+									<tbody className="divide-y divide-gray-200">
+										{currentSuppliers.map((supplier) => (
+											<tr key={supplier.id} className="hover:bg-gray-50">
+												<td className="py-3 px-4">
+													<div className="font-medium text-gray-900">
+														{supplier.name}
+													</div>
+												</td>
+												<td className="py-3 px-4">
+													<div>{supplier.contact}</div>
+													<div className="text-gray-500 text-sm">
+														{supplier.email}
+													</div>
+												</td>
+												<td className="py-3 px-4">{supplier.supplierType}</td>
+												<td className="py-3 px-4">
+													<div className="flex items-center justify-center gap-2">
+														<button className="p-1 hover:bg-gray-100 rounded">
+															<Edit size={18} className="text-blue-600" />
+														</button>
+														<button
+															className="p-1 hover:bg-red-100 rounded"
+															title="Delete"
+														>
+															<Trash2 size={18} className="text-red-500" />
+														</button>
+													</div>
+												</td>
+											</tr>
+										))}
+										{currentSuppliers.length === 0 && (
+											<tr>
+												<td
+													colSpan={6}
+													className="py-4 text-center text-gray-500"
+												>
+													No suppliers found matching your criteria
+												</td>
+											</tr>
+										)}
+									</tbody>
+								</table>
 							</div>
-							<div className="flex items-center gap-2">
-								<button
-									onClick={handlePrevPage}
-									disabled={currentPage === 1}
-									className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
-								>
-									Previous
-								</button>
-								<button
-									onClick={handleNextPage}
-									disabled={indexOfLastItem >= filteredSuppliers.length}
-									className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
-								>
-									Next
-								</button>
+							<div className="p-4 border-t border-gray-200 flex justify-between items-center text-sm text-gray-600">
+								<div>
+									Showing {indexOfFirstItem + 1} to{" "}
+									{Math.min(indexOfLastItem, filteredSuppliers.length)} of{" "}
+									{filteredSuppliers.length} requests
+								</div>
+								<div className="flex items-center gap-2">
+									<button
+										onClick={handlePrevPage}
+										disabled={currentPage === 1}
+										className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+									>
+										Previous
+									</button>
+									<button
+										onClick={handleNextPage}
+										disabled={indexOfLastItem >= filteredSuppliers.length}
+										className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+									>
+										Next
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>

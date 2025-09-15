@@ -1,9 +1,11 @@
 import React from "react";
 import { Search, Bell, Menu, User } from "lucide-react";
 import { useAuth } from "../context/auth";
+import { useSupplierAuth } from "../context/supplierAuth";
 
 const SearchBox = ({ searchQuery, setSearchQuery }) => {
 	const { user } = useAuth();
+	const { user: supplier } = useSupplierAuth();
 
 	return (
 		<header className="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between">
@@ -34,7 +36,9 @@ const SearchBox = ({ searchQuery, setSearchQuery }) => {
 				</button>
 				<div className="flex items-center gap-3">
 					<div className="hidden md:block text-right">
-						<div className="text-sm font-medium">{user.name}</div>
+						<div className="text-sm font-medium">
+							{user ? user.name : supplier.name}
+						</div>
 					</div>
 					<div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center">
 						<User size={16} className="text-gray-600" />

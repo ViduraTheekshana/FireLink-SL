@@ -36,6 +36,8 @@ import { SupplierAuthProvider } from "./context/supplierAuth";
 import Loader from "./components/Loader";
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
+import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForSupplier";
+import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
 
 // Main App component
 function AppContent() {
@@ -301,6 +303,14 @@ function AppContent() {
 								<ProtectedRoute>
 									<SupplyRequests />
 								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/supplier/supply-requests"
+							element={
+								<ProtectedSupplierRoute>
+									<SupplyRequestForSupplier />
+								</ProtectedSupplierRoute>
 							}
 						/>
 

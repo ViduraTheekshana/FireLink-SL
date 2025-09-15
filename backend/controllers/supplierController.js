@@ -57,7 +57,7 @@ const createSupplier = catchAsyncErrors(async (req, res, next) => {
 });
 
 const getSupplierProfile = catchAsyncErrors(async (req, res) => {
-	res.status(200).json({ supplier: req.supplier });
+	res.status(200).json({ success: true, supplier: req.supplier });
 });
 
 const logoutSupplier = catchAsyncErrors(async (req, res) => {

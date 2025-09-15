@@ -1,5 +1,6 @@
 import axios from "axios";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { authUtils } from "./auth";
 
 const SupplierAuthContext = createContext(null);
 
@@ -13,8 +14,26 @@ export const useSupplierAuth = () => {
 
 export const SupplierAuthProvider = ({ children }) => {
 	const [user, setUser] = useState(null);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		const fetchUser = async () => {
+			try {
+				const res = await axios.get("/api/v1/supplier/profile");
+				if (res.data.success) {
+					setUser(res.data.supplier);
+				}
+			} catch (err) {
+				setUser(null);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchUser();
+	}, []);
 
 	const login = async (email, password) => {
+		setLoading(true);
 		const res = await axios.post("/api/v1/supplier/login", { email, password });
 
 		const { success, user } = res.data;
@@ -22,23 +41,28 @@ export const SupplierAuthProvider = ({ children }) => {
 		if (!success) {
 			throw new Error(res.data.message || "Login failed");
 		}
+		authUtils.clearTokens();
 		setUser(user);
+		setLoading(false);
 		return { success, user };
 	};
 
 	const logout = async () => {
+		setLoading(true);
 		const res = await axios.get("/api/v1/supplier/logout");
 
 		if (!res.data.success) {
 			throw new Error(res.data.message || "Logout failed");
 		}
 		setUser(null);
+		setLoading(false);
 	};
 
 	const value = {
 		user,
 		login,
 		logout,
+		loading,
 	};
 
 	return (

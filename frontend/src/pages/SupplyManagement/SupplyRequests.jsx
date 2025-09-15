@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Filter, Edit, Trash2 } from "lucide-react";
-import { getSupplyRequests } from "../../services/supply/supplyRequest";
+import { getSupplyRequests } from "../../services/supply/supplyRequestService";
 import formatDate from "../../utils/convertDate";
 import Loader from "../../components/Loader";
 import Sidebar from "../../components/SideBar";
