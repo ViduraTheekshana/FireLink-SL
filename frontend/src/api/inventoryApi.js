@@ -1,22 +1,17 @@
+
 import axios from 'axios';
-
-// Base API URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-// Create axios instance with base configuration
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Use global axios instance (interceptors are set in auth context)
+// Set baseURL for axios globally if needed
+if (!axios.defaults.baseURL) {
+  axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+}
 
 // Inventory API functions
 export const inventoryApi = {
   // Get all inventory items with search/filter/pagination
   getItems: async (params = {}) => {
     try {
-      const response = await api.get('/api/inventory', { params });
+  const response = await axios.get('/api/inventory', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching inventory items:', error);
@@ -27,7 +22,7 @@ export const inventoryApi = {
   // Get single inventory item by ID
   getItemById: async (id) => {
     try {
-      const response = await api.get(`/api/inventory/${id}`);
+  const response = await axios.get(`/api/inventory/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching inventory item:', error);
@@ -38,7 +33,7 @@ export const inventoryApi = {
   // Create new inventory item
   addItem: async (itemData) => {
     try {
-      const response = await api.post('/api/inventory', itemData);
+  const response = await axios.post('/api/inventory', itemData);
       return response.data;
     } catch (error) {
       console.error('Error creating inventory item:', error);
@@ -49,7 +44,7 @@ export const inventoryApi = {
   // Update existing inventory item
   updateItem: async (id, itemData) => {
     try {
-      const response = await api.put(`/api/inventory/${id}`, itemData);
+  const response = await axios.put(`/api/inventory/${id}`, itemData);
       return response.data;
     } catch (error) {
       console.error('Error updating inventory item:', error);
@@ -60,7 +55,7 @@ export const inventoryApi = {
   // Delete inventory item
   deleteItem: async (id) => {
     try {
-      const response = await api.delete(`/api/inventory/${id}`);
+  const response = await axios.delete(`/api/inventory/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error deleting inventory item:', error);
@@ -71,7 +66,7 @@ export const inventoryApi = {
   // Generate inventory reports
   generateReport: async (reportType = 'summary') => {
     try {
-      const response = await api.get('/api/inventory/reports', {
+  const response = await axios.get('/api/inventory/reports', {
         params: { reportType }
       });
       return response.data;
@@ -84,7 +79,7 @@ export const inventoryApi = {
   // Get available categories (for dropdowns)
   getCategories: async () => {
     try {
-      const response = await api.get('/api/inventory', {
+  const response = await axios.get('/api/inventory', {
         params: { limit: 1000 } // Get all items to extract categories
       });
       
@@ -100,7 +95,7 @@ export const inventoryApi = {
   // Get available locations (for dropdowns)
   getLocations: async () => {
     try {
-      const response = await api.get('/api/inventory', {
+  const response = await axios.get('/api/inventory', {
         params: { limit: 1000 } // Get all items to extract locations
       });
       
@@ -116,7 +111,7 @@ export const inventoryApi = {
   // Check if item ID exists
   checkItemIdExists: async (itemId) => {
     try {
-      const response = await api.get(`/api/inventory/check-id/${itemId}`);
+  const response = await axios.get(`/api/inventory/check-id/${itemId}`);
       return response.data;
     } catch (error) {
       console.error('Error checking item ID:', error);
