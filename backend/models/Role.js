@@ -17,7 +17,12 @@ const roleSchema = new mongoose.Schema({
       'suppliermanager',
       'Team_captain',
       'fighter',
-      'civilian'
+      'civilian',
+      'captain',
+      'lieutenant',
+      'incident_commander',
+      'crew_leader',
+      'driver_engineer'
     ]
   },
   displayName: {
