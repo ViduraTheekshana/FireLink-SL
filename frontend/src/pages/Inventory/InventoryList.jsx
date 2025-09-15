@@ -35,10 +35,8 @@ const InventoryList = () => {
   }, []);
 
   useEffect(() => {
-    if (!loading) { // Only call if initial data is loaded
-      loadInventoryData();
-    }
-  }, [currentPage, itemsPerPage, sortBy, sortOrder, loading]);
+    loadInventoryData();
+  }, [currentPage, itemsPerPage, sortBy, sortOrder]);
 
   const loadInitialData = async () => {
     try {
@@ -51,7 +49,7 @@ const InventoryList = () => {
       setCategories(categoriesData);
       setLocations(locationsData);
       
-      await loadInventoryData();
+  // await loadInventoryData();
     } catch (err) {
       setError('Failed to load initial data');
       console.error(err);
