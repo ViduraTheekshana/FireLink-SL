@@ -4,6 +4,8 @@ import { authUtils } from "./auth";
 
 const SupplierAuthContext = createContext(null);
 
+const api = axios.create({ withCredentials: true });
+
 export const useSupplierAuth = () => {
 	const context = useContext(SupplierAuthContext);
 	if (context === null) {
@@ -19,7 +21,7 @@ export const SupplierAuthProvider = ({ children }) => {
 	useEffect(() => {
 		const fetchUser = async () => {
 			try {
-				const res = await axios.get("/api/v1/supplier/profile");
+				const res = await api.get("/api/v1/supplier/profile");
 				if (res.data.success) {
 					setUser(res.data.supplier);
 				}
@@ -34,7 +36,7 @@ export const SupplierAuthProvider = ({ children }) => {
 
 	const login = async (email, password) => {
 		setLoading(true);
-		const res = await axios.post("/api/v1/supplier/login", { email, password });
+		const res = await api.post("/api/v1/supplier/login", { email, password });
 
 		const { success, user } = res.data;
 
@@ -49,7 +51,7 @@ export const SupplierAuthProvider = ({ children }) => {
 
 	const logout = async () => {
 		setLoading(true);
-		const res = await axios.get("/api/v1/supplier/logout");
+		const res = await api.get("/api/v1/supplier/logout");
 
 		if (!res.data.success) {
 			throw new Error(res.data.message || "Logout failed");

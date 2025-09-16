@@ -33,7 +33,6 @@ const SupplierLogin = () => {
 			await login(formData.email, formData.password);
 			navigate("/supplier/supply-requests", { replace: true });
 		} catch (exception) {
-			console.log(exception);
 			const apiMessage = exception?.response?.data?.message;
 			setError(apiMessage || "Supplier login failed");
 		} finally {
@@ -50,7 +49,7 @@ const SupplierLogin = () => {
 			navigate("/supplier/supply-requests", { replace: true });
 			toast.error("You have Already Logged in!");
 		}
-	}, []);
+	}, [userLoading, authLoading]);
 
 	useEffect(() => {
 		if (error) {
