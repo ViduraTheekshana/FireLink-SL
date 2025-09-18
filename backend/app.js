@@ -6,70 +6,58 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
-const errorMiddleware = require("./middlewares/errors");
-
-// setting up config file
+// Load environment variables
 dotenv.config({ path: "config/config.env" });
 
-// cors
+// CORS setup
 app.use(
-	cors({
-		origin: process.env.FRONTEND_URL || "http://localhost:5173",
-		credentials: true,
-	})
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
 );
 
-// middleware
+// Middleware
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Request logging middleware
 app.use((req, res, next) => {
-	console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-	next();
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
 });
 
-// import all routes
-const auth = require("./routes/authRoutes");
-const civilianAuth = require("./routes/civilianAuthRoutes");
-const mission = require("./routes/missionRoutes");
-const userManagement = require("./routes/userManagementRoutes");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); // <-- added
+// Import routes
+const authRoutes = require("./routes/authRoutes");
+const civilianAuthRoutes = require("./routes/civilianAuthRoutes");
+const missionRoutes = require("./routes/missionRoutes");
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes");
 
-// mount routes
-app.use("/api/v1/auth", auth);
-app.use("/api/v1/civilian-auth", civilianAuth);
-app.use("/api/v1/missions", mission);
-app.use("/api/v1/users", userManagement);
+// Inventory routes
+const inventoryRoutes = require("./routes/inventoryRoutes");
+const inventoryReorderRoutes = require("./routes/inventoryReorderRoutes");
+const inventoryVehicleItemsRoutes = require("./routes/inventoryVehicleItemsRoutes");
+const inventoryVehicleRoutes = require("./routes/inventoryVehicleRoutes");
+const inventoryLogRoutes = require("./routes/inventoryLogRoutes");
 
-app.use("/api/inventory", require("./routes/inventoryRoutes"));
-
-app.use("/api/inventory-reorders", require("./routes/inventoryReorderRoutes"));
-
-app.use(
-	"/api/inventory-vehicle-items",
-	require("./routes/inventoryVehicleItemsRoutes")
-);
-
-app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
-
-app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
-app.use("/api/v1/shifts", require("./routes/shiftRoutes"));
-app.use("/api/v1/trainings", require("./routes/trainingRoutes"));
-app.use("/api/v1/vehicles", require("./routes/vehicleRoutes"));
-app.use(
-	"/api/v1/shift-change-requests",
-	require("./routes/shiftChangeRequestRoutes")
-);
-app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
-app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
-app.use("/api/v1/messages", require("./routes/messageRoutes"));
+// Mount routes
+app.use("/api/v1/auth", authRoutes);
+//app.use("/api/v1/civilian-auth", civilianAuthRoutes);
+app.use("/api/v1/missions", missionRoutes);
+//app.use("/api/inventory", inventoryRoutes);
+app.use("/api/inventory-reorders", inventoryReorderRoutes);
+app.use("/api/inventory-vehicle-items", inventoryVehicleItemsRoutes);
+app.use("/api/inventory-vehicles", inventoryVehicleRoutes);
+app.use("/api/inventory-logs", inventoryLogRoutes);
 
 // Prevention certificate route
 app.use("/api/prevention/certificates", preventionCertificateRoutes);
 
-// Middleware to handle errors
-app.use(errorMiddleware);
+// Minimal error handling for now (optional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, message: "Something went wrong" });
+});
 
 module.exports = app;

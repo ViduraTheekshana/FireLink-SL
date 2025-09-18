@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 const {
   getMyMessages,
@@ -37,3 +37,4 @@ router.delete('/:id', mongoIdValidation('id'), deleteMessage);
 router.post('/send', sendMessageValidation, sendMessage);
 
 module.exports = router;
+*/

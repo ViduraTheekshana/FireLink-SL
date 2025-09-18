@@ -1,4 +1,4 @@
-const UserReg = require("../models/UserReg"); // your schema
+const UserReg = require("../models/UserReg"); 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -64,5 +64,38 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Error logging in", error: err.message });
+  }
+};
+
+// Add Users (this was missing!)
+exports.addUsers = async (req, res) => {
+  try {
+    const { name, phone, age, gmail, position, status, address, password, staffId } = req.body;
+
+    // check if email already exists
+    const existingUser = await UserReg.findOne({ gmail });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    // create new user (password will be hashed automatically by your schema)
+    const user = await UserReg.create({
+      name,
+      phone,
+      age,
+      gmail,
+      position,
+      status,
+      address,
+      password,
+      staffId,
+    });
+
+    res.status(201).json({
+      message: "User added successfully",
+      user: user
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding user", error: err.message });
   }
 };

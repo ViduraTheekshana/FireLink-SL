@@ -1,4 +1,4 @@
-const Message = require('../models/Message');
+/*const Message = require('../models/Message');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 
@@ -273,3 +273,4 @@ module.exports = {
   deleteMessage,
   sendMessage
 };
+*/
