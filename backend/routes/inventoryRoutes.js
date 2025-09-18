@@ -1,4 +1,4 @@
-const express = require("express");
+/*const express = require("express");
 const router = express.Router();
 const {
 	createItem,
@@ -116,3 +116,4 @@ router.put(
 router.delete("/:id", protect, requireRole("admin"), deleteItem);
 
 module.exports = router;
+*/

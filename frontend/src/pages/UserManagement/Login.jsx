@@ -1,182 +1,173 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../context/auth";
-import { useNavigate, useLocation, Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import { FaUserAlt, FaLock } from "react-icons/fa";
 
-const Login = () => {
-	const [formData, setFormData] = useState({
-		email: "",
-		password: "",
-	});
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState("");
+function DemoCredentials() {
+  return (
+    <div className="mt-4 text-sm text-gray-500">
+      <p><strong>Demo Staff ID:</strong> S123</p>
+      <p><strong>Password:</strong> 123456</p>
+    </div>
+  );
+}
 
-	const { login, user } = useAuth();
-	const navigate = useNavigate();
-	const location = useLocation();
+function StaffLogin() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    staffId: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
 
-	// Redirect if already logged in
-	useEffect(() => {
-		if (user) {
-			const from = location.state?.from?.pathname || "/dashboard";
-			navigate(from, { replace: true });
-		}
-	}, [user, navigate, location]);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
-	const handleChange = (e) => {
-		setFormData({
-			...formData,
-			[e.target.name]: e.target.value,
-		});
-		// Clear error when user starts typing
-		if (error) setError("");
-	};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setLoading(true);
-		setError("");
+    try {
+      const res = await axios.post("http://localhost:5000/api/v1/auth/login", formData);
+      const data = res.data;
 
-		try {
-			await login(formData.email, formData.password);
-			const from = location.state?.from?.pathname || "/dashboard";
-			navigate(from, { replace: true });
-		} catch (error) {
-			const apiMessage = error?.response?.data?.message;
-			setError(apiMessage || "Login failed");
-		} finally {
-			setLoading(false);
-		}
-	};
+      if (data.status === "ok") {
+        alert(`Login successful! Welcome ${data.user.name}`);
 
-	// Demo credentials component
-	const DemoCredentials = () => (
-		<div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-			<h3 className="text-sm font-medium text-gray-900 mb-3"></h3>
-			<div className="space-y-2 text-xs">
-				<div className="flex justify-between"></div>
-				<div className="flex justify-between"></div>
-				<div className="flex justify-between"></div>
-				<div className="flex justify-between"></div>
-			</div>
-		</div>
-	);
+        if (data.user.position === "1stclass officer") {
+          try {
+            const userRes = await axios.get(
+              `http://localhost:5006/users/staff/${data.user.staffId}`
+            );
+            navigate(`/officer/${userRes.data.user._id}`);
+          } catch (err) {
+            console.error("Error fetching user details:", err);
+            alert("Login successful but could not load profile. Redirecting to dashboard.");
+            navigate("/firefighter-dashboard", { state: { user: data.user } });
+          }
+        } else {
+          switch (data.user.position) {
+            case "fighter":
+              navigate("/firefighter-dashboard", { state: { user: data.user } });
+              break;
+            case "finanaceManager":
+              navigate("/finance-dashboard", { state: { user: data.user } });
+              break;
+            case "inventoryManager":
+              navigate("/inventory-dashboard", { state: { user: data.user } });
+              break;
+            case "recordmanager":
+              navigate("/record-dashboard", { state: { user: data.user } });
+              break;
+            case "preventionManager":
+              navigate("/prevention-dashboard", { state: { user: data.user } });
+              break;
+            case "trainingsessionmanager":
+              navigate("/training-dashboard", { state: { user: data.user } });
+              break;
+            case "suplliermanager":
+              navigate("/supplier-dashboard", { state: { user: data.user } });
+              break;
+            case "teamcaptain":
+              navigate("/team-dashboard", { state: { user: data.user } });
+              break;
+            default:
+              navigate("/staff-dashboard", { state: { user: data.user } });
+          }
+        }
+      } else {
+        alert("Login failed: " + (data.err || "Invalid credentials"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
 
-	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-			<div className="max-w-md w-full space-y-8">
-				{/* Header */}
-				<div className="text-center">
-					<h2 className="text-3xl font-bold text-white mb-2">
-						Fire Handling System
-					</h2>
-					<p className="text-gray-300">Sign in to access your dashboard</p>
-				</div>
+    setLoading(false);
+  };
 
-				{/* Login Form */}
-				<div className="bg-white rounded-xl shadow-2xl p-8">
-					<form className="space-y-6" onSubmit={handleSubmit}>
-						{/* Error Message */}
-						{error && (
-							<div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg animate-slide-up">
-								<div className="flex">
-									<div>
-										<p className="text-sm font-medium">{error}</p>
-									</div>
-								</div>
-							</div>
-						)}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-primary to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Fire Handling System
+          </h2>
+          <p className="text-gray-300">Sign in to access your dashboard</p>
+        </div>
 
-						{/* Email Field */}
-						<div>
-							<label
-								htmlFor="email"
-								className="block text-sm font-medium text-gray-700 mb-1"
-							>
-								Email Address
-							</label>
-							<input
-								id="email"
-								name="email"
-								type="email"
-								autoComplete="email"
-								required
-								className="input-field"
-								placeholder="Enter your email"
-								value={formData.email}
-								onChange={handleChange}
-								disabled={loading}
-							/>
-						</div>
+        {/* Login Form */}
+        <div className="bg-white rounded-xl shadow-2xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Staff ID */}
+            <div className="relative">
+              <FaUserAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                name="staffId"
+                placeholder="Staff ID"
+                value={formData.staffId}
+                onChange={handleChange}
+                className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800] transition"
+                required
+              />
+            </div>
 
-						{/* Password Field */}
-						<div>
-							<label
-								htmlFor="password"
-								className="block text-sm font-medium text-gray-700 mb-1"
-							>
-								Password
-							</label>
-							<input
-								id="password"
-								name="password"
-								type="password"
-								autoComplete="current-password"
-								required
-								className="input-field"
-								placeholder="Enter your password"
-								value={formData.password}
-								onChange={handleChange}
-								disabled={loading}
-							/>
-						</div>
+            {/* Password */}
+            <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800] transition"
+                required
+              />
+            </div>
 
-						{/* Submit Button */}
-						<div>
-							<button
-								type="submit"
-								disabled={loading}
-								className="w-full flex justify-center items-center btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								{loading ? (
-									<>
-										<div className="loading-spinner mr-2"></div>
-										Signing in...
-									</>
-								) : (
-									"Sign in"
-								)}
-							</button>
-						</div>
-					</form>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full p-3 bg-[#FF9800] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
 
-					{/* Demo Credentials */}
-					<DemoCredentials />
-				</div>
+          {/* Demo Credentials */}
+          <DemoCredentials />
+        </div>
 
-				{/* Civilian Login Link */}
-				<div className="text-center">
-					<Link
-						to="/civilian-login"
-						className="text-blue-300 hover:text-white text-sm underline transition-colors"
-					>
-						Login as a Civilian
-					</Link>
-					<Link
-						to="/supplier-login"
-						className="text-blue-300 hover:text-white text-sm underline transition-colors"
-					>
-						Login as a Supplier
-					</Link>
-				</div>
+        {/* Links */}
+        <div className="text-center">
+          <Link
+            to="/civilian-login"
+            className="text-blue-300 hover:text-white text-sm underline transition-colors"
+          >
+            Login as a Civilian
+          </Link>
+          <br />
+          <Link
+            to="/supplier-login"
+            className="text-blue-300 hover:text-white text-sm underline transition-colors"
+          >
+            Login as a Supplier
+          </Link>
+        </div>
 
-				{/* Footer */}
-				<div className="text-center text-gray-300 text-sm">
-					<p>© 2024 Fire Department. All rights reserved.</p>
-				</div>
-			</div>
-		</div>
-	);
-};
+        {/* Footer */}
+        <div className="text-center text-gray-300 text-sm">
+          <p>© 2024 Fire Department. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-export default Login;
+export default StaffLogin;

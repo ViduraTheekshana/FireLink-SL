@@ -1,9 +1,10 @@
+// Components/StaffLogin.js
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaUserAlt, FaLock } from "react-icons/fa"; // ✅ icons for inputs
+import { FaUserAlt, FaLock } from "react-icons/fa";
 
-const URL = "http://localhost:5000/stafflogin"; // backend endpoint
+const URL = "http://localhost:5006/stafflogin";
 
 function StaffLogin() {
   const navigate = useNavigate();
@@ -27,37 +28,49 @@ function StaffLogin() {
       const data = res.data;
 
       if (data.status === "ok") {
-        alert(Login successful! Welcome ${data.user.name});
+        alert(`Login successful! Welcome ${data.user.name}`);
 
-        // Redirect based on position/role
-        switch (data.user.position) {
-          case "1stclass officer":
-          case "fighter":
+        // For 1st class officer, redirect to their profile page
+        if (data.user.position === "1stclass officer") {
+          // We need to get the user ID first
+          try {
+            const userRes = await axios.get(`http://localhost:5006/users/staff/${data.user.staffId}`);
+            navigate(`/officer/${userRes.data.user._id}`);
+          } catch (err) {
+            console.error("Error fetching user details:", err);
+            alert("Login successful but could not load profile. Redirecting to dashboard.");
             navigate("/firefighter-dashboard", { state: { user: data.user } });
-            break;
-          case "finanaceManager":
-            navigate("/finance-dashboard", { state: { user: data.user } });
-            break;
-          case "inventoryManager":
-            navigate("/inventory-dashboard", { state: { user: data.user } });
-            break;
-          case "recordmanager":
-            navigate("/record-dashboard", { state: { user: data.user } });
-            break;
-          case "preventionManager":
-            navigate("/prevention-dashboard", { state: { user: data.user } });
-            break;
-          case "trainingsessionmanager":
-            navigate("/training-dashboard", { state: { user: data.user } });
-            break;
-          case "suplliermanager":
-            navigate("/supplier-dashboard", { state: { user: data.user } });
-            break;
-          case "teamcaptain":
-            navigate("/team-dashboard", { state: { user: data.user } });
-            break;
-          default:
-            navigate("/staff-dashboard", { state: { user: data.user } });
+          }
+        } else {
+          // Redirect based on position/role for other positions
+          switch (data.user.position) {
+            case "fighter":
+              navigate("/firefighter-dashboard", { state: { user: data.user } });
+              break;
+            case "finanaceManager":
+              navigate("/finance-dashboard", { state: { user: data.user } });
+              break;
+            case "inventoryManager":
+              navigate("/inventory-dashboard", { state: { user: data.user } });
+              break;
+            case "recordmanager":
+              navigate("/record-dashboard", { state: { user: data.user } });
+              break;
+            case "preventionManager":
+              navigate("/prevention-dashboard", { state: { user: data.user } });
+              break;
+            case "trainingsessionmanager":
+              navigate("/training-dashboard", { state: { user: data.user } });
+              break;
+            case "suplliermanager":
+              navigate("/supplier-dashboard", { state: { user: data.user } });
+              break;
+            case "teamcaptain":
+              navigate("/team-dashboard", { state: { user: data.user } });
+              break;
+            default:
+              navigate("/staff-dashboard", { state: { user: data.user } });
+          }
         }
       } else {
         alert("Login failed: " + (data.err || "Invalid credentials"));
@@ -131,4 +144,4 @@ function StaffLogin() {
   );
 }
 
-export default StaffLogin;
+export default StaffLogin;
