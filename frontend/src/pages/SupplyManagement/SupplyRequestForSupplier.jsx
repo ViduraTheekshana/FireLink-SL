@@ -18,7 +18,6 @@ const SupplyRequestForSupplier = () => {
 			try {
 				const res = await getSupplyRequests();
 				setSupplyRequests(res.data);
-				console.log(SupplyRequests);
 			} catch (exception) {
 				console.log(exception);
 				setError(exception.data.message);

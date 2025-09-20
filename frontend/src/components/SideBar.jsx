@@ -40,8 +40,6 @@ const Sidebar = () => {
 		logout();
 	};
 
-	console.log(user);
-
 	if (hasRole("supply_manager")) {
 		menuItems = [
 			{

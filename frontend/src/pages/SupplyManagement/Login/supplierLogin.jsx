@@ -4,6 +4,7 @@ import { useSupplierAuth } from "../../../context/supplierAuth";
 import { useAuth } from "../../../context/auth";
 import { useNavigate } from "react-router-dom";
 import "./supplier.css";
+import Loader from "../../../components/Loader";
 
 const SupplierLogin = () => {
 	const [formData, setFormData] = useState({
@@ -47,7 +48,6 @@ const SupplierLogin = () => {
 
 		if (!authLoading && supplier) {
 			navigate("/supplier/supply-requests", { replace: true });
-			toast.error("You have Already Logged in!");
 		}
 	}, [userLoading, authLoading]);
 
@@ -57,6 +57,8 @@ const SupplierLogin = () => {
 			setError("");
 		}
 	}, [error, setError, toast]);
+
+	if (authLoading || userLoading) return <Loader />;
 
 	return (
 		<div className="supplier-login-container">
