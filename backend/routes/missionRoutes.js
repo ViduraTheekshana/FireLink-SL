@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const { body, param, query } = require('express-validator');
 const router = express.Router();
 const {
@@ -8,7 +8,7 @@ const {
   updateMission,
   deleteMission,
   getMissionStats
-} = require('../controllers/missionControllers');
+} = require('../../controllers/missionControllers.js');
 const { protect } = require('../middlewares/authMiddleware');
 
 // Validation middleware
@@ -133,12 +133,12 @@ const validateId = [
 // @route   POST /api/missions
 // @desc    Create a new mission record
 // @access  Private
-router.post('/', protect, validateMission, createMission);
+//router.post('/', protect, validateMission, createMission);
 
 // @route   GET /api/missions
 // @desc    Get all mission records with pagination and filtering
 // @access  Private
-router.get('/', protect, validateQueryParams, getMissions);
+router.get("/something", MissionController.getMissions);
 
 // @route   GET /api/missions/stats
 // @desc    Get mission statistics
@@ -161,3 +161,4 @@ router.put('/:id', protect, validateId, validateMissionUpdate, updateMission);
 router.delete('/:id', protect, validateId, deleteMission);
 
 module.exports = router;
+*/

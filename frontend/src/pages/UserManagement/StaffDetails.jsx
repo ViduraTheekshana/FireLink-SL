@@ -30,7 +30,7 @@ const UserDetails = () => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5006/users/${id}`);
+        const response = await axios.get(`http://localhost:5000/users/${id}`);
         setUser(response.data.user);
         setLoading(false);
       } catch (err) {

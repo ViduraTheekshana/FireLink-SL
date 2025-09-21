@@ -1,8 +1,10 @@
-const express = require("express");
+/*const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
-const civilianController = require("../controllers/civilianAuthController");
-const { protect } = require("../middlewares/authMiddleware");
+const civilianController = require("../../controllers/UserManagement/civilianAuthController");
+const { protect } = require("../../middlewares/authMiddleware");
+const User = require("../../models/UserManagement/UserReg");
+
 
 // Registration
 router.post(
@@ -22,10 +24,10 @@ router.post(
 router.post("/login", civilianController.login);
 
 // Get profile (protected)
-router.get("/profile", protect, civilianController.getProfile);
+//router.get("/profile", protect, civilianController.getProfile);
 
 // Update profile (protected)
-router.put("/profile", protect, civilianController.updateProfile);
+//router.put("/profile", protect, civilianController.updateProfile);
 
 // Forgot password
 router.post("/forgot-password", civilianController.forgotPassword);
@@ -37,3 +39,4 @@ router.post("/reset-password", civilianController.resetPassword);
 router.post("/logout", protect, civilianController.logout);
 
 module.exports = router;
+*/

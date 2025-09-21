@@ -1,12 +1,50 @@
-const { validationResult } = require("express-validator");
-const User = require("../models/User");
-const Role = require("../models/Role");
+const User = require("../models/UserReg");
+
+// Get all users (position-based)
+exports.getAllUsers = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id);
+
+    let query = {};
+    if (currentUser.position === "1st_class_officer") query = { position: "staff" };
+    else query = { _id: req.user.id };
+
+    const users = await User.find(query).select("-password").sort({ createdAt: -1 });
+    res.json({ users, total: users.length });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// Get user by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id);
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+/*
+// Add user
+exports.addUser = async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    res.status(201).json({ message: "User added successfully", user });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding user", error: err.message });
+  }
+};
+
+
 
 // Get all users (with role restrictions)
 exports.getAllUsers = async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id).populate("roles");
-    const userRoles = currentUser.roles.map(role => role.name);
 
     // Build query based on user's permissions
     let query = {};
@@ -429,3 +467,4 @@ exports.getAvailableRoles = async (req, res) => {
     });
   }
 };
+*/

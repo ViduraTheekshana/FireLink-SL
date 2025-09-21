@@ -11,7 +11,7 @@ process.on("uncaughtException", (err) => {
 });
 
 // setting up config file
-dotenv.config({ path: "backend/config/config.env" });
+dotenv.config({ path: "config/config.env" });
 
 // Check if required environment variables are set
 if (!process.env.PORT) {

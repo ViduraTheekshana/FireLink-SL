@@ -1,10 +1,10 @@
-// Components/StaffLogin.js
+// src/pages/UserManagement/StaffLogin.jsx
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaUserAlt, FaLock } from "react-icons/fa";
 
-const URL = "http://localhost:5006/stafflogin";
+const URL = "http://localhost:5000/users/stafflogin";
 
 function StaffLogin() {
   const navigate = useNavigate();
@@ -24,25 +24,18 @@ function StaffLogin() {
     setLoading(true);
 
     try {
+          console.log("Login attempt:", formData.staffId); // moved inside
       const res = await axios.post(URL, formData);
       const data = res.data;
+    console.log("Server response:", data); // debug
 
       if (data.status === "ok") {
+        localStorage.setItem("token", data.token);
         alert(`Login successful! Welcome ${data.user.name}`);
 
-        // For 1st class officer, redirect to their profile page
-        if (data.user.position === "1stclass officer") {
-          // We need to get the user ID first
-          try {
-            const userRes = await axios.get(`http://localhost:5006/users/staff/${data.user.staffId}`);
-            navigate(`/officer/${userRes.data.user._id}`);
-          } catch (err) {
-            console.error("Error fetching user details:", err);
-            alert("Login successful but could not load profile. Redirecting to dashboard.");
-            navigate("/firefighter-dashboard", { state: { user: data.user } });
-          }
+        if (data.user.position === "1stclassofficer") {
+          navigate(`/officer/${data.user._id}`);
         } else {
-          // Redirect based on position/role for other positions
           switch (data.user.position) {
             case "fighter":
               navigate("/firefighter-dashboard", { state: { user: data.user } });
@@ -76,12 +69,16 @@ function StaffLogin() {
         alert("Login failed: " + (data.err || "Invalid credentials"));
       }
     } catch (err) {
-      console.error(err);
-      alert("Server error");
+  console.error("Login error:", err.response ? err.response.data : err.message);
+  alert("Server error: " + (err.response?.data?.err || err.message));
+  } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
+
+ 
+
+  const isButtonDisabled = !formData.staffId || !formData.password;
 
   return (
     <div className="min-h-screen bg-[#1E2A38] flex items-center justify-center p-6">
@@ -125,7 +122,7 @@ function StaffLogin() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isButtonDisabled}
             className="w-full p-3 bg-[#FF9800] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition"
           >
             {loading ? "Logging in..." : "Login"}
