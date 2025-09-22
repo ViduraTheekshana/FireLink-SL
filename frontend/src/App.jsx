@@ -1,16 +1,10 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AddFireStaff from "./pages/UserManagement/AddUsers"; 
+import LoginFireStaff from "./pages/UserManagement/StaffLogin";
+import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
+import UserDetails from "./pages/UserManagement/StaffDetails";
 
-// User Management
-//import AddFireStaff from "./pages/UserManagement/AddUsers.jsx"; 
-import LoginFireStaff from "./pages/UserManagement/StaffLogin.jsx";
-import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile.jsx";
-//import UserDetails from "./pages/UserManagement/StaffDetails.jsx";
-//import UpdateUser from "./pages/UserManagement/updateStaff.jsx";
-//import TrainingSessionManager from "./pages/UserManagement/TrainingSessionManager.jsx";
-//import UpdateSession from "./pages/UserManagement/UpdateSession.jsx";
-//import ViewSessions from "./pages/UserManagement/AllSessionsDetails.jsx"; 
-//import AttendanceForm from "./pages/UserManagement/AttendanceForm.jsx";
 
 function App() {
   return (
@@ -18,10 +12,14 @@ function App() {
       <Routes>
         {/* Auth & Staff */}
         <Route path="/" element={<LoginFireStaff />} />
-        <Route path="/login" element={<LoginFireStaff />} />
-        <Route path="/officer/:id" element={<OfficerProfile/>} />
+        <Route path="/staff-login" element={<LoginFireStaff />} />
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/officer/:id" element={<OfficerProfile />} />
+        <Route path="/userdetails" element={<UserDetails />} />
+        <Route path="/userdetails/:id" element={<UserDetails />} />
 
-        {/* Training sessions */}
+
+      
       </Routes>
     </BrowserRouter>
   );

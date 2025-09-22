@@ -35,9 +35,13 @@ const addUsers = async (req, res, next) => {
 
     return res.status(200).json({ status: "ok", users, staffId });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ status: "error", err: err.message });
-  }
+  console.error("Add user error:", err); // <-- show full error
+  return res.status(500).json({
+    status: "error",
+    message: "Server error while adding user",
+    error: err.message,  // <-- send error to frontend for debugging
+  });
+}
 };
 
 
@@ -47,7 +51,7 @@ const staffLogin = async (req, res) => {
     const { staffId, password } = req.body;
 
     if (!staffId || !password) {
-      return res.status(400).json({ status: "error", err: "All fields are required" });
+      return res.status(400).json({ status: "error", message: "Staff ID and password are required" });
     }
 
     const user = await User.findOne({ staffId });
@@ -63,11 +67,15 @@ const staffLogin = async (req, res) => {
     // Generate JWT
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    res.status(200).json({ status: "ok", user, token });
+    return res.status(200).json({ status: "ok", user, token });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ status: "error", err: "Server error" });
-  }
+  console.error("Staff login error:", err);
+  return res.status(500).json({
+    status: "error",
+    message: "Server error during login",
+    error: err.message,
+  });
+}
 };
 
 exports.addUsers = addUsers;

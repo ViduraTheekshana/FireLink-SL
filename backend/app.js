@@ -1,14 +1,14 @@
 const express = require("express");
-const cors = require("cors");
-const app = express();
-const dotenv = require("dotenv");
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const app = express();
+const cors = require("cors");
+
 const UserController = require("./controllers/UserManagement/UserController.js");
 
+const dotenv = require("dotenv");
+
 // Load environment variables
-dotenv.config({ path: "config/config.env" });
+dotenv.config({ path: "./config/config.env" });
 
 // CORS setup
 app.use(
@@ -20,51 +20,18 @@ app.use(
 
 // Middleware
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(cors());
 
+// Register schemas BEFORE routes
+require("./models/UserManagement/Attendance.js"); // Attendance schema
+require("./models/UserManagement/UserReg.js");    // User schema
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// Import routes uer management
+// Routes
 const userRouter = require("./routes/UserManagement/UserRoute.js");
-const civilianAuthRoutes = require("./routes/UserManagement/civilianRoutes.js");
+const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
+const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 
-
-const missionRoutes = require("./routes/missionRoutes");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes");
-
-// Inventory routes
-const inventoryRoutes = require("./routes/inventoryRoutes");
-const inventoryReorderRoutes = require("./routes/inventoryReorderRoutes");
-const inventoryVehicleItemsRoutes = require("./routes/inventoryVehicleItemsRoutes");
-const inventoryVehicleRoutes = require("./routes/inventoryVehicleRoutes");
-const inventoryLogRoutes = require("./routes/inventoryLogRoutes");
-
-// Mount routes
-app.use("/users", userRouter);
-//app.use("/api/v1/civilian-auth", civilianAuthRoutes);
-//app.use("/api/v1/missions", missionRoutes);
-//app.use("/api/inventory", inventoryRoutes);
-app.use("/api/inventory-reorders", inventoryReorderRoutes);
-app.use("/api/inventory-vehicle-items", inventoryVehicleItemsRoutes);
-app.use("/api/inventory-vehicles", inventoryVehicleRoutes);
-app.use("/api/inventory-logs", inventoryLogRoutes);
-
-// Prevention certificate route
-app.use("/api/prevention/certificates", preventionCertificateRoutes);
-
-// Minimal error handling for now (optional)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: "Something went wrong" });
-});
-
+app.use("/sessions", sessionRouter);
+app.use("/attendance", attendanceRouter);
 
 console.log("DB_URI from env:", process.env.DB_URI);
 
@@ -82,13 +49,32 @@ mongoose
 });
 
   // User Registration endpoint
-app.use("/firstaff", userRouter); // This should handle addUsers
-
+app.use("/users", userRouter);
 
 // Staff login endpoint
 
-app.post("/stafflogin", UserController.staffLogin); // Login route
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// Import routes
+
+
+
+// Mount routes
+
+// Prevention certificate route
+
+// Minimal error handling for now (optional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, message: "Something went wrong" });
+});
 
 
 
 module.exports = app;
+
