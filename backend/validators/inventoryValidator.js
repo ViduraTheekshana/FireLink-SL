@@ -1,6 +1,7 @@
 const { body, param, query } = require('express-validator');
 
-// Validation for creating/updating inventory items
+//12. Validation for creating/updating inventory items (these fields must match the frontend form fields)
+//12. These validations run before reaching controller
 const validateInventoryItem = [
   body('item_ID')
     .isInt({ min: 1 })

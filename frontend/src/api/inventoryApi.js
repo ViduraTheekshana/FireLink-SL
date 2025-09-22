@@ -11,8 +11,11 @@ export const inventoryApi = {
   // Get all inventory items with search/filter/pagination
   getItems: async (params = {}) => {
     try {
-  const response = await axios.get('/api/inventory', { params });
-      return response.data;
+      //creates HTTP get request to backend and passes query parameters //params is an object containing search, filter, pagination info
+      //also waits for the response from backend
+      const response = await axios.get('/api/inventory', { params });
+      return response.data;// Returns the success object with data and pagination to the caller(e.g., InventoryList.jsx)
+
     } catch (error) {
       console.error('Error fetching inventory items:', error);
       throw error;
@@ -20,32 +23,39 @@ export const inventoryApi = {
   },
 
   // Get single inventory item by ID
-  getItemById: async (id) => {
+  // update 5: This function is called when editing an existing item to fetch its current data 
+  getItemById: async (id) => { 
     try {
-  const response = await axios.get(`/api/inventory/${id}`);
-      return response.data;
+      //update 9: API receives the response from backend which includes the existing item data
+      const response = await axios.get(`/api/inventory/${id}`);// update 4: Sends GET request to backend to fetch item by ID --> look inventoryRoutes.js
+      return response.data;// update 10: Returns the existing item data to the form component --> look InventoryForm.jsx
     } catch (error) {
       console.error('Error fetching inventory item:', error);
       throw error;
     }
   },
 
+  //5.This function is called when form submits
   // Create new inventory item
+  
   addItem: async (itemData) => {
     try {
-  const response = await axios.post('/api/inventory', itemData);
-      return response.data;
+      //6. Sends POST request to backend -->look inventoryRoutes.js
+      const response = await axios.post('/api/inventory', itemData);//20. THIS is where the backend response is first caught from inventoryController.js
+      //21.then this line extracts just the data portion:
+      return response.data;//22. Returns the created item data to the form component //Returns only the backend JSON response --> look InventoryForm.jsx
+
     } catch (error) {
       console.error('Error creating inventory item:', error);
-      throw error;
+      throw error;//8. shows error in form if any 
     }
   },
 
   // Update existing inventory item
-  updateItem: async (id, itemData) => {
+  updateItem: async (id, itemData) => {// update 13 : This function is called when editing an existing item and submitting the form
     try {
-  const response = await axios.put(`/api/inventory/${id}`, itemData);
-      return response.data;
+  const response = await axios.put(`/api/inventory/${id}`, itemData);//update 14 : Sends PUT request to backend to update item by ID
+      return response.data;// update 14 A : Returns the updated item data to the form component
     } catch (error) {
       console.error('Error updating inventory item:', error);
       throw error;

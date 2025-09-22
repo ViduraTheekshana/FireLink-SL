@@ -6,6 +6,7 @@ const InventoryLog = require('../models/InventoryLog');
 // @access  Private
 const createItem = async (req, res) => {
   try {
+    //13.Extract validated data from request
     const {
       item_ID,
       item_name,
@@ -18,7 +19,7 @@ const createItem = async (req, res) => {
       expire_date
     } = req.body;
 
-    // Check if item_ID already exists
+    // 14. Check if item_ID already exists
     const existingItem = await Inventory.findOne({ item_ID });
     if (existingItem) {
       return res.status(400).json({
@@ -27,7 +28,7 @@ const createItem = async (req, res) => {
       });
     }
 
-    // Validate threshold minimum value only
+    // 15.Validate threshold minimum value only
     if (threshold !== undefined) {
       if (threshold < 1) {
         return res.status(400).json({
@@ -39,6 +40,7 @@ const createItem = async (req, res) => {
       // This enables setting low stock alerts even when current stock is below threshold
     }
 
+    // 16. Create new MongoDB document
     const inventoryItem = new Inventory({
       item_ID,
       item_name,
@@ -51,19 +53,20 @@ const createItem = async (req, res) => {
       expire_date
     });
 
+    // 17. Save to database (MongoDB) // MongoDB auto generates: _id, createdAt, updatedAt, lastUpdated
     const savedItem = await inventoryItem.save();
 
-    // Create log entry for item creation
+    // 18. Create log entry for item creation (automatic)
     try {
       const log = new InventoryLog({
-        action: 'CREATE',
-        itemId: savedItem._id,
-        itemName: savedItem.item_name,
-        itemCategory: savedItem.category,
+        action: 'CREATE',                                                     // Log type
+        itemId: savedItem._id,                                  // ObjectId from MongoDB
+        itemName: savedItem.item_name,                              // For easy searching
+        itemCategory: savedItem.category,                   // For filtering
         description: `Created new inventory item: ${savedItem.item_name}`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
-        timestamp: new Date()
+        performedBy: req.user?._id || null,                                       // User who added it
+        performedByName: req.user?.name || 'System User',              // User name
+        timestamp: new Date()     // Exact time of creation
       });
       await log.save();
     } catch (logError) {
@@ -71,10 +74,11 @@ const createItem = async (req, res) => {
       // Don't fail the main operation if logging fails
     }
 
+    // 19. Return success response with created item data -->in frontend, inventoryApi.js receives this response
     res.status(201).json({
       success: true,
       message: 'Inventory item created successfully',
-      data: savedItem
+      data: savedItem   //19.1 Returns the complete saved item with MongoDB _id --- now database record is created successfully for inventories and inventoryLogs collections
     });
   } catch (error) {
     console.error('Create item error:', error);
@@ -89,7 +93,7 @@ const createItem = async (req, res) => {
 // @desc    Get all inventory items with search/filter
 // @route   GET /api/inventory
 // @access  Private
-const getItems = async (req, res) => {
+const getItems = async (req, res) => {//get all inventory items
   try {
     const {
       search,
@@ -101,11 +105,12 @@ const getItems = async (req, res) => {
       limit = 10,
       sortBy = 'lastUpdated',
       sortOrder = 'desc'
-    } = req.query;
+    } = req.query;//extract query parameters from request
 
     // Build filter object
     const filter = {};
     
+    //add search filter
     if (search) {
       filter.$or = [
         { item_name: { $regex: search, $options: 'i' } },
@@ -114,6 +119,7 @@ const getItems = async (req, res) => {
       ];
     }
     
+    //add specific filters
     if (category) filter.category = category;
     if (condition) filter.condition = condition;
     if (status) filter.status = status;
@@ -136,10 +142,11 @@ const getItems = async (req, res) => {
       .limit(parseInt(limit));
 
     // Calculate pagination info
-    const totalPages = Math.ceil(totalItems / parseInt(limit));
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
+    const totalPages = Math.ceil(totalItems / parseInt(limit));//total number of pages
+    const hasNextPage = page < totalPages;//is there a next page
+    const hasPrevPage = page > 1;//is there a previous page
 
+    // send response back to frontend with items and pagination info -->in frontend, inventoryApi.js receives this response
     res.json({
       success: true,
       data: items,
@@ -165,20 +172,21 @@ const getItems = async (req, res) => {
 // @desc    Get single inventory item by ID
 // @route   GET /api/inventory/:id
 // @access  Private
-const getItemById = async (req, res) => {
+//update 8: This function is called when editing an existing item to fetch its current data
+const getItemById = async (req, res) => {//fetch single inventory item by its MongoDB _id
   try {
     const { id } = req.params;
     
-    const item = await Inventory.findById(id);
+    const item = await Inventory.findById(id);//update 9: Fetch item from database using Mongoose model 
     
-    if (!item) {
+    if (!item) { //update 10: If item not found, return 404 error
       return res.status(404).json({
         success: false,
         message: 'Inventory item not found'
       });
     }
 
-    res.json({
+    res.json({ //update 11: If found, return item data to frontend -->in frontend, inventoryApi.js receives this response
       success: true,
       data: item
     });
@@ -195,10 +203,11 @@ const getItemById = async (req, res) => {
 // @desc    Update inventory item
 // @route   PUT /api/inventory/:id
 // @access  Private
+//update 16:update item controller function called by route when editing an existing item and submitting the form
 const updateItem = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
+    const { id } = req.params;        // Get item ID from URL parameters
+    const updateData = req.body;  // Get updated data from request body
 
     // Check if item_ID is being updated and if it already exists
     if (updateData.item_ID) {
@@ -230,10 +239,11 @@ const updateItem = async (req, res) => {
     // Add lastUpdated timestamp
     updateData.lastUpdated = new Date();
 
+    //update 16: Find item by ID and update with new data (when this runs the inventry.js model execute the update with validations)
     const updatedItem = await Inventory.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
+      id, // Item ID to update
+      updateData, // Data to update
+      { new: true, runValidators: true } // Return the updated document
     );
 
     if (!updatedItem) {
@@ -243,9 +253,9 @@ const updateItem = async (req, res) => {
       });
     }
 
-    // Create log entry for item update
+    //update 17 Create log entry for item update
     try {
-      const log = new InventoryLog({
+      const log = new InventoryLog({ 
         action: 'UPDATE',
         itemId: updatedItem._id,
         itemName: updatedItem.item_name,
@@ -255,16 +265,18 @@ const updateItem = async (req, res) => {
         performedByName: req.user?.name || 'System User',
         timestamp: new Date()
       });
-      await log.save();
+      await log.save(); // Save log entry to database
+
     } catch (logError) {
       console.error('Failed to create log entry:', logError);
       // Don't fail the main operation if logging fails
     }
 
+    //update 18; Return success response with updated item data -->in frontend, inventoryApi.js receives this response
     res.json({
       success: true,
       message: 'Inventory item updated successfully',
-      data: updatedItem
+      data: updatedItem // Return the updated item data
     });
   } catch (error) {
     console.error('Update item error:', error);

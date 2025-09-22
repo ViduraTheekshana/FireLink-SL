@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { addItem, updateItem, getItemById, getCategories, getLocations, checkItemIdExists } from '../../api/inventoryApi';
 
+// This form is used for both adding new items and editing existing items
 const InventoryForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const isEditing = Boolean(id);
+  const isEditing = Boolean(id); // update 2 : True if editing an existing item
 
   // Form state
+  //Read 1.1 : User enters this data in the form
   const [formData, setFormData] = useState({
     item_ID: '',
     item_name: '',
@@ -36,7 +38,7 @@ const InventoryForm = () => {
 
   useEffect(() => {
     if (isEditing && id) {
-      loadItemData();
+      loadItemData();                  //update 3: Automatically load existing item data
       setItemIdExists(false); // Clear item ID validation when editing
     }
   }, [id, isEditing]);
@@ -59,11 +61,13 @@ const InventoryForm = () => {
   const loadItemData = async () => {
     try {
       setLoading(true);
-      const response = await getItemById(id);
+      const response = await getItemById(id);//update 4: Calls inventoryApi.js getItemById function which sends request to backend 
+                                            // (API makes HTTP GET request to /api/inventory/:id and waits for response)
       
-      if (response.success) {
-        const item = response.data;
-        setFormData({
+      // form processes the response and prefills
+      if (response.success) {// update 4A: If response is successful, populate form with existing item data
+        const item = response.data; //update 11 A: extract item data from response
+        setFormData({                 //update 11 B: prefill form fields
           item_ID: item.item_ID || '',
           item_name: item.item_name || '',
           category: item.category || '',
@@ -158,10 +162,11 @@ const InventoryForm = () => {
     return true;
   };
 
+  //2. When user clicks "Save", this function runs
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateForm()) { // Validate form before submitting
       return;
     }
 
@@ -169,6 +174,7 @@ const InventoryForm = () => {
       setSubmitting(true);
       setError(null);
 
+      //3. Convert strings to numbers for API
       const submitData = {
         ...formData,
         quantity: parseInt(formData.quantity),
@@ -176,19 +182,20 @@ const InventoryForm = () => {
         expire_date: formData.expire_date || null
       };
 
-      if (isEditing) {
-        await updateItem(id, submitData);
+      if (isEditing) { //update 12 : If editing, call update API and wait for response
+        await updateItem(id, submitData); 
       } else {
-        await addItem(submitData);
+        //4. Call the API to add a new item AND WAIT FOR RESPONSE //23. THIS LINE ALSO WAIT FOR BACKEND RESPONSE AND CATCHES IT BUT DOESN'T STORE IT
+        await addItem(submitData);//5. Redirect to inventory list --> look inventoryApi.js
       }
+      navigate('/inventory');//24. nOW FETCHES FRESH DATA FROM DATABASE
 
-      navigate('/inventory');
     } catch (err) {
       // Handle specific error messages for better user experience
       let errorMessage = 'Failed to save item';
       
-      if (err.response?.data?.message) {
-        const backendMessage = err.response.data.message;
+      if (err.response?.data?.message) {        //CATCHES ERRORS FROM BACKEND
+        const backendMessage = err.response.data.message; // Extract error message
         
         if (backendMessage.includes('Item ID already exists')) {
           errorMessage = '❌ Item ID already exists! Please choose a different Item ID.';
