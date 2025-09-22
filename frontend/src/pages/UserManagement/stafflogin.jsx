@@ -1,7 +1,7 @@
 // Components/StaffLogin.js
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { FaUserAlt, FaLock } from "react-icons/fa";
 
 const URL = "http://localhost:5000/users/stafflogin";
@@ -30,9 +30,7 @@ function StaffLogin() {
       if (data.status === "ok") {
         alert(`Login successful! Welcome ${data.user.name}`);
 
-        // For 1st class officer, redirect to their profile page
         if (data.user.position === "1stclass officer") {
-          // We need to get the user ID first
           try {
             const userRes = await axios.get(`http://localhost:5000/users/staff/${data.user.staffId}`);
             navigate(`/officer/${userRes.data.user._id}`);
@@ -42,7 +40,6 @@ function StaffLogin() {
             navigate("/firefighter-dashboard", { state: { user: data.user } });
           }
         } else {
-          // Redirect based on position/role for other positions
           switch (data.user.position) {
             case "fighter":
               navigate("/firefighter-dashboard", { state: { user: data.user } });
@@ -132,12 +129,20 @@ function StaffLogin() {
           </button>
         </form>
 
-        {/* Optional Footer */}
+        {/* Civilian & Supplier Links */}
         <div className="mt-6 text-center text-gray-500 text-sm">
-          Forgot your password?{" "}
-          <span className="text-[#C62828] cursor-pointer hover:underline">
-            Reset here
-          </span>
+          <Link
+            to="/civilian-login"
+            className="text-blue-500 hover:text-blue-700 underline mr-4"
+          >
+            Login as Civilian
+          </Link>
+          <Link
+            to="/supplier-login"
+            className="text-blue-500 hover:text-blue-700 underline"
+          >
+            Login as Supplier
+          </Link>
         </div>
       </div>
     </div>
