@@ -2,6 +2,7 @@ const Supplier = require("../models/Supplier");
 const catchAsyncErrors = require("./catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const jwt = require("jsonwebtoken");
+const { protect } = require("./authMiddleware");
 
 // Checks if user is authenticated or not
 exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
@@ -29,8 +30,34 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
 exports.isNotLoggedIn = catchAsyncErrors(async (req, res, next) => {
 	const { token } = req.cookies;
 
-	if (token) {
-		return next(new ErrorHandler("You have already logged in", 401));
+	try {
+		const decode = jwt.verify(token, process.env.JWT_SECRET);
+		req.supplier = await Supplier.findById(decode.id);
+
+		if (!req.supplier) {
+			res.cookie("token", null, {
+				expires: new Date(Date.now()),
+				httpOnly: true,
+			});
+			return next();
+		}
+
+		return next(new ErrorHandler("You have already logged in", 400));
+	} catch (e) {
+		res.cookie("token", null, {
+			expires: new Date(Date.now()),
+			httpOnly: true,
+		});
+		return next();
 	}
-	next();
+});
+
+exports.userOrSupplier = catchAsyncErrors(async (req, res, next) => {
+	if (req.headers.authorization?.startsWith("Bearer")) {
+		return protect(req, res, next);
+	} else if (req.cookies.token) {
+		return exports.isAuthenticatedUser(req, res, next);
+	} else {
+		return next(new ErrorHandler("Authenticated as user or supplier", 401));
+	}
 });

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useSupplierAuth } from "../../../context/supplierAuth";
+import { useAuth } from "../../../context/auth";
 import { useNavigate } from "react-router-dom";
 import "./supplier.css";
+import Loader from "../../../components/Loader";
 
 const SupplierLogin = () => {
 	const [formData, setFormData] = useState({
@@ -12,7 +14,8 @@ const SupplierLogin = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
-	const { login } = useSupplierAuth();
+	const { login, user: supplier, loading: authLoading } = useSupplierAuth();
+	const { user, loading: userLoading } = useAuth();
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -29,9 +32,8 @@ const SupplierLogin = () => {
 
 		try {
 			await login(formData.email, formData.password);
-			navigate("/supplier-dashboard", { replace: true });
+			navigate("/supplier/supply-requests", { replace: true });
 		} catch (exception) {
-			console.log(exception);
 			const apiMessage = exception?.response?.data?.message;
 			setError(apiMessage || "Supplier login failed");
 		} finally {
@@ -40,11 +42,23 @@ const SupplierLogin = () => {
 	};
 
 	useEffect(() => {
+		if (!userLoading && user) {
+			navigate("/dashboard", { replace: true });
+		}
+
+		if (!authLoading && supplier) {
+			navigate("/supplier/supply-requests", { replace: true });
+		}
+	}, [userLoading, authLoading]);
+
+	useEffect(() => {
 		if (error) {
 			toast.error(error);
 			setError("");
 		}
-	}, [error]);
+	}, [error, setError, toast]);
+
+	if (authLoading || userLoading) return <Loader />;
 
 	return (
 		<div className="supplier-login-container">
@@ -70,6 +84,7 @@ const SupplierLogin = () => {
 							value={formData.email}
 							onChange={handleChange}
 							disabled={loading}
+							required
 						/>
 						<label htmlFor="password">Enter your password</label>
 						<input
@@ -80,6 +95,7 @@ const SupplierLogin = () => {
 							value={formData.password}
 							onChange={handleChange}
 							disabled={loading}
+							required
 						/>
 						<button
 							type="submit"

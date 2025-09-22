@@ -1,9 +1,17 @@
 import React from "react";
 import { Search, Bell, Menu, User } from "lucide-react";
 import { useAuth } from "../context/auth";
+import { useSupplierAuth } from "../context/supplierAuth";
+import { useNavigate } from "react-router-dom";
 
 const SearchBox = ({ searchQuery, setSearchQuery }) => {
 	const { user } = useAuth();
+	const { user: supplier } = useSupplierAuth();
+	const navigate = useNavigate();
+
+	const handleClick = () => {
+		navigate("/supplier/profile");
+	};
 
 	return (
 		<header className="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between">
@@ -32,9 +40,11 @@ const SearchBox = ({ searchQuery, setSearchQuery }) => {
 					<Bell size={20} className="text-gray-600" />
 					<span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
 				</button>
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-3" onClick={() => handleClick()}>
 					<div className="hidden md:block text-right">
-						<div className="text-sm font-medium">{user.name}</div>
+						<div className="text-sm font-medium">
+							{user ? user.name : supplier.name}
+						</div>
 					</div>
 					<div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center">
 						<User size={16} className="text-gray-600" />

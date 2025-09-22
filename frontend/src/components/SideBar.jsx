@@ -1,15 +1,39 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Users, ClipboardList, LogOut, Flame } from "lucide-react";
+import {
+	Users,
+	ClipboardList,
+	LogOut,
+	Flame,
+	UserIcon,
+	FileTextIcon,
+	ClipboardCheckIcon,
+	ShoppingCartIcon,
+} from "lucide-react";
 import { useAuth } from "../context/auth";
+import { useSupplierAuth } from "../context/supplierAuth";
 import Loader from "./Loader";
 
 const Sidebar = () => {
-	const { hasRole, logout, loading } = useAuth();
+	const { hasRole, logout, loading, user } = useAuth();
+	const { user: supplier, logout: supplierLogout } = useSupplierAuth();
 	const location = useLocation();
+
+	const [isSupplier, setIsSupplier] = useState(false);
 
 	let menuItems = [];
 	let bottomMenuItems = [];
+
+	useEffect(() => {
+		if (supplier) {
+			setIsSupplier(true);
+		}
+	}, [supplier]);
+
+	const supplierLogoutHandler = (e) => {
+		e.preventDefault();
+		supplierLogout();
+	};
 
 	const logoutHandler = (e) => {
 		e.preventDefault();
@@ -27,6 +51,26 @@ const Sidebar = () => {
 				id: "supply-requests",
 				label: "Supply Requests",
 				icon: <ClipboardList size={20} />,
+			},
+		];
+	}
+
+	if (supplier) {
+		menuItems = [
+			{
+				id: "supplier/supply-requests",
+				label: "Supply Requests",
+				icon: <ShoppingCartIcon size={20} />,
+			},
+			{
+				id: "supplier/bids",
+				label: "My Bids",
+				icon: <ClipboardCheckIcon size={20} />,
+			},
+			{
+				id: "supplier/profile",
+				label: "Profile",
+				icon: <UserIcon size={20} />,
 			},
 		];
 	}
@@ -56,7 +100,7 @@ const Sidebar = () => {
 							key={item.id}
 							to={`/${item.id}`}
 							className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
-								location.pathname === `/${item.id}`
+								location.pathname.startsWith(`/${item.id}`)
 									? "bg-red-700 text-white"
 									: "text-gray-300 hover:bg-gray-800"
 							}`}
@@ -72,7 +116,13 @@ const Sidebar = () => {
 					<button
 						key={item.id}
 						className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-800"
-						onClick={item.id === "logout" ? logoutHandler : undefined}
+						onClick={
+							item.id === "logout" && !isSupplier
+								? logoutHandler
+								: isSupplier
+								? supplierLogoutHandler
+								: null
+						}
 					>
 						{item.icon}
 						<span>{item.label}</span>

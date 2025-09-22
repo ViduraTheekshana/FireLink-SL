@@ -14,7 +14,7 @@ const {
 	deleteBid,
 } = require("../controllers/supplyRequestController");
 
-const { isAuthenticatedUser } = require("../middlewares/auth");
+const { isAuthenticatedUser, userOrSupplier } = require("../middlewares/auth");
 const { protect } = require("../middlewares/authMiddleware");
 const { requireAnyRole } = require("../middlewares/roleMiddleware");
 
@@ -38,7 +38,12 @@ router
 		validate,
 		createSupplyRequest
 	)
-	.get(protect, validateGetAllSupplyRequests(), validate, getAllSupplyRequests);
+	.get(
+		userOrSupplier,
+		validateGetAllSupplyRequests(),
+		validate,
+		getAllSupplyRequests
+	);
 
 router
 	.route("/:id")

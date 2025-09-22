@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
+import { useSupplierAuth } from "../../context/supplierAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 const Login = () => {
 	const [formData, setFormData] = useState({
@@ -12,6 +12,7 @@ const Login = () => {
 	const [error, setError] = useState("");
 
 	const { login, user } = useAuth();
+	const { loading: supplierLoading, user: supplier } = useSupplierAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -21,7 +22,11 @@ const Login = () => {
 			const from = location.state?.from?.pathname || "/dashboard";
 			navigate(from, { replace: true });
 		}
-	}, [user, navigate, location]);
+
+		if (!supplierLoading && supplier) {
+			navigate("/supplier/supply-requests", { replace: true });
+		}
+	}, []);
 
 	const handleChange = (e) => {
 		setFormData({
@@ -170,7 +175,6 @@ const Login = () => {
 					</Link>
 				</div>
 
-				{/* Footer */}
 				<div className="text-center text-gray-300 text-sm">
 					<p>© 2024 Fire Department. All rights reserved.</p>
 				</div>

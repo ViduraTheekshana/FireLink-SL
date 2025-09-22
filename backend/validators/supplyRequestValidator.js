@@ -81,6 +81,10 @@ const validateGetAllSupplyRequests = () => {
 			.isIn(categoryEnum)
 			.withMessage("Invalid category"),
 		query("status").optional().isIn(statusEnum).withMessage("Invalid status"),
+		query("bids")
+			.optional()
+			.isBoolean()
+			.withMessage("Public must be a boolean"),
 	];
 };
 
@@ -91,6 +95,26 @@ const validateAddBid = () => {
 			.isNumeric({ min: 0 })
 			.withMessage("Offer price must be a non-negative number"),
 		body("notes").optional().isString(),
+		body("deliveryDate")
+			.notEmpty()
+			.withMessage("Estimated delivery date is required")
+			.matches(/^\d{4}-\d{2}-\d{2}$/) // Strict YYYY-MM-DD format
+			.withMessage("Delivery date must be in YYYY-MM-DD format")
+			.custom((value) => {
+				const date = new Date(value);
+				if (isNaN(date.getTime())) {
+					throw new Error("Invalid date");
+				}
+
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+
+				if (date < today) {
+					throw new Error("Delivery date cannot be in the past");
+				}
+
+				return true;
+			}),
 	];
 };
 
@@ -102,6 +126,26 @@ const validateUpdateBid = () => {
 			.isNumeric({ min: 0 })
 			.withMessage("Offer price must be a non-negative number"),
 		body("notes").optional().isString(),
+		body("deliveryDate")
+			.notEmpty()
+			.withMessage("Estimated delivery date is required")
+			.matches(/^\d{4}-\d{2}-\d{2}$/)
+			.withMessage("Delivery date must be in YYYY-MM-DD format")
+			.custom((value) => {
+				const date = new Date(value);
+				if (isNaN(date.getTime())) {
+					throw new Error("Invalid date");
+				}
+
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+
+				if (date < today) {
+					throw new Error("Delivery date cannot be in the past");
+				}
+
+				return true;
+			}),
 	];
 };
 
