@@ -127,11 +127,14 @@ function StaffLogin() {
               to="/supplier-login"
               className="text-blue-500 hover:text-blue-700 underline"
             >
+
+
+            
               Login as a Supplier
             </Link>
           </p>
         </div>
-        
+
       </div>
     </div>
   );
