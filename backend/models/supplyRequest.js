@@ -85,6 +85,10 @@ const supplyRequestSchema = new Schema(
 					type: Date,
 					default: Date.now,
 				},
+				deliveryDate: {
+					type: Date,
+					required: [true, "Please specify a delivery date"],
+				},
 			},
 		],
 	},

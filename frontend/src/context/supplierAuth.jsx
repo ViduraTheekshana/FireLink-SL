@@ -23,7 +23,7 @@ export const SupplierAuthProvider = ({ children }) => {
 			try {
 				const res = await api.get("/api/v1/supplier/profile");
 				if (res.data.success) {
-					setUser(res.data.supplier);
+					setUser(res.data.data);
 				}
 			} catch (err) {
 				setUser(null);

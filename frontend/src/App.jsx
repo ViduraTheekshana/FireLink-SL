@@ -38,6 +38,8 @@ import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
 import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForSupplier";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
+import Bids from "./pages/SupplyManagement/Bids";
+import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 
 // Main App component
 function AppContent() {
@@ -314,6 +316,30 @@ function AppContent() {
 							}
 						/>
 
+						<Route
+							path="/supplier/bids"
+							element={
+								<ProtectedSupplierRoute>
+									<Bids />
+								</ProtectedSupplierRoute>
+							}
+						/>
+						<Route
+							path="/supplier/bids/new/:requestId?"
+							element={
+								<ProtectedSupplierRoute>
+									<Bids />
+								</ProtectedSupplierRoute>
+							}
+						/>
+						<Route
+							path="/supplier/profile"
+							element={
+								<ProtectedSupplierRoute>
+									<SupplierProfile />
+								</ProtectedSupplierRoute>
+							}
+						/>
 						<Route path="/supplier-login" element={<SupplierLogin />} />
 
 						{/* Catch all route - must be last */}

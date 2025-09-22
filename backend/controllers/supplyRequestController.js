@@ -40,6 +40,9 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 	if (req.query.status) {
 		query.status = req.query.status;
 	}
+	if (req.query.bids) {
+		query.bids = { $elemMatch: { supplier: req.supplier._id } };
+	}
 
 	// Made only supply_manager can see every request other insiders can see only requests made by them
 	// suppliers only can see public requests
@@ -55,8 +58,24 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 	}
 
 	const supplyRequests = await SupplyRequest.find(query)
-		// .populate("createdBy", "name email")
-		.sort({ createdAt: -1 });
+		.sort({
+			createdAt: -1,
+		})
+		.lean();
+
+	if (req.supplier) {
+		supplyRequests.forEach((request) => {
+			request.isBidden = request.bids.some(
+				(bid) => bid.supplier.toString() === req.supplier._id.toString()
+			);
+
+			request.bid = request.bids.find(
+				(bid) => bid.supplier.toString() === req.supplier._id.toString()
+			);
+
+			delete request.bids;
+		});
+	}
 
 	res.status(200).json({
 		success: true,
@@ -65,11 +84,16 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 	});
 });
 
-const getSupplyRequestById = catchAsyncErrors(async (req, res) => {
+const getSupplyRequestById = catchAsyncErrors(async (req, res, next) => {
 	const supplyRequest = await SupplyRequest.findOne({
 		_id: req.params.id,
 		public: true,
-	});
+	}).lean();
+
+	supplyRequest.bid = supplyRequest.bids.find(
+		(bid) => bid.supplier.toString() === req.supplier._id.toString()
+	);
+	delete supplyRequest.bids;
 
 	if (!supplyRequest) {
 		return next(new ErrorHandler("Supply Request Not Found! ", 404));
@@ -81,7 +105,7 @@ const getSupplyRequestById = catchAsyncErrors(async (req, res) => {
 	});
 });
 
-const getSupplyRequestByIdByAdmin = catchAsyncErrors(async (req, res) => {
+const getSupplyRequestByIdByAdmin = catchAsyncErrors(async (req, res, next) => {
 	const supplyRequest = await SupplyRequest.findById(req.params.id)
 		.populate("createdBy", "name email")
 		.populate("assignedSupplier", "name email phone")
@@ -101,7 +125,7 @@ const getSupplyRequestByIdByAdmin = catchAsyncErrors(async (req, res) => {
 	});
 });
 
-const updateSupplyRequest = catchAsyncErrors(async (req, res) => {
+const updateSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 	const {
 		title,
 		description,
@@ -198,8 +222,8 @@ const deleteSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 	});
 });
 
-const addBidToRequest = catchAsyncErrors(async (req, res) => {
-	const { offerPrice, notes } = req.body;
+const addBidToRequest = catchAsyncErrors(async (req, res, next) => {
+	const { offerPrice, notes, deliveryDate } = req.body;
 	const supplyRequest = await SupplyRequest.findById(req.params.id);
 
 	if (!supplyRequest) {
@@ -211,7 +235,7 @@ const addBidToRequest = catchAsyncErrors(async (req, res) => {
 	}
 
 	if (new Date() > new Date(supplyRequest.applicationDeadline)) {
-		return next(new ErrorHandler("The application deadline has passed", 400));
+		return next(new ErrorHandler("The bidding deadline has passed", 400));
 	}
 
 	if (supplyRequest.bids.some((bid) => bid.supplier === req.supplier._id)) {
@@ -221,19 +245,28 @@ const addBidToRequest = catchAsyncErrors(async (req, res) => {
 		});
 	}
 
+	const deliveryDateObject = new Date(deliveryDate);
+
 	const newBid = {
 		supplier: req.supplier._id,
 		offerPrice,
 		notes,
+		deliveryDate: deliveryDateObject,
 	};
 
 	supplyRequest.bids.push(newBid);
 	await supplyRequest.save();
 
+	const responseData = supplyRequest.toObject();
+	responseData.bid = supplyRequest.bids.find(
+		(bid) => bid.supplier.toString() === req.supplier._id.toString()
+	);
+	delete responseData.bids;
+
 	res.status(201).json({ success: true, data: supplyRequest });
 });
 
-const assignSupplierToRequest = catchAsyncErrors(async (req, res) => {
+const assignSupplierToRequest = catchAsyncErrors(async (req, res, next) => {
 	const { supplierId } = req.body;
 	let supplyRequest = await SupplyRequest.findById(req.params.id);
 
@@ -267,7 +300,7 @@ const assignSupplierToRequest = catchAsyncErrors(async (req, res) => {
 });
 
 const updateBid = catchAsyncErrors(async (req, res, next) => {
-	const { offerPrice, notes } = req.body;
+	const { offerPrice, notes, deliveryDate } = req.body;
 	const supplyRequest = await SupplyRequest.findById(req.params.id);
 
 	if (!supplyRequest) {
@@ -282,23 +315,28 @@ const updateBid = catchAsyncErrors(async (req, res, next) => {
 	}
 
 	const bidIndex = supplyRequest.bids.findIndex(
-		(bid) => bid.supplier === req.supplier._id
+		(bid) => bid.supplier.toString() === req.supplier._id.toString()
 	);
 
 	if (bidIndex === -1) {
 		return next(
-			new ErrorHandler("You have not placed a bid on this request", 404)
+			new ErrorHandler("You have not placed a bid on this request", 400)
 		);
 	}
 
 	supplyRequest.bids[bidIndex].offerPrice = offerPrice;
 	supplyRequest.bids[bidIndex].notes = notes;
+	supplyRequest.bids[bidIndex].deliveryDate = deliveryDate;
 
 	await supplyRequest.save();
 
+	const responseData = supplyRequest.toObject();
+	responseData.bid = supplyRequest.bids[bidIndex];
+	delete responseData.bids;
+
 	res.status(200).json({
 		success: true,
-		data: supplyRequest.bids[bidIndex],
+		data: responseData,
 	});
 });
 
@@ -317,16 +355,20 @@ const deleteBid = catchAsyncErrors(async (req, res, next) => {
 	}
 
 	const bid = supplyRequest.bids.find(
-		(bid) => bid.supplier === req.supplier._id
+		(bid) => bid.supplier.toString() === req.supplier._id.toString()
 	);
 
 	if (!bid) {
 		return next(
-			new ErrorHandler("You have not placed a bid on this request", 404)
+			new ErrorHandler("You have not placed a bid on this request", 400)
 		);
 	}
 
-	await supplyRequest.save();
+	await SupplyRequest.findByIdAndUpdate(
+		req.params.id,
+		{ $pull: { bids: { _id: bid._id } } },
+		{ new: true }
+	);
 
 	res.status(200).json({
 		success: true,
