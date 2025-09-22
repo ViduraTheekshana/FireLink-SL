@@ -7,6 +7,7 @@ const User = require("../../models/UserManagement/UserReg");
 // Create a new session
 router.post("/", sessionController.createSession);
 
+
 // Get all sessions
 router.get("/", sessionController.getSessions);
 
