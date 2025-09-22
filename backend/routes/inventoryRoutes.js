@@ -28,16 +28,18 @@ const { validateInventoryItem } = require("../validators/inventoryValidator");
 // @route   POST /api/inventory
 // @desc    Create new inventory item
 // @access  Private - Inventory Manager, Admin, CFO
+
+// 7.Route definition with middleware chain:
 router.post(
 	"/",
-	protect,
-	requireAnyPermission([
+	protect,						//8.verify JWT token
+	requireAnyPermission([			//9.Check user permissions
 		"inventory_management",
 		"procurement_requests",
 		"all_access",
 	]),
-	validateInventoryItem,
-	createItem
+	validateInventoryItem,		//10.validate input data
+	createItem			        //11.execute controller function to create item	--> LOOK inventoryController.js
 );
 
 // @route   GET /api/inventory
@@ -45,14 +47,14 @@ router.post(
 // @access  Private - Anyone with inventory access
 router.get(
 	"/",
-	protect,
-	requireAnyPermission([
+	protect,	//verify JWT token
+	requireAnyPermission([	//Check user permissions
 		"equipment_tracking",
 		"supply_management",
 		"inventory_management",
 		"all_access",
 	]),
-	getItems
+	getItems //execute controller function to get items --> LOOK inventoryController.js
 );
 
 // @route   GET /api/inventory/check-id/:itemId
@@ -83,7 +85,7 @@ router.get(
 // @route   GET /api/inventory/:id
 // @desc    Get single inventory item by ID
 // @access  Private - Anyone with inventory access
-router.get(
+router.get(//update 6: route processes GET request
 	"/:id",
 	protect,
 	requireAnyPermission([
@@ -92,22 +94,22 @@ router.get(
 		"inventory_management",
 		"all_access",
 	]),
-	getItemById
+	getItemById // update 7: Calls inventoryController.js getItemById function which fetches item data from database
 );
 
 // @route   PUT /api/inventory/:id
 // @desc    Update inventory item
 // @access  Private - Inventory Manager, Admin
 router.put(
-	"/:id",
-	protect,
-	requireAnyPermission([
+	"/:id",						//update 15: route processes PUT request to update item by ID
+	protect,			//verify JWT token	
+	requireAnyPermission([					//Check user permissions
 		"inventory_management",
 		"equipment_tracking",
 		"all_access",
 	]),
-	validateInventoryItem,
-	updateItem
+	validateInventoryItem,		//validate input data
+	updateItem		        //execute controller function to update item --> LOOK inventoryController.js
 );
 
 // @route   DELETE /api/inventory/:id
