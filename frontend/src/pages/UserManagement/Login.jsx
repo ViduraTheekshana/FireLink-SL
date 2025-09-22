@@ -14,7 +14,7 @@ const Login = () => {
 	const { login, user } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
-	
+
 
 	// Redirect if already logged in
 	useEffect(() => {
@@ -87,6 +87,7 @@ const Login = () => {
 								</div>
 							</div>
 						)}
+
 
 						{/* Email Field */}
 						<div>
