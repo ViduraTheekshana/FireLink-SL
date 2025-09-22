@@ -4,7 +4,9 @@ import AddFireStaff from "./pages/UserManagement/AddUsers";
 import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
 import UserDetails from "./pages/UserManagement/StaffDetails";
-
+import CivilianLogin from "./pages/CivilianManagement/CivilianLogin";
+import CivilianDashboard from "./pages/CivilianManagement/CivilianDashboard"; 
+import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 
 function App() {
   return (
@@ -18,6 +20,9 @@ function App() {
         <Route path="/userdetails" element={<UserDetails />} />
         <Route path="/userdetails/:id" element={<UserDetails />} />
 
+          <Route path="/civilian-login" element={<CivilianLogin/>} /> 
+         <Route path="/supplier-login" element={<SupplierLogin />} /> 
+           <Route path="/civilian-dashboard" element={<CivilianDashboard />} /> 
 
       
       </Routes>

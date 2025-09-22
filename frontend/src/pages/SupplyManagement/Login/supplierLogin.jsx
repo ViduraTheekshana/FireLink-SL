@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useSupplierAuth } from "../../../context/supplierAuth";
+//import { useSupplierAuth } from "../../../context/supplierAuth";
 import { useNavigate } from "react-router-dom";
 import "./supplier.css";
 

@@ -29,9 +29,11 @@ require("./models/UserManagement/UserReg.js");    // User schema
 const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
+const civilianRoutes = require("./routes/UserManagement/civilianRoutes.js");
 
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
+app.use("/civilians", civilianRoutes);
 
 console.log("DB_URI from env:", process.env.DB_URI);
 
