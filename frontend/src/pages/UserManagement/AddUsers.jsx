@@ -179,6 +179,7 @@ function AddFireStaff() {
               required
             />
           </div>
+          
 
           {/* Password */}
           <div className="relative">

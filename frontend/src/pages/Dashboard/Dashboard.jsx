@@ -1,19 +1,26 @@
 // Components/DynamicDashboard.js
-import React from "react";
-import { useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import StaffManagementTable from "../UserManagement/StaffManagementTable";
 
 const DynamicDashboard = () => {
   const location = useLocation();
-  const user = location.state?.user;
+  const navigate = useNavigate();
+
+  // ✅ Get user from state or localStorage
+  const user =
+    location.state?.user || JSON.parse(localStorage.getItem("user"));
+
+  useEffect(() => {
+    if (!user) {
+      // Redirect to login if no user found
+      navigate("/staff-login");
+    }
+  }, [user, navigate]);
 
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-lg text-red-500">No user data found. Please login again.</p>
-      </div>
-    );
+    return null; // or a loader
   }
 
   // Render based on position
@@ -89,7 +96,9 @@ const DynamicDashboard = () => {
       return (
         <div className="p-6">
           <h1 className="text-3xl font-bold mb-4">Staff Dashboard</h1>
-          <p>Welcome {user.name}, here is your general dashboard.</p>
+          <p>
+            Welcome {user.name || "Staff Member"}, here is your general dashboard.
+          </p>
         </div>
       );
   }

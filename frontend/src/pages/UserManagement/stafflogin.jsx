@@ -27,52 +27,14 @@ function StaffLogin() {
       const res = await axios.post(URL, formData);
       const data = res.data;
 
-      if (data.status === "ok") {
-        alert(`Login successful! Welcome ${data.user.name}`);
+      // Inside StaffLogin.js -> handleSubmit
+    if (data.status === "ok") {
 
-        // For 1st class officer, redirect to their profile page
-        if (data.user.position === "1stclass officer") {
-          // We need to get the user ID first
-          try {
-            const userRes = await axios.get(`http://localhost:5000/users/staff/${data.user.staffId}`);
-            navigate(`/officer/${userRes.data.user._id}`);
-          } catch (err) {
-            console.error("Error fetching user details:", err);
-            alert("Login successful but could not load profile. Redirecting to dashboard.");
-            navigate("/firefighter-dashboard", { state: { user: data.user } });
-          }
-        } else {
-          // Redirect based on position/role for other positions
-          switch (data.user.position) {
-            case "fighter":
-              navigate("/firefighter-dashboard", { state: { user: data.user } });
-              break;
-            case "finanaceManager":
-              navigate("/finance-dashboard", { state: { user: data.user } });
-              break;
-            case "inventoryManager":
-              navigate("/inventory-dashboard", { state: { user: data.user } });
-              break;
-            case "recordmanager":
-              navigate("/record-dashboard", { state: { user: data.user } });
-              break;
-            case "preventionManager":
-              navigate("/prevention-dashboard", { state: { user: data.user } });
-              break;
-            case "trainingsessionmanager":
-              navigate("/training-dashboard", { state: { user: data.user } });
-              break;
-            case "suplliermanager":
-              navigate("/supplier-dashboard", { state: { user: data.user } });
-              break;
-            case "teamcaptain":
-              navigate("/team-dashboard", { state: { user: data.user } });
-              break;
-            default:
-              navigate("/staff-dashboard", { state: { user: data.user } });
-          }
-        }
-      } else {
+             localStorage.setItem("user", JSON.stringify(data.user)); 
+  alert(`Login successful! Welcome ${data.user.name}`);
+  navigate("/dashboard", { state: { user: data.user } });
+    }
+    else {
         alert("Login failed: " + (data.err || "Invalid credentials"));
       }
     } catch (err) {
@@ -132,21 +94,12 @@ function StaffLogin() {
           </button>
         </form>
 
-        {/* Civilian & Supplier Links */}
+        {/* Optional Footer */}
         <div className="mt-6 text-center text-gray-500 text-sm">
-          <Link
-            to="/civilian-login"
-            className="text-blue-500 hover:text-blue-700 underline mr-4"
-          >
-            Login as Civilian
-            
-          </Link>
-          <Link
-            to="/supplier-login"
-            className="text-blue-500 hover:text-blue-700 underline"
-          >
-            Login as Supplier
-          </Link>
+          Forgot your password?{" "}
+          <span className="text-[#C62828] cursor-pointer hover:underline">
+            Reset here
+          </span>
         </div>
 
         {/* Links to Supplier & Civilian Login */}
@@ -172,6 +125,5 @@ function StaffLogin() {
     </div>
   );
 }
-
 
 export default StaffLogin;
