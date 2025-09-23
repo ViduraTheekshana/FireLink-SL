@@ -51,7 +51,9 @@ mongoose
   // User Registration endpoint
 app.use("/users", userRouter);
 
-// Staff login endpoint
+// covi login endpoint
+const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
+app.use("/api/v1/civilian-auth", civilianAuthRoutes);
 
 
 // Request logging middleware
