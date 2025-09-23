@@ -3,7 +3,7 @@ import { FaUser, FaPhone, FaBirthdayCake, FaEnvelope, FaBriefcase, FaFlag, FaMap
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const URL = "http://localhost:5000/UserReg";
+const URL = "http://localhost:5000/users";
 
 function AddFireStaff() {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ function AddFireStaff() {
     try {
       const res = await axios.post(URL, formData);
       if (res.data.status === "ok") {
-        alert("Staff added successfully!");
+      alert(`Staff added successfully! Staff ID: ${res.data.staffId}`);
         setFormData({
           name: "",
           phone: "",
@@ -180,6 +180,7 @@ function AddFireStaff() {
             />
           </div>
 
+
           {/* Password */}
           <div className="relative">
             <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -208,4 +209,4 @@ function AddFireStaff() {
   );
 }
 
-export default AddFireStaff;
+export default AddFireStaff;
