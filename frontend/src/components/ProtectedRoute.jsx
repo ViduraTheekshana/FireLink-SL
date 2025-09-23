@@ -1,18 +1,19 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
-import Loader from "./Loader";
 
-const ProtectedRoute = ({ children }) => {
-	const { isAuthenticated, loading } = useAuth();
+// props: children, allowedRoles
+const ProtectedRoute = ({ children, allowedRoles, user }) => {
+  if (!user) {
+    // Not logged in
+    return <Navigate to="/staff-login" replace />;
+  }
 
-	if (loading) return <Loader />;
+  if (allowedRoles && !allowedRoles.includes(user.position)) {
+    // Logged in but role not allowed
+    return <Navigate to="/staff-login" replace />;
+  }
 
-	if (!isAuthenticated) {
-		return <Navigate to="/login" replace />;
-	}
-
-	return children;
+  return children;
 };
 
 export default ProtectedRoute;
