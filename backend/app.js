@@ -38,7 +38,6 @@ const userManagement = require("./routes/userManagementRoutes");
 const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); // <-- added
 
 // mount routes
-app.use("/api/v1/auth", auth);
 app.use("/api/v1/civilian-auth", civilianAuth);
 app.use("/api/v1/missions", mission);
 app.use("/api/v1/users", userManagement);
@@ -55,9 +54,7 @@ app.use(
 app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
 
 app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
-app.use("/api/v1/shifts", require("./routes/shiftRoutes"));
-app.use("/api/v1/trainings", require("./routes/trainingRoutes"));
-app.use("/api/v1/vehicles", require("./routes/vehicleRoutes"));
+
 app.use(
 	"/api/v1/shift-change-requests",
 	require("./routes/shiftChangeRequestRoutes")
@@ -71,5 +68,36 @@ app.use("/api/prevention/certificates", preventionCertificateRoutes);
 
 // Middleware to handle errors
 app.use(errorMiddleware);
+
+
+
+// User Registration endpoint
+app.use("/users", userRouter);
+
+// covi login endpoint
+const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
+app.use("/api/v1/civilian-auth", civilianAuthRoutes);
+
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// Register schemas BEFORE routes
+require("./models/UserManagement/Attendance.js"); // Attendance schema
+require("./models/UserManagement/UserReg.js");    // User schema
+
+// Routes
+const userRouter = require("./routes/UserManagement/UserRoute.js");
+const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
+const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
+
+app.use("/sessions", sessionRouter);
+app.use("/attendance", attendanceRouter);
+
+
+
 
 module.exports = app;
