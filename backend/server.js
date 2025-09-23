@@ -10,8 +10,6 @@ process.on("uncaughtException", (err) => {
 	process.exit(1);
 });
 
-// setting up config file
-dotenv.config({ path: "backend/config/config.env" });
 
 // Check if required environment variables are set
 if (!process.env.PORT) {
