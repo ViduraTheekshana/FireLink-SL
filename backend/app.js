@@ -68,6 +68,7 @@ const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 
+
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
 
