@@ -216,6 +216,7 @@ const App = () => {
         {/* Catch all route */}
         <Route
           path="*"
+          
           element={
             user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
           }
