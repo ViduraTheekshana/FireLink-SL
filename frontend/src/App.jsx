@@ -72,97 +72,73 @@ const App = () => {
         <Route
           path="/inventory"
           element={
-            <ProtectedRoute user={user}>
               <InventoryList />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/add"
           element={
-            <ProtectedRoute user={user}>
               <InventoryForm />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/vehicles"
           element={
-            <ProtectedRoute user={user}>
               <VehicleList />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/vehicles/add"
           element={
-            <ProtectedRoute user={user}>
               <VehicleForm />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/vehicles/:id"
           element={
-            <ProtectedRoute user={user}>
               <VehicleDetail />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/edit/:id"
           element={
-            <ProtectedRoute user={user}>
               <InventoryForm />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/vehicle-items"
           element={
-            <ProtectedRoute user={user}>
               <VehicleItemsPage />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/:id/reorder"
           element={
-            <ProtectedRoute user={user}>
               <ReorderPage />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/reorders"
           element={
-            <ProtectedRoute user={user}>
               <ReordersList />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/reorders/list"
           element={
-            <ProtectedRoute user={user}>
               <ReordersList />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/logs"
           element={
-            <ProtectedRoute user={user}>
               <InventoryLogs />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/inventory/:id"
           element={
-            <ProtectedRoute user={user}>
               <InventoryDetail />
-            </ProtectedRoute>
           }
         />
 
@@ -170,41 +146,31 @@ const App = () => {
         <Route
           path="/shifts"
           element={
-            <ProtectedRoute user={user}>
               <ShiftDashboard />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/shifts/create"
           element={
-            <ProtectedRoute user={user}>
               <CreateShift />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/shifts/my-shifts"
           element={
-            <ProtectedRoute user={user}>
               <MyShifts />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/shifts/change-requests"
           element={
-            <ProtectedRoute user={user}>
               <ChangeRequests />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/shifts/messages"
           element={
-            <ProtectedRoute user={user}>
               <Messages />
-            </ProtectedRoute>
           }
         />
 
@@ -212,49 +178,37 @@ const App = () => {
         <Route
           path="/suppliers"
           element={
-            <ProtectedRoute user={user}>
               <SupplierManagement />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/supply-requests"
           element={
-            <ProtectedRoute user={user}>
               <SupplyRequests />
-            </ProtectedRoute>
           }
         />
         <Route
           path="/supplier/supply-requests"
           element={
-            <ProtectedSupplierRoute user={supplier}>
               <SupplyRequestForSupplier />
-            </ProtectedSupplierRoute>
           }
         />
         <Route
           path="/supplier/bids"
           element={
-            <ProtectedSupplierRoute user={supplier}>
               <Bids />
-            </ProtectedSupplierRoute>
           }
         />
         <Route
           path="/supplier/bids/new/:requestId?"
           element={
-            <ProtectedSupplierRoute user={supplier}>
               <Bids />
-            </ProtectedSupplierRoute>
           }
         />
         <Route
           path="/supplier/profile"
           element={
-            <ProtectedSupplierRoute user={supplier}>
               <SupplierProfile />
-            </ProtectedSupplierRoute>
           }
         />
 
