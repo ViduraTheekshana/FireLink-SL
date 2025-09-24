@@ -9,7 +9,6 @@ import AddFireStaff from "./pages/UserManagement/AddUsers";
 import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
 import UserDetails from "./pages/UserManagement/StaffDetails";
 
-
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import InventoryList from "./pages/Inventory/InventoryList";
 import InventoryForm from "./pages/Inventory/InventoryForm";
@@ -52,10 +51,14 @@ const App = () => {
         <Route path="/firstaff" element={<AddFireStaff />} />
         <Route path="/officer/:id" element={<OfficerProfile />} />
         <Route path="/userdetails" element={<UserDetails />} />
-        <Route path="/dashboard" element={<DynamicDashboard />} />
-
+        
         {/* Protected user routes */}
-       
+        <Route
+          path="/dashboard"
+          element={
+              <DynamicDashboard />
+          }
+        />
         <Route
           path="/mission-records"
           element={
@@ -259,7 +262,7 @@ const App = () => {
         <Route
           path="*"
           element={
-            user ? <Navigate to="/staff-login" replace /> : <Navigate to="/" replace />
+            user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
           }
         />
       </Routes>

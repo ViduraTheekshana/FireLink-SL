@@ -22,6 +22,7 @@ const auth = (req, res, next) => {
 
 module.exports = auth;
 
+
 exports.protect = async (req, res, next) => {
   let token;
 

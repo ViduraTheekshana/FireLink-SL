@@ -9,7 +9,8 @@ const {
   deleteMission,
   getMissionStats
 } = require('../controllers/missionControllers');
-const { protect } = require('../middlewares/authMiddleware');
+const authModule = require('../middlewares/authMiddleware');
+const protect = authModule.protect || authModule;
 
 // Validation middleware
 const validateMission = [
@@ -160,4 +161,4 @@ router.put('/:id', protect, validateId, validateMissionUpdate, updateMission);
 // @access  Private
 router.delete('/:id', protect, validateId, deleteMission);
 
-module.exports = router;
+module.exports = router;

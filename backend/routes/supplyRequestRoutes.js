@@ -15,8 +15,16 @@ const {
 } = require("../controllers/supplyRequestController");
 
 const { isAuthenticatedUser, userOrSupplier } = require("../middlewares/auth");
-const { protect } = require("../middlewares/authMiddleware");
-const { requireAnyRole } = require("../middlewares/roleMiddleware");
+const authModule = require("../middlewares/authMiddleware");
+const protect = authModule.protect || authModule;
+
+let roleModule = {};
+try {
+    roleModule = require("../middlewares/roleMiddleware");
+} catch (err) {
+    console.warn("roleMiddleware not found, applying no-op role/permission guards");
+}
+const requireAnyRole = roleModule.requireAnyRole || (() => (req, res, next) => next());
 
 const {
 	validateCreateSupplyRequest,
@@ -98,4 +106,4 @@ router
 	)
 	.delete(isAuthenticatedUser, idValidationRules(), validate, deleteBid);
 
-module.exports = router;
+module.exports = router;

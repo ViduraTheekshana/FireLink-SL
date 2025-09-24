@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
-//const errorMiddleware = require("./middlewares/errors");
+const errorMiddleware = require("./middlewares/errors");
 
 // setting up config file
 dotenv.config({ path: "config/config.env" });
@@ -31,42 +31,33 @@ app.use((req, res, next) => {
 });
 
 // import all routes
-//const mission = require("./routes/missionRoutes");
-//const userManagement = require("./routes/userManagementRoutes");
-//const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); // <-- added
+const mission = require("./routes/missionRoutes");
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
 
 // mount routes
-//app.use("/api/v1/missions", mission);
+app.use("/api/v1/missions", mission);
 
-//app.use("/api/inventory", require("./routes/inventoryRoutes"));
+app.use("/api/inventory", require("./routes/inventoryRoutes"));
 
-//app.use("/api/inventory-reorders", require("./routes/inventoryReorderRoutes"));
+app.use("/api/inventory-reorders", require("./routes/inventoryReorderRoutes"));
 
-/*app.use(
+app.use(
 	"/api/inventory-vehicle-items",
 	require("./routes/inventoryVehicleItemsRoutes")
 );
-*/
-//app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
 
-//app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
-//app.use("/api/v1/shifts", require("./routes/shiftRoutes"));
-//app.use("/api/v1/trainings", require("./routes/trainingRoutes"));
-//app.use("/api/v1/vehicles", require("./routes/vehicleRoutes"));
-/*app.use(
-	"/api/v1/shift-change-requests",
-	require("./routes/shiftChangeRequestRoutes")
-);
+app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
+
+app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
+
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
 app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
-app.use("/api/v1/messages", require("./routes/messageRoutes"));
 
 // Prevention certificate route
 app.use("/api/prevention/certificates", preventionCertificateRoutes);
 
 // Middleware to handle errors
 app.use(errorMiddleware);
-*/
 
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
@@ -103,12 +94,7 @@ const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.j
 app.use("/api/v1/civilian-auth", civilianAuthRoutes);
 
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
 
 
 
-module.exports = app;
+module.exports = app;
