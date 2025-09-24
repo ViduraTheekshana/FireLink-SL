@@ -14,11 +14,11 @@ const OfficerProfile = () => {
     const fetchOfficerData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:500/users/${id}`);
+        const response = await axios.get(`http://localhost:5000/users/${id}`);
         setOfficer(response.data.user);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch officer data');
+        setError('Failed to fetch officer data'+err.message);
         setLoading(false);
         console.error(err);
       }

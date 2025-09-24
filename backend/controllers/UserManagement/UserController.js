@@ -19,12 +19,13 @@ const addUsers = async (req, res, next) => {
     const count = await User.countDocuments({ position });
     const staffId = `${prefix}${Date.now().toString().slice(-5)}`; // unique
 
+
     const users = new User({
       name,
       gmail,
       age,
       phone,
-      position,
+      position ,
       status,
       password: hashedPassword,
       address,

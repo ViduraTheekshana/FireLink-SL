@@ -39,7 +39,7 @@ function StaffLogin() {
       }
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      alert("Server error"+err);
     }
 
     setLoading(false);

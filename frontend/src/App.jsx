@@ -5,6 +5,10 @@ import LoginFireStaff from "./pages/UserManagement/StaffLogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 import DynamicDashboard from "./pages/Dashboard/Dashboard";
+import AddFireStaff from "./pages/UserManagement/AddUsers";
+import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
+import UserDetails from "./pages/UserManagement/StaffDetails";
+
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -45,16 +49,13 @@ const App = () => {
         <Route path="/staff-login" element={<LoginFireStaff />} />
         <Route path="/civilian-login" element={<CivilianLogin />} />
         <Route path="/supplier-login" element={<SupplierLogin />} />
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/officer/:id" element={<OfficerProfile />} />
+        <Route path="/userdetails" element={<UserDetails />} />
+        <Route path="/dashboard" element={<DynamicDashboard />} />
 
         {/* Protected user routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute user={user}>
-              <DynamicDashboard />
-            </ProtectedRoute>
-          }
-        />
+       
         <Route
           path="/mission-records"
           element={
@@ -258,7 +259,7 @@ const App = () => {
         <Route
           path="*"
           element={
-            user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
+            user ? <Navigate to="/staff-login" replace /> : <Navigate to="/" replace />
           }
         />
       </Routes>

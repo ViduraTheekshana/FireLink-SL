@@ -24,7 +24,7 @@ const StaffManagementTable = () => {
         setFilteredStaff(filteredStaff); // ✅ initialize filtered list
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch staff data");
+        setError("Failed to fetch staff data"+err.message);
         setLoading(false);
         console.error(err);
       }
