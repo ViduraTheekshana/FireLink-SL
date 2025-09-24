@@ -212,6 +212,7 @@ const App = () => {
           }
         />
 
+
         {/* Catch all route */}
         <Route
           path="*"
