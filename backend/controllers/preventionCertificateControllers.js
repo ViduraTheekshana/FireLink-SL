@@ -1,4 +1,4 @@
-const PreventionCertificate = require("../models/PreventionCertificate");
+const PreventionCertificate = require("../models/preventionCertificate");
 
 // Civilian applies for a certificate
 exports.applyCertificate = async (req, res) => {
