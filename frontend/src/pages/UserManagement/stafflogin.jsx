@@ -120,6 +120,14 @@ function StaffLogin() {
               Civilian Login
             </Link>
           </p>
+          <p>
+            <Link
+              to="/prevention-certificate"
+              className="text-orange-600 hover:underline"
+            >
+              Certificate Login
+            </Link>
+          </p>
         </div>
       </div>
     </div>
