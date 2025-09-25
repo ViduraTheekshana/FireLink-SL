@@ -63,6 +63,13 @@ function AppContent() {
 								)
 							}
 						/>
+
+						{/* Prevention Certificate Form Route */}
+						<Route
+							path="/prevention-certificate"
+							element={<PreventionCertificateForm />}
+						/>
+
 						{/* Protected routes */}
 						<Route
 							path="/dashboard"
