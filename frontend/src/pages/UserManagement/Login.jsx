@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 const Login = () => {
 	const [formData, setFormData] = useState({
@@ -14,6 +14,7 @@ const Login = () => {
 	const { login, user } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+
 
 	// Redirect if already logged in
 	useEffect(() => {
@@ -28,6 +29,7 @@ const Login = () => {
 			...formData,
 			[e.target.name]: e.target.value,
 		});
+		// Clear error when user starts typing
 		if (error) setError("");
 	};
 
@@ -51,17 +53,12 @@ const Login = () => {
 	// Demo credentials component
 	const DemoCredentials = () => (
 		<div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-			<h3 className="text-sm font-medium text-gray-900 mb-3">
-			</h3>
+			<h3 className="text-sm font-medium text-gray-900 mb-3"></h3>
 			<div className="space-y-2 text-xs">
-				<div className="flex justify-between">
-				</div>
-				<div className="flex justify-between">
-				</div>
-				<div className="flex justify-between">
-				</div>
-				<div className="flex justify-between">
-				</div>
+				<div className="flex justify-between"></div>
+				<div className="flex justify-between"></div>
+				<div className="flex justify-between"></div>
+				<div className="flex justify-between"></div>
 			</div>
 		</div>
 	);
@@ -90,6 +87,7 @@ const Login = () => {
 								</div>
 							</div>
 						)}
+
 
 						{/* Email Field */}
 						<div>
@@ -156,25 +154,21 @@ const Login = () => {
 
 					{/* Demo Credentials */}
 					<DemoCredentials />
-
-					{/* Quick Access to Prevention Certificate Form */}
-					<div className="mt-4 text-center">
-						<Link
-							to="/prevention-certificate"
-							className="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
-						>
-							Apply for Prevention Certificate
-						</Link>
-					</div>
 				</div>
 
 				{/* Civilian Login Link */}
 				<div className="text-center">
-					<Link 
-						to="/civilian-login" 
+					<Link
+						to="/civilian-login"
 						className="text-blue-300 hover:text-white text-sm underline transition-colors"
 					>
 						Login as a Civilian
+					</Link>
+					<Link
+						to="/supplier-login"
+						className="text-blue-300 hover:text-white text-sm underline transition-colors"
+					>
+						Login as a Supplier
 					</Link>
 				</div>
 

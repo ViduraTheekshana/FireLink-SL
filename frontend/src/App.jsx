@@ -5,11 +5,11 @@ import {
 	Route,
 	Navigate,
 } from "react-router-dom";
+import { Bounce, ToastContainer } from "react-toastify";
 import { AuthProvider, useAuth } from "./context/auth";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/UserManagement/Login";
-import PreventionCertificateForm from "./pages/PreventionCertificate/PreventionCertificateForm";
 import Profile from "./pages/UserManagement/Profile";
 import UserManagement from "./pages/UserManagement/UserManagement";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -29,6 +29,27 @@ import CreateShift from "./pages/ShiftManagement/CreateShift";
 import MyShifts from "./pages/ShiftManagement/MyShifts";
 import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
 import Messages from "./pages/ShiftManagement/Messages";
+import CivilianLogin from "./pages/UserManagement/CivilianLogin";
+import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
+import { SupplierAuthProvider } from "./context/supplierAuth";
+import Loader from "./components/Loader";
+import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
+import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
+import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForSupplier";
+import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
+import Bids from "./pages/SupplyManagement/Bids";
+import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
+
+
+import AddFireStaff from "./pages/UserManagement/AddUsers"; 
+import LoginFireStaff from "./pages/UserManagement/StaffLogin";
+import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
+import UserDetails from "./pages/UserManagement/StaffDetails";
+import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
+import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
+import DynamicDashboard from "./pages/Dashboard/Dashboard";
+
 
 
 // Main App component
@@ -36,21 +57,14 @@ function AppContent() {
 	const { loading, isAuthenticated } = useAuth();
 
 	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-					<p className="mt-4 text-gray-600">Loading...</p>
-				</div>
-			</div>
-		);
+		return <Loader />;
 	}
 
 	return (
 		<Router>
 			<div className="min-h-screen bg-gray-50">
-				{isAuthenticated && <Navbar />}
-				<main className="container mx-auto px-4 py-8">
+				{/* {isAuthenticated && <Navbar />} */}
+				<main>
 					<Routes>
 						{/* Public routes */}
 						<Route
@@ -64,10 +78,24 @@ function AppContent() {
 							}
 						/>
 
-						{/* Prevention Certificate Form Route */}
 						<Route
-							path="/prevention-certificate"
-							element={<PreventionCertificateForm />}
+							path="/civilian-login"
+							element={
+								isAuthenticated ? (
+									<Navigate to="/civilian-dashboard" replace />
+								) : (
+									<CivilianLogin />
+								)
+							}
+						/>
+
+						<Route
+							path="/civilian-dashboard"
+							element={
+								<ProtectedRoute>
+									<CivilianDashboard />
+								</ProtectedRoute>
+							}
 						/>
 
 						{/* Protected routes */}
@@ -192,7 +220,6 @@ function AppContent() {
 							}
 						/>
 
-
 						<Route
 							path="/inventory/reorders"
 							element={
@@ -275,6 +302,57 @@ function AppContent() {
 							}
 						/>
 
+						<Route
+							path="/suppliers"
+							element={
+								<ProtectedRoute>
+									<SupplierManagement />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/supply-requests"
+							element={
+								<ProtectedRoute>
+									<SupplyRequests />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/supplier/supply-requests"
+							element={
+								<ProtectedSupplierRoute>
+									<SupplyRequestForSupplier />
+								</ProtectedSupplierRoute>
+							}
+						/>
+
+						<Route
+							path="/supplier/bids"
+							element={
+								<ProtectedSupplierRoute>
+									<Bids />
+								</ProtectedSupplierRoute>
+							}
+						/>
+						<Route
+							path="/supplier/bids/new/:requestId?"
+							element={
+								<ProtectedSupplierRoute>
+									<Bids />
+								</ProtectedSupplierRoute>
+							}
+						/>
+						<Route
+							path="/supplier/profile"
+							element={
+								<ProtectedSupplierRoute>
+									<SupplierProfile />
+								</ProtectedSupplierRoute>
+							}
+						/>
+						<Route path="/supplier-login" element={<SupplierLogin />} />
+
 						{/* Catch all route - must be last */}
 						<Route
 							path="*"
@@ -286,10 +364,22 @@ function AppContent() {
 								)
 							}
 						/>
-						
 					</Routes>
 				</main>
 			</div>
+			<ToastContainer
+				position="bottom-right"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick={false}
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme="dark"
+				transition={Bounce}
+			/>
 		</Router>
 	);
 }
@@ -298,9 +388,35 @@ function AppContent() {
 function App() {
 	return (
 		<AuthProvider>
-			<AppContent />
+			<SupplierAuthProvider>
+				<AppContent />
+			</SupplierAuthProvider>
 		</AuthProvider>
 	);
 }
+
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Auth & Staff */}
+        <Route path="/" element={<LoginFireStaff />} />
+        <Route path="/staff-login" element={<LoginFireStaff />} />
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/officer/:id" element={<OfficerProfile />} />
+        <Route path="/userdetails" element={<UserDetails />} />
+        <Route path="/userdetails/:id" element={<UserDetails />} />
+
+
+         <Route path="/supplier-login" element={<SupplierLogin />} />
+        <Route path="/civilian-login" element={<CivilianLogin />} />
+      <Route path="/dashboard" element={<DynamicDashboard />} />
+
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
 
 export default App;
