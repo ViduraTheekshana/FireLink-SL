@@ -27,7 +27,6 @@ const Login = () => {
 			...formData,
 			[e.target.name]: e.target.value,
 		});
-		// Clear error when user starts typing
 		if (error) setError("");
 	};
 
@@ -156,6 +155,16 @@ const Login = () => {
 
 					{/* Demo Credentials */}
 					<DemoCredentials />
+
+					{/* Quick Access to Prevention Certificate Form */}
+					<div className="mt-4 text-center">
+												<Link
+													to="/prevention-certificate"
+													className="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+												>
+													Apply for Prevention Certificate
+												</Link>
+					</div>
 				</div>
 
 				{/* Civilian Login Link */}

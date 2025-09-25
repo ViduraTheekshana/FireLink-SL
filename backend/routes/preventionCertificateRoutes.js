@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const preventionController = require("../controllers/preventionCertificateControllers");
+const { uploadDocuments } = require("../middlewares/uploadMiddleware");
 
-// Civilian applies
-router.post("/apply", preventionController.applyCertificate);
+// Civilian applies (with file upload)
+router.post("/apply", uploadDocuments, preventionController.applyCertificate);
 
 // Officer views all
 router.get("/", preventionController.getAllCertificates);

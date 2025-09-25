@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "./context/auth";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/UserManagement/Login";
+import PreventionCertificateForm from "./pages/PreventionCertificate/PreventionCertificateForm";
 import Profile from "./pages/UserManagement/Profile";
 import UserManagement from "./pages/UserManagement/UserManagement";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -28,6 +29,7 @@ import CreateShift from "./pages/ShiftManagement/CreateShift";
 import MyShifts from "./pages/ShiftManagement/MyShifts";
 import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
 import Messages from "./pages/ShiftManagement/Messages";
+
 
 // Main App component
 function AppContent() {
@@ -61,7 +63,6 @@ function AppContent() {
 								)
 							}
 						/>
-
 						{/* Protected routes */}
 						<Route
 							path="/dashboard"
