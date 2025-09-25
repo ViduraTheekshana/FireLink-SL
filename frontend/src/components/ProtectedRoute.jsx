@@ -1,26 +1,26 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
 
-const ProtectedRoute = ({ children }) => {
-	const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles, user }) => {
+  // Fallback: get user from localStorage if not passed
+  const currentUser = user || JSON.parse(localStorage.getItem("user"));
 
-	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-					<p className="mt-4 text-gray-600">Loading...</p>
-				</div>
-			</div>
-		);
-	}
+  if (!currentUser) {
+    // Not logged in
+    return <Navigate to="/staff-login" replace />;
+  }
 
-	if (!isAuthenticated) {
-		return <Navigate to="/login" replace />;
-	}
+  if (allowedRoles) {
+    // Check if user has at least one allowed role
+    const userRoles = currentUser.roles?.map(role => role.name) || [];
+    const hasPermission = allowedRoles.some(role => userRoles.includes(role));
+    if (!hasPermission) {
+      return <Navigate to="/staff-login" replace />;
+    }
+  }
 
-	return children;
+  // Always wrap children in a fragment
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

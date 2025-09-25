@@ -35,10 +35,8 @@ const InventoryList = () => {
   }, []);
 
   useEffect(() => {
-    if (!loading) { // Only call if initial data is loaded
-      loadInventoryData();
-    }
-  }, [currentPage, itemsPerPage, sortBy, sortOrder, loading]);
+    loadInventoryData();// runs when components mout or filters change
+  }, [currentPage, itemsPerPage, sortBy, sortOrder]);
 
   const loadInitialData = async () => {
     try {
@@ -51,7 +49,7 @@ const InventoryList = () => {
       setCategories(categoriesData);
       setLocations(locationsData);
       
-      await loadInventoryData();
+  // await loadInventoryData();
     } catch (err) {
       setError('Failed to load initial data');
       console.error(err);
@@ -68,7 +66,7 @@ const InventoryList = () => {
         limit: itemsPerPage,
         sortBy,
         sortOrder,
-        search: searchTerm || undefined,
+        search: searchTerm || undefined, //user input search term
         category: selectedCategory || undefined,
         condition: selectedCondition || undefined,
         status: selectedStatus || undefined,
@@ -82,8 +80,10 @@ const InventoryList = () => {
         }
       });
 
+
+      //  Calls inventoryApi.js getItems function which sends request to backend
+      //wait for response and processes the response and updates state variables
       const response = await getItems(params);
-      
       if (response.success) {
         setInventory(response.data);
         setTotalItems(response.pagination.totalItems);
@@ -405,6 +405,8 @@ const InventoryList = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
+
+              {/*UI renders the items */}
               {inventory.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -493,7 +495,7 @@ const InventoryList = () => {
                         👁️ View
                       </Link>
                       <Link 
-                        to={`/inventory/edit/${item._id}`} 
+                        to={`/inventory/edit/${item._id}`} //update 1: Navigate to edit form
                         className="text-green-600 hover:text-green-900 font-medium"
                       >
                         ✏️ Edit
