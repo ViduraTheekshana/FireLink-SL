@@ -50,4 +50,4 @@ const regiSchema = new schema ({
 });
 
 
-module.exports = mongoose.model("UserReg", regiSchema);
+module.exports = mongoose.model("Users", regiSchema);
