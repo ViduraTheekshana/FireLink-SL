@@ -17,7 +17,7 @@ router.get("/staff/:staffId", auth, async (req, res) => {
     return res.status(200).json({ user });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error"+err.message });
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -71,4 +71,4 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;

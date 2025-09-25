@@ -68,6 +68,12 @@ const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 
+// User Registration endpoint
+app.use("/users", userRouter);
+
+// Civilian login endpoint
+const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
+app.use("/api/v1/civilian-auth", civilianAuthRoutes);
 
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
@@ -83,19 +89,8 @@ mongoose
   .then((con) => console.log(`MongoDB connected: ${con.connection.host}`))
   .catch((err) => console.error("Database connection error:", err));
  
-  app.get("/", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Fire Handling System API running");
 });
-
-  // User Registration endpoint
-app.use("/users", userRouter);
-
-// covi login endpoint
-const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
-app.use("/api/v1/civilian-auth", civilianAuthRoutes);
-
-
-
-
 
 module.exports = app;
