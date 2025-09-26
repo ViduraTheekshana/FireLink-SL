@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 
-//data insert 
+//data insert
 
 const addUsers = async (req, res, next) => {
   const { name, gmail, age, phone, position, status, password, address } = req.body;
@@ -79,4 +79,4 @@ const staffLogin = async (req, res) => {
 };
 
 exports.addUsers = addUsers;
-exports.staffLogin = staffLogin;
+exports.staffLogin = staffLogin;

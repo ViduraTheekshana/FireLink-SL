@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  // 2️ Extract token
+  // 2 Extract token
   const token = authHeader.split(" ")[1];
 
   try {
@@ -39,6 +39,6 @@ exports.protect = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("JWT verification error:", error);
-    return res.status(401).json({ success: false, message: "Not authorized, token invalid" });
-  }
+    return res.status(401).json({ success: false, message: "Not authorized, token invalid" });
+  }
 };

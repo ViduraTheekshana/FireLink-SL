@@ -4,7 +4,6 @@
 	"description": "e-commerce",
 	"main": "server.js",
 	"scripts": {
-		
 		"seed:all": "npm run seed:roles && npm run seed:suppliers && npm run seed:users && npm run seed:inventory && npm run seed:reorders && npm run seed:vehicle-items && npm run seed:vehicles",
 		"seed:roles": "node seeders/seedRoles.js",
 		"seed:suppliers": "node seeders/seedSuppliers.js",
@@ -21,6 +20,7 @@
 	"license": "ISC",
 	"dependencies": {
 		"bcrypt": "^6.0.0",
+		"bcryptjs": "^3.0.2",
 		"body-parser": "^1.19.1",
 		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",

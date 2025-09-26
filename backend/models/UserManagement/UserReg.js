@@ -12,7 +12,7 @@ const regiSchema = new schema ({
             type :  Number , //dataType
             required : true , //validate
           },
-         
+
           age : {
             type :  Number , //dataType
             required : true , //validate
@@ -45,9 +45,9 @@ const regiSchema = new schema ({
 
             staffId: { type: String, unique: true }
 
-         
+
 
 });
 
 
-module.exports = mongoose.model("UserReg", regiSchema);
+module.exports = mongoose.model("Users", regiSchema);

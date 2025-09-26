@@ -4,12 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 
 const StaffManagementTable = () => {
   const [staff, setStaff] = useState([]);
-  const [filteredStaff, setFilteredStaff] = useState([]); // ✅ filtered list
-  const [searchTerm, setSearchTerm] = useState(""); // ✅ search term
+  const [filteredStaff, setFilteredStaff] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const componentRef = useRef(); // ✅ Reference for print
+  const componentRef = useRef();
 
   useEffect(() => {
     const fetchStaffData = async () => {
@@ -20,8 +20,9 @@ const StaffManagementTable = () => {
         const filteredStaff = response.data.users.filter(
           (user) => user.position !== "1stclass officer"
         );
+
         setStaff(filteredStaff);
-        setFilteredStaff(filteredStaff); // ✅ initialize filtered list
+        setFilteredStaff(filteredStaff);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch staff data");
@@ -45,13 +46,14 @@ const StaffManagementTable = () => {
     }
   }, [searchTerm, staff]);
 
+  // ✅ Delete staff
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff member?")) {
       try {
         await axios.delete(`http://localhost:5000/users/${id}`);
         const updatedStaff = staff.filter((member) => member._id !== id);
         setStaff(updatedStaff);
-        setFilteredStaff(updatedStaff); // ✅ update filtered too
+        setFilteredStaff(updatedStaff);
         alert("Staff member deleted successfully");
       } catch (err) {
         console.error(
@@ -69,15 +71,27 @@ const StaffManagementTable = () => {
     setFilteredStaff(staff);
   };
 
-  // ✅ Print / Save as PDF function
+  // ✅ Print without reload
   const handlePrintAlternative = () => {
     const printContents = componentRef.current.innerHTML;
-    const originalContents = document.body.innerHTML;
-
-    document.body.innerHTML = printContents;
-    window.print();
-    document.body.innerHTML = originalContents;
-    window.location.reload();
+    const newWindow = window.open("", "_blank", "width=900,height=650");
+    newWindow.document.write(`
+      <html>
+        <head>
+          <title>Staff Management Report</title>
+          <style>
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; }
+            th { background: #f4f4f4; }
+          </style>
+        </head>
+        <body>
+          ${printContents}
+        </body>
+      </html>
+    `);
+    newWindow.document.close();
+    newWindow.print();
   };
 
   if (loading) {
@@ -100,9 +114,7 @@ const StaffManagementTable = () => {
     <div className="mt-8 bg-white rounded-xl shadow-lg overflow-hidden">
       {/* Print-specific CSS */}
       <style>
-        {`@media print {
-            .no-print { display: none !important; }
-          }`}
+        {`@media print { .no-print { display: none !important; } }`}
       </style>
 
       <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
@@ -168,14 +180,14 @@ const StaffManagementTable = () => {
                   {member.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {member.gmail}
+                  {member.email}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {member.position}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                       ${
                         member.status === "Active"
                           ? "bg-green-100 text-green-800"

@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -31,16 +31,11 @@ app.use((req, res, next) => {
 });
 
 // import all routes
-const auth = require("./routes/authRoutes");
-const civilianAuth = require("./routes/civilianAuthRoutes");
 const mission = require("./routes/missionRoutes");
-const userManagement = require("./routes/userManagementRoutes");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); // <-- added
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes");
 
 // mount routes
-app.use("/api/v1/civilian-auth", civilianAuth);
 app.use("/api/v1/missions", mission);
-app.use("/api/v1/users", userManagement);
 
 app.use("/api/inventory", require("./routes/inventoryRoutes"));
 
@@ -55,35 +50,14 @@ app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
 
 app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
 
-app.use(
-	"/api/v1/shift-change-requests",
-	require("./routes/shiftChangeRequestRoutes")
-);
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
 app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
-app.use("/api/v1/messages", require("./routes/messageRoutes"));
 
 // Prevention certificate route
 app.use("/api/prevention/certificates", preventionCertificateRoutes);
 
 // Middleware to handle errors
 app.use(errorMiddleware);
-
-
-
-// User Registration endpoint
-app.use("/users", userRouter);
-
-// covi login endpoint
-const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
-app.use("/api/v1/civilian-auth", civilianAuthRoutes);
-
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
 
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
@@ -94,10 +68,18 @@ const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 
+// User Registration endpoint
+app.use("/users", userRouter);
+
+// Civilian login endpoint
+const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
+app.use("/api/v1/civilian-auth", civilianAuthRoutes);
+
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
 
+app.get("/", (req, res) => {
+  res.send("Fire Handling System API running");
+});
 
-
-
-module.exports = app;
+module.exports = app;

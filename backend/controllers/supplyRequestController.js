@@ -1,7 +1,12 @@
 const SupplyRequest = require("../models/supplyRequest");
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-const generateId = require("../utils/generateUniqueId");
+let generateId;
+try {
+    generateId = require("../utils/generateUniqueId");
+} catch (err) {
+    generateId = (prefix = "id") => `${prefix}_${Date.now()}`;
+}
 
 const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 	const { title, description, category, quantity, applicationDeadline, unit } =
