@@ -8,6 +8,13 @@ import DynamicDashboard from "./pages/Dashboard/Dashboard";
 import AddFireStaff from "./pages/UserManagement/AddUsers";
 import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
 import UserDetails from "./pages/UserManagement/StaffDetails";
+import UpdateUser from "./pages/UserManagement/updateStaff";
+import TrainingSessionManager from "./pages/TraningSessionManagement/TrainingSessionManager";
+import UpdateSession from "./pages/TraningSessionManagement/UpdateSession";
+import ViewSessions from "./pages/TraningSessionManagement/AllSessionsDetails";
+import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
+import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
+
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -21,11 +28,7 @@ import ReorderPage from "./pages/Inventory/ReorderPage";
 import ReordersList from "./pages/Inventory/ReordersList";
 import InventoryLogs from "./pages/Inventory/InventoryLogs";
 
-import ShiftDashboard from "./pages/ShiftManagement/ShiftDashboard";
-import CreateShift from "./pages/ShiftManagement/CreateShift";
-import MyShifts from "./pages/ShiftManagement/MyShifts";
-import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
-import Messages from "./pages/ShiftManagement/Messages";
+
 
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
@@ -50,13 +53,24 @@ const App = () => {
         <Route path="/supplier-login" element={<SupplierLogin />} />
         <Route path="/firstaff" element={<AddFireStaff />} />
         <Route path="/officer/:id" element={<OfficerProfile />} />
-        <Route path="/userdetails" element={<UserDetails />} />
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/update-user/:id" element={<UpdateUser />} />
+        <Route path="/userdetails/:id" element={<UserDetails />} />
 
+
+        <Route
+          path="/training-dashboard"
+          element={<TrainingSessionManager />}
+        />
+        <Route path="/update-session/:id" element={<UpdateSession />} />
+        <Route path="/shiftschedule" element={<ShiftScheduler />} />
+        <Route path="/sessions" element={<ViewSessions />} />
+        <Route path="/attendance/:id" element={<AttendanceForm />} />
         {/* Protected user routes */}
         <Route
           path="/dashboard"
           element={
-              <DynamicDashboard />
+            <DynamicDashboard />
           }
         />
         <Route
@@ -72,143 +86,112 @@ const App = () => {
         <Route
           path="/inventory"
           element={
-              <InventoryList />
+            <InventoryList />
           }
         />
         <Route
           path="/inventory/add"
           element={
-              <InventoryForm />
+            <InventoryForm />
           }
         />
         <Route
           path="/inventory/vehicles"
           element={
-              <VehicleList />
+            <VehicleList />
           }
         />
         <Route
           path="/inventory/vehicles/add"
           element={
-              <VehicleForm />
+            <VehicleForm />
           }
         />
         <Route
           path="/inventory/vehicles/:id"
           element={
-              <VehicleDetail />
+            <VehicleDetail />
           }
         />
         <Route
           path="/inventory/edit/:id"
           element={
-              <InventoryForm />
+            <InventoryForm />
           }
         />
         <Route
           path="/inventory/vehicle-items"
           element={
-              <VehicleItemsPage />
+            <VehicleItemsPage />
           }
         />
         <Route
           path="/inventory/:id/reorder"
           element={
-              <ReorderPage />
+            <ReorderPage />
           }
         />
         <Route
           path="/inventory/reorders"
           element={
-              <ReordersList />
+            <ReordersList />
           }
         />
         <Route
           path="/inventory/reorders/list"
           element={
-              <ReordersList />
+            <ReordersList />
           }
         />
         <Route
           path="/inventory/logs"
           element={
-              <InventoryLogs />
+            <InventoryLogs />
           }
         />
         <Route
           path="/inventory/:id"
           element={
-              <InventoryDetail />
+            <InventoryDetail />
           }
         />
 
-        {/* Shift Management routes */}
-        <Route
-          path="/shifts"
-          element={
-              <ShiftDashboard />
-          }
-        />
-        <Route
-          path="/shifts/create"
-          element={
-              <CreateShift />
-          }
-        />
-        <Route
-          path="/shifts/my-shifts"
-          element={
-              <MyShifts />
-          }
-        />
-        <Route
-          path="/shifts/change-requests"
-          element={
-              <ChangeRequests />
-          }
-        />
-        <Route
-          path="/shifts/messages"
-          element={
-              <Messages />
-          }
-        />
 
         {/* Supplier routes */}
         <Route
           path="/suppliers"
           element={
-              <SupplierManagement />
+            <SupplierManagement />
           }
         />
         <Route
           path="/supply-requests"
           element={
-              <SupplyRequests />
+            <SupplyRequests />
           }
         />
         <Route
           path="/supplier/supply-requests"
           element={
-              <SupplyRequestForSupplier />
+            <SupplyRequestForSupplier />
           }
         />
         <Route
           path="/supplier/bids"
           element={
-              <Bids />
+            <Bids />
           }
         />
         <Route
           path="/supplier/bids/new/:requestId?"
           element={
-              <Bids />
+            <Bids />
           }
         />
         <Route
           path="/supplier/profile"
           element={
-              <SupplierProfile />
+            <SupplierProfile />
           }
         />
 
@@ -229,4 +212,4 @@ const App = () => {
 
 
 
-export default App;
+export default App;

@@ -8,6 +8,15 @@ const bodyParser = require("body-parser");
 
 const errorMiddleware = require("./middlewares/errors");
 
+
+const userRouter = require("./routes/UserManagement/UserRoute.js");
+const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
+const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
+const shiftScheduleRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
+
+// Register schemas BEFORE routes
+require("./models/UserManagement/Attendance.js"); // Attendance schema
+require("./models/UserManagement/UserReg.js");    
 // setting up config file
 dotenv.config({ path: "config/config.env" });
 
@@ -59,24 +68,16 @@ app.use("/api/prevention/certificates", preventionCertificateRoutes);
 // Middleware to handle errors
 app.use(errorMiddleware);
 
-// Register schemas BEFORE routes
-require("./models/UserManagement/Attendance.js"); // Attendance schema
-require("./models/UserManagement/UserReg.js");    // User schema
-
-// Routes
-const userRouter = require("./routes/UserManagement/UserRoute.js");
-const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
-const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
-
 // User Registration endpoint
 app.use("/users", userRouter);
+app.use("/sessions", sessionRouter);
+app.use("/attendance", attendanceRouter);
+app.use("/shift-schedules", shiftScheduleRoutes);
 
 // Civilian login endpoint
 const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
 app.use("/api/v1/civilian-auth", civilianAuthRoutes);
 
-app.use("/sessions", sessionRouter);
-app.use("/attendance", attendanceRouter);
 
 app.get("/", (req, res) => {
   res.send("Fire Handling System API running");

@@ -1,89 +1,114 @@
-// Components/Sidebar.js
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { UserIcon, Settings, LogOut, Flame } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FaTachometerAlt,
+  FaUser,
+  FaCogs,
+  FaSignOutAlt,
+  FaClipboardList,
+  FaTruck,
+  FaUsers,
+} from "react-icons/fa";
 
 const Sidebar = ({ user, onLogout }) => {
-  const location = useLocation();
   const navigate = useNavigate();
 
-  // Main menu items
-  const menuItems = [
-    {
-      id: "profile",
-      label: "Profile",
-      icon: <UserIcon size={20} />,
-      // If you have user id, link to officer profile, otherwise generic profile page
-      path: user ? `/officer/${user.id}` : "/profile",
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: <Settings size={20} />,
-      path: "/settings",
-    },
-  ];
+  if (!user) return null;
 
-  // Bottom menu
-  const bottomMenuItems = [
-    {
-      id: "logout",
-      label: "Logout",
-      icon: <LogOut size={20} />,
-      action: () => {
-        // Clear user from localStorage
-        localStorage.removeItem("user");
-        // Optional: navigate to login page
-        navigate("/staff-login");
-        if (onLogout) onLogout();
-      },
-    },
-  ];
+  // Define sidebar links based on position
+  const getLinks = () => {
+    const links = [
+      { name: "Dashboard", path: "/dashboard", icon: <FaTachometerAlt /> },
+      { name: "Profile", path: "/profile", icon: <FaUser /> },
+      { name: "Settings", path: "/settings", icon: <FaCogs /> }, // Can change to settings page
+    ];
+
+    switch (user.position.toLowerCase()) {
+      case "1stclass officer":
+        links.push(
+          { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
+          { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
+          { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> }
+        );
+        break;
+
+      case "fighter":
+        links.push({ name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> });
+        break;
+      case "financemanager":
+        links.push({ name: "Finance Reports", path: "/finance", icon: <FaClipboardList /> });
+        break;
+      case "inventorymanager":
+        links.push(
+          { name: "Inventory", path: "/inventory", icon: <FaTruck /> },
+          { name: "Reorders", path: "/inventory/reorders", icon: <FaClipboardList /> }
+        );
+        break;
+      case "recordmanager":
+        links.push({ name: "Records", path: "/records", icon: <FaClipboardList /> });
+        break;
+      case "preventionmanager":
+        links.push({ name: "Prevention", path: "/prevention", icon: <FaClipboardList /> });
+        break;
+      case "trainingsessionmanager":
+        links.push(
+          { name: "View Sessions", path: "/sessions", icon: <FaClipboardList /> },
+          { name: "Add Attendance", path: "/attendance/1", icon: <FaClipboardList /> } // example default id
+        );
+        break;
+
+      case "suppliermanager":
+        links.push({ name: "Suppliers", path: "/suppliers", icon: <FaUsers /> });
+        break;
+      case "teamcaptain":
+        links.push({ name: "Team Management", path: "/team", icon: <FaUsers /> });
+        break;
+      default:
+        break;
+    }
+
+    return links;
+  };
+
+  const links = getLinks();
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-full hidden md:flex">
-      {/* Logo / Header */}
-      <div className="p-4 flex items-center gap-3">
-        <Flame className="h-8 w-8 text-red-500" />
-        <span className="text-xl font-bold">FireDept MS</span>
-      </div>
-
-      {/* Main navigation */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="px-4 py-2 text-xs uppercase text-gray-400 font-semibold">
-          Main
+    <div className="bg-gray-800 text-white flex flex-col justify-between h-screen w-64 p-6">
+      <div>
+        {/* User Info */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold">{user.name}</h2>
+          <p className="text-sm text-gray-400">ID: {user.staffId}</p>
+          <p className="text-sm text-gray-400">{user.position}</p>
         </div>
-        <nav className="mt-2">
-          {menuItems.map((item) => (
+
+        {/* Navigation Links */}
+        <nav className="flex flex-col gap-4">
+          {links.map((link) => (
             <Link
-              key={item.id}
-              to={item.path}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
-                location.pathname.startsWith(item.path)
-                  ? "bg-red-700 text-white"
-                  : "text-gray-300 hover:bg-gray-800"
-              }`}
+              key={link.name}
+              to={link.path}
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 transition"
             >
-              {item.icon}
-              <span>{item.label}</span>
+              {link.icon}
+              <span>{link.name}</span>
             </Link>
           ))}
         </nav>
       </div>
 
-      {/* Bottom navigation (Logout) */}
-      <div className="border-t border-gray-700 py-2 mt-auto">
-        {bottomMenuItems.map((item) => (
-          <button
-            key={item.id}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-800"
-            onClick={item.action}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* Logout Button */}
+      <button
+        onClick={() => {
+          localStorage.removeItem("user");
+          localStorage.removeItem("staffId");
+          onLogout ? onLogout() : navigate("/staff-login");
+        }}
+        className="flex items-center gap-3 mt-6 px-3 py-2 rounded bg-red-600 hover:bg-red-700 transition"
+      >
+        <FaSignOutAlt />
+        Logout
+      </button>
     </div>
   );
 };
