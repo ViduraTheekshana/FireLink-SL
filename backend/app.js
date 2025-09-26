@@ -59,10 +59,6 @@ app.use("/api/prevention/certificates", preventionCertificateRoutes);
 // Middleware to handle errors
 app.use(errorMiddleware);
 
-// Register schemas BEFORE routes
-require("./models/UserManagement/Attendance.js"); // Attendance schema
-require("./models/UserManagement/UserReg.js");    // User schema
-
 // Routes
 const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
@@ -79,7 +75,7 @@ app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
 
 app.get("/", (req, res) => {
-  res.send("Fire Handling System API running");
+	res.send("Fire Handling System API running");
 });
 
-module.exports = app;
+module.exports = app;

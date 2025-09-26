@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 
-const TrainingSession = mongoose.model("TrainingSession");
-const Attendance = mongoose.model("Attendance");
+const TrainingSession = require("../../models/UserManagement/TrainingSession");
+const Attendance = require("../../models/UserManagement/Attendance");
 
 // Mark attendance
 router.post("/mark", async (req, res) => {
