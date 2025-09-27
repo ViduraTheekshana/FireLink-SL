@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const ShiftSchedule = require("../../models/UserManagement/ShiftSchedule");
 const UserReg = require("../../models/UserManagement/UserReg");
+const { Parser } = require("json2csv"); // for CSV conversion
 
 // Create new shift schedule
 router.post("/", async (req, res) => {
@@ -22,12 +23,51 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+// GET schedules by date range (optional)
+router.get("/download", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query; // e.g., ?startDate=2025-09-01&endDate=2025-09-30
+
+    let query = {};
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+
+    const schedules = await ShiftSchedule.find(query).populate("members");
+
+    if (!schedules.length) return res.status(404).send({ message: "No schedules found" });
+
+    // Convert to CSV
+    const csvFields = ["date", "vehicle", "shiftType", "notes", "members"];
+    const csvData = schedules.map(s => ({
+      date: s.date.toISOString().split("T")[0],
+      vehicle: s.vehicle,
+      shiftType: s.shiftType,
+      notes: s.notes || "",
+      members: s.members.map(m => `${m.name} (${m.position})`).join("; ")
+    }));
+
+    const parser = new Parser({ fields: csvFields });
+    const csv = parser.parse(csvData);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment("shift_schedules.csv");
+    return res.send(csv);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 // Get all shift schedules
 router.get("/", async (req, res) => {
   try {
     const schedules = await ShiftSchedule.find()
       .populate("members", "name staffId position")
       .sort({ date: -1 });
+          console.log(schedules); // <-- check what data is returned
     res.status(200).json({ schedules });
   } catch (err) {
     console.error(err);

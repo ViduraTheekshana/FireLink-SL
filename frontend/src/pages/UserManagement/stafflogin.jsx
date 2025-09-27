@@ -23,25 +23,38 @@ function StaffLogin() {
 		e.preventDefault();
 		setLoading(true);
 
-		try {
-			const res = await axios.post(URL, formData);
-			const data = res.data;
+    try {
+      const res = await axios.post(URL, formData);
+      const data = res.data;
 
-			if (data.status === "ok") {
-				localStorage.setItem("user", JSON.stringify(data.user));
-				localStorage.setItem("token", data.token);
-				alert(`Login successful! Welcome ${data.user.name}`);
-				navigate("/dashboard", { state: { user: data.user } });
-			} else {
-				alert("Login failed: " + (data.err || "Invalid credentials"));
-			}
-		} catch (err) {
-			console.error(err);
-			alert("Server error" + err);
-		}
+      // Inside StaffLogin.js -> handleSubmit
+    // after successful login (inside handleSubmit)
+if (data.status === "ok") {
+  // store user
+  localStorage.setItem("user", JSON.stringify(data.user));
 
-		setLoading(false);
-	};
+  // store token (common response keys)
+  const token = data.token || data.accessToken || data.jwt || data.user?.token || null;
+  if (token) {
+    localStorage.setItem("token", token);
+  } else {
+    console.warn("No token found in login response. Backend must return a token for protected routes.");
+  }
+
+  alert(`Login successful! Welcome ${data.user.name}`);
+  navigate("/dashboard", { state: { user: data.user } });
+}
+
+    else {
+        alert("Login failed: " + (data.err || "Invalid credentials"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("invalide credentails"+err);
+    }
+
+    setLoading(false);
+  };
 
 	return (
 		<div className="min-h-screen bg-[#1E2A38] flex items-center justify-center p-6">

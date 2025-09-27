@@ -15,6 +15,10 @@ import ViewSessions from "./pages/TraningSessionManagement/AllSessionsDetails";
 import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
 import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
+
+
+
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
@@ -59,29 +63,31 @@ const App = () => {
 
 				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 
-				<Route
-					path="/training-dashboard"
-					element={<TrainingSessionManager />}
-				/>
-				<Route path="/update-session/:id" element={<UpdateSession />} />
-				<Route path="/shiftschedule" element={<ShiftScheduler />} />
-				<Route path="/sessions" element={<ViewSessions />} />
-				<Route path="/attendance/:id" element={<AttendanceForm />} />
-				{/* Protected user routes */}
-				<Route path="/dashboard" element={<DynamicDashboard />} />
-				<Route path="/mission-records" element={<MissionRecords />} />
-				<Route path="/salary-management" element={<SalaryManagement />} />
+        <Route
+          path="/training-dashboard"
+          element={<TrainingSessionManager />}
+        />
+        <Route path="/update-session/:id" element={<UpdateSession />} />
+        <Route path="/shiftschedule" element={<ShiftScheduler />} />
+        <Route path="/sessions" element={<ViewSessions />} />
+        <Route path="/attendance/:id" element={<AttendanceForm />} />
+        <Route path="/staff-management" element={<StaffManagementTable />} />
 
-				{/* Protected user routes */}
-				<Route path="/dashboard" element={<DynamicDashboard />} />
-				<Route
-					path="/mission-records"
-					element={
-						<ProtectedRoute user={user}>
-							<MissionRecords />
-						</ProtectedRoute>
-					}
-				/>
+        {/* Protected user routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <DynamicDashboard />
+          }
+        />
+        <Route
+          path="/mission-records"
+          element={
+            <ProtectedRoute user={user}>
+              <MissionRecords />
+            </ProtectedRoute>
+          }
+        />
 
 				{/* Inventory routes */}
 				<Route path="/inventory" element={<InventoryList />} />
