@@ -1,76 +1,88 @@
+const mongoose = require('mongoose');
 const InventoryVehicleItems = require('../models/inventoryVehicleItems');
 const Vehicle = require('../models/inventoryVehicle');
 const Inventory = require('../models/Inventory');
+const InventoryLog = require('../models/InventoryLog');
 
-// Assign an item to a vehicle
+// Helper to create inventory log (auth removed / placeholders used similar to other controllers)
+async function createInventoryLog({ action, item, description, previousValue, newValue, quantityChange = 0 }) {
+  try {
+    await InventoryLog.create({
+      action,
+      itemId: item._id,
+      itemName: item.item_name,
+      itemCategory: item.category,
+      description,
+      previousValue,
+      newValue,
+      quantityChange,
+      performedBy: null, // TODO: restore req.user when auth re-enabled
+      performedByName: 'System User'
+    });
+  } catch (e) {
+    console.error('Failed to write inventory log (non-blocking):', e.message);
+  }
+}
+
+// Assign an item to a vehicle (with stock deduction & logging)
 const assignItemToVehicle = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { vehicle_ID, item_ID, quantity } = req.body;
+    const parsedQty = parseInt(quantity, 10);
 
-    // Validate input
-    if (!vehicle_ID || !item_ID || !quantity) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vehicle ID, Item ID, and quantity are required'
-      });
+    // Basic validations
+    if (!vehicle_ID || !item_ID || !parsedQty || parsedQty < 1) {
+      return res.status(400).json({ success: false, message: 'Vehicle ID, Item ID and valid quantity (>=1) are required' });
     }
 
-    // Check if vehicle exists
-    const vehicle = await Vehicle.findById(vehicle_ID);
-    if (!vehicle) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vehicle not found'
-      });
+    const vehicle = await Vehicle.findById(vehicle_ID).session(session);
+    if (!vehicle) return res.status(404).json({ success: false, message: 'Vehicle not found' });
+
+    const item = await Inventory.findById(item_ID).session(session);
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+
+    // Stock availability check
+    if (item.quantity < parsedQty) {
+      return res.status(400).json({ success: false, message: `Insufficient stock. Available: ${item.quantity}` });
     }
 
-    // Check if item exists
-    const item = await Inventory.findById(item_ID);
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item not found'
-      });
-    }
-
-    // Check if item is already assigned to this vehicle
-    const existingAssignment = await InventoryVehicleItems.findOne({
-      vehicle_ID,
-      item_ID
-    });
-
+    const existingAssignment = await InventoryVehicleItems.findOne({ vehicle_ID, item_ID }).session(session);
     if (existingAssignment) {
-      return res.status(400).json({
-        success: false,
-        message: 'Item is already assigned to this vehicle'
-      });
+      return res.status(400).json({ success: false, message: 'Item already assigned to this vehicle. Consider updating quantity.' });
     }
 
-    // Create new assignment
-    const vehicleItem = new InventoryVehicleItems({
-      vehicle_ID,
-      item_ID,
-      quantity: parseInt(quantity)
+    // Create assignment
+    const vehicleItem = await InventoryVehicleItems.create([{ vehicle_ID, item_ID, quantity: parsedQty }], { session });
+    const createdAssignment = vehicleItem[0];
+
+    // Deduct stock from inventory item
+    const prevQty = item.quantity;
+    item.quantity = item.quantity - parsedQty;
+    await item.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await createdAssignment.populate('item_ID');
+
+    // Log (after commit; non-blocking with fresh item state fetch)
+    createInventoryLog({
+      action: 'STOCK_CHANGE',
+      item,
+      description: `Assigned ${parsedQty} of item to vehicle ${vehicle.vehicle_name} (${vehicle._id})`,
+      previousValue: { quantity: prevQty },
+      newValue: { quantity: item.quantity },
+      quantityChange: -parsedQty
     });
 
-    await vehicleItem.save();
-
-    // Populate item details for response
-    await vehicleItem.populate('item_ID');
-
-    res.status(201).json({
-      success: true,
-      message: 'Item assigned to vehicle successfully',
-      data: vehicleItem
-    });
-
+    return res.status(201).json({ success: true, message: 'Item assigned to vehicle successfully', data: createdAssignment });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('Error assigning item to vehicle:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 };
 
@@ -116,77 +128,103 @@ const getVehicleItems = async (req, res) => {
   }
 };
 
-// Update assigned item quantity
+// Update assigned item quantity (adjust inventory stock delta & log)
 const updateVehicleItem = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
     const { quantity } = req.body;
+    const newQty = parseInt(quantity, 10);
+    if (!newQty || newQty < 1) return res.status(400).json({ success: false, message: 'Valid quantity (>=1) required' });
 
-    // Validate input
-    if (!quantity || quantity < 1) {
-      return res.status(400).json({
-        success: false,
-        message: 'Valid quantity is required (minimum 1)'
-      });
+    const assignment = await InventoryVehicleItems.findById(id).session(session);
+    if (!assignment) return res.status(404).json({ success: false, message: 'Vehicle item assignment not found' });
+
+    const item = await Inventory.findById(assignment.item_ID).session(session);
+    if (!item) return res.status(404).json({ success: false, message: 'Linked inventory item not found' });
+
+    const oldQty = assignment.quantity;
+    if (oldQty === newQty) {
+      return res.json({ success: true, message: 'No change in quantity', data: assignment });
     }
 
-    // Find and update the vehicle item
-    const vehicleItem = await InventoryVehicleItems.findByIdAndUpdate(
-      id,
-      { quantity: parseInt(quantity) },
-      { new: true, runValidators: true }
-    ).populate('item_ID');
-
-    if (!vehicleItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vehicle item assignment not found'
-      });
+    const diff = newQty - oldQty; // positive means we need more stock, negative means we release stock back
+    if (diff > 0) {
+      // Need to deduct additional diff from inventory
+      if (item.quantity < diff) {
+        return res.status(400).json({ success: false, message: `Insufficient stock to increase quantity. Available: ${item.quantity}` });
+      }
+      item.quantity -= diff;
+    } else {
+      // diff negative => return (-diff) to inventory
+      item.quantity += (-diff);
     }
+    await item.save({ session });
 
-    res.json({
-      success: true,
-      message: 'Vehicle item updated successfully',
-      data: vehicleItem
+    assignment.quantity = newQty;
+    await assignment.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await assignment.populate('item_ID');
+
+    createInventoryLog({
+      action: 'STOCK_CHANGE',
+      item,
+      description: `Adjusted assigned quantity on vehicle ${assignment.vehicle_ID} from ${oldQty} to ${newQty}`,
+      previousValue: { quantity: item.quantity + (-diff) },
+      newValue: { quantity: item.quantity },
+      quantityChange: diff * -1 // inventory perspective (negative when assignment increases)
     });
 
+    return res.json({ success: true, message: 'Vehicle item updated successfully', data: assignment });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('Error updating vehicle item:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 };
 
-// Remove an assigned item
+// Remove an assigned item (returns stock & logs)
 const removeVehicleItem = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
+    const assignment = await InventoryVehicleItems.findById(id).session(session);
+    if (!assignment) return res.status(404).json({ success: false, message: 'Vehicle item assignment not found' });
 
-    // Find and delete the vehicle item
-    const vehicleItem = await InventoryVehicleItems.findByIdAndDelete(id);
+    const item = await Inventory.findById(assignment.item_ID).session(session);
+    if (!item) return res.status(404).json({ success: false, message: 'Linked inventory item not found' });
 
-    if (!vehicleItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vehicle item assignment not found'
-      });
-    }
+    const prevQty = item.quantity;
+    // Return stock
+    item.quantity += assignment.quantity;
+    await item.save({ session });
 
-    res.json({
-      success: true,
-      message: 'Item removed from vehicle successfully'
+    await assignment.deleteOne({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    createInventoryLog({
+      action: 'STOCK_CHANGE',
+      item,
+      description: `Removed assignment of ${assignment.quantity} units from vehicle ${assignment.vehicle_ID}`,
+      previousValue: { quantity: prevQty },
+      newValue: { quantity: item.quantity },
+      quantityChange: assignment.quantity // stock added back
     });
 
+    return res.json({ success: true, message: 'Item removed from vehicle successfully' });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('Error removing vehicle item:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 };
 
