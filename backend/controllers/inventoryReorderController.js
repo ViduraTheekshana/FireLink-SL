@@ -54,8 +54,11 @@ const createReorder = async (req, res) => {
         itemName: inventoryItem.item_name,
         itemCategory: inventoryItem.category,
         description: `Created reorder for ${inventoryItem.item_name} - Quantity: ${quantity}, Priority: ${priority}`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();
@@ -321,8 +324,11 @@ const approveReorder = async (req, res) => {
         itemName: reorder.item_name,
         itemCategory: reorder.category,
         description: `Reorder approved for ${reorder.item_name} by ${approvedBy}`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();
@@ -378,8 +384,11 @@ const markDelivered = async (req, res) => {
         itemName: reorder.item_name,
         itemCategory: reorder.category,
         description: `Reorder delivered for ${reorder.item_name} - Actual quantity: ${actualQuantity}`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();

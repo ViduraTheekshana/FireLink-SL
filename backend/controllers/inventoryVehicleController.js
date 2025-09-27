@@ -57,8 +57,11 @@ const createVehicle = async (req, res) => {
         itemName: vehicle.vehicle_name,
         itemCategory: 'Vehicle',
         description: `Created new vehicle: ${vehicle.vehicle_name} (${vehicle.vehicle_type})`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();
@@ -214,8 +217,11 @@ const updateVehicle = async (req, res) => {
         itemName: vehicle.vehicle_name,
         itemCategory: 'Vehicle',
         description: `Updated vehicle: ${vehicle.vehicle_name} (${vehicle.vehicle_type})`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();
@@ -261,8 +267,11 @@ const deleteVehicle = async (req, res) => {
         itemName: vehicle.vehicle_name,
         itemCategory: 'Vehicle',
         description: `Deleted vehicle: ${vehicle.vehicle_name} (${vehicle.vehicle_type})`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();

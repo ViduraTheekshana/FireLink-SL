@@ -64,8 +64,11 @@ const createItem = async (req, res) => {
         itemName: savedItem.item_name,                              // For easy searching
         itemCategory: savedItem.category,                   // For filtering
         description: `Created new inventory item: ${savedItem.item_name}`,
-        performedBy: req.user?._id || null,                                       // User who added it
-        performedByName: req.user?.name || 'System User',              // User name
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,                                       // User who added it
+        // performedByName: req.user?.name || 'System User',              // User name
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()     // Exact time of creation
       });
       await log.save();
@@ -261,8 +264,11 @@ const updateItem = async (req, res) => {
         itemName: updatedItem.item_name,
         itemCategory: updatedItem.category,
         description: `Updated inventory item: ${updatedItem.item_name}`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save(); // Save log entry to database
@@ -312,8 +318,11 @@ const deleteItem = async (req, res) => {
         itemName: deletedItem.item_name,
         itemCategory: deletedItem.category,
         description: `Deleted inventory item: ${deletedItem.item_name}`,
-        performedBy: req.user?._id || null,
-        performedByName: req.user?.name || 'System User',
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null, // Temporary - will be replaced with actual user ID
+        performedByName: 'System User', // Temporary - will be replaced with actual user name
         timestamp: new Date()
       });
       await log.save();
