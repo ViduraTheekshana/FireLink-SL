@@ -68,6 +68,7 @@ const SupplyRequests = () => {
 	};
 
 	if (loading) return <Loader />;
+	// TODO: fix 404
 
 	return (
 		<div className="flex h-screen bg-gray-100">

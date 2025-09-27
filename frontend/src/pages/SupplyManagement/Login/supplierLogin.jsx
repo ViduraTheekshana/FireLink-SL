@@ -15,7 +15,7 @@ const SupplierLogin = () => {
 	const [error, setError] = useState("");
 
 	const { login, user: supplier, loading: authLoading } = useSupplierAuth();
-	const { user, loading: userLoading } = useAuth();
+	const { user } = useAuth();
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -42,14 +42,14 @@ const SupplierLogin = () => {
 	};
 
 	useEffect(() => {
-		if (!userLoading && user) {
+		if (user) {
 			navigate("/dashboard", { replace: true });
 		}
 
 		if (!authLoading && supplier) {
 			navigate("/supplier/supply-requests", { replace: true });
 		}
-	}, [userLoading, authLoading]);
+	}, [authLoading]);
 
 	useEffect(() => {
 		if (error) {
@@ -58,7 +58,7 @@ const SupplierLogin = () => {
 		}
 	}, [error, setError, toast]);
 
-	if (authLoading || userLoading) return <Loader />;
+	if (authLoading) return <Loader />;
 
 	return (
 		<div className="supplier-login-container">

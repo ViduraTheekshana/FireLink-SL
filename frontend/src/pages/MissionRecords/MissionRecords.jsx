@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { missionService } from "../../services/missionService";
 
 const MissionRecords = () => {
+	const navigate = useNavigate();
 	const [missions, setMissions] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [showForm, setShowForm] = useState(false);
+	const [editingMissionId, setEditingMissionId] = useState(null);
 	const [formData, setFormData] = useState({
 		missionType: "",
 		missionDate: "",
@@ -17,9 +20,6 @@ const MissionRecords = () => {
 	const [totalPages, setTotalPages] = useState(1);
 	const [filters, setFilters] = useState({
 		missionType: "",
-		status: "",
-		startDate: "",
-		endDate: "",
 	});
 
 	// Mission types for dropdown
@@ -33,7 +33,6 @@ const MissionRecords = () => {
 	];
 
 	// Load missions on component mount
-	//test 1
 	useEffect(() => {
 		loadMissions();
 	}, [currentPage, filters]);
@@ -44,12 +43,12 @@ const MissionRecords = () => {
 			const params = {
 				page: currentPage,
 				limit: 10,
-				...filters,
+				missionType: filters.missionType,
 			};
 
 			const response = await missionService.getMissions(params);
-			setMissions(response.data.docs || []);
-			setTotalPages(response.data.totalPages || 1);
+			setMissions(response.docs || []);
+			setTotalPages(response.totalPages || 1);
 		} catch (err) {
 			setError(err.response?.data?.message || "Failed to load missions");
 		} finally {
@@ -110,7 +109,11 @@ const MissionRecords = () => {
 				inventoryItems: validItems,
 			};
 
-			await missionService.createMission(missionData);
+			if (editingMissionId) {
+				await missionService.updateMission(editingMissionId, missionData);
+			} else {
+				await missionService.createMission(missionData);
+			}
 
 			// Reset form and reload missions
 			setFormData({
@@ -121,11 +124,43 @@ const MissionRecords = () => {
 				inventoryItems: [],
 			});
 			setShowForm(false);
+			setEditingMissionId(null);
 			loadMissions();
 
-			alert("Mission record created successfully!");
+			alert(editingMissionId ? "Mission record updated successfully!" : "Mission record created successfully!");
 		} catch (err) {
 			setError(err.response?.data?.message || "Failed to create mission");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const startEditMission = (mission) => {
+		setEditingMissionId(mission._id);
+		setFormData({
+			missionType: mission.missionType || "",
+			missionDate: mission.missionDate ? new Date(mission.missionDate).toISOString().slice(0, 10) : "",
+			missionTime: mission.missionTime || "",
+			description: mission.description || "",
+			inventoryItems: (mission.inventoryItems || []).map((it) => ({
+				itemCode: it.itemCode || "",
+				quantity: Number(it.quantity) || 0,
+				usedQuantity: Number(it.usedQuantity) || 0,
+			})),
+		});
+		setShowForm(true);
+	};
+
+	const deleteMission = async (id) => {
+		if (!window.confirm("Are you sure you want to delete this mission?")) return;
+		try {
+			setLoading(true);
+			setError("");
+			await missionService.deleteMission(id);
+			await loadMissions();
+			alert("Mission deleted successfully");
+		} catch (err) {
+			setError(err.response?.data?.message || "Failed to delete mission");
 		} finally {
 			setLoading(false);
 		}
@@ -181,58 +216,24 @@ const MissionRecords = () => {
 							))}
 						</select>
 					</div>
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							Status
-						</label>
-						<select
-							name="status"
-							value={filters.status}
-							onChange={handleFilterChange}
-							className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-						>
-							<option value="">All Status</option>
-							<option value="Active">Active</option>
-							<option value="Completed">Completed</option>
-							<option value="Cancelled">Cancelled</option>
-						</select>
-					</div>
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							Start Date
-						</label>
-						<input
-							type="date"
-							name="startDate"
-							value={filters.startDate}
-							onChange={handleFilterChange}
-							className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-						/>
-					</div>
-					<div>
-						<label className="block text-sm font-medium text-gray-700 mb-2">
-							End Date
-						</label>
-						<input
-							type="date"
-							name="endDate"
-							value={filters.endDate}
-							onChange={handleFilterChange}
-							className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-						/>
-					</div>
 				</div>
 			</div>
 
 			{/* Add Mission Button */}
-			<div className="mb-6">
-				<button
-					onClick={() => setShowForm(!showForm)}
-					className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
-				>
-					{showForm ? "Cancel" : "Add New Mission"}
-				</button>
-			</div>
+		<div className="mb-6 flex items-center gap-3">
+			<button
+				onClick={() => setShowForm(!showForm)}
+				className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
+			>
+				{showForm ? "Cancel" : "Add New Mission"}
+			</button>
+			<button
+				onClick={() => navigate("/salary-management")}
+				className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
+			>
+				Go to Salary Management
+			</button>
+		</div>
 
 			{/* Mission Form */}
 			{showForm && (
@@ -432,7 +433,7 @@ const MissionRecords = () => {
 				) : missions.length === 0 ? (
 					<div className="p-6 text-center text-gray-500">
 						No missions found.{" "}
-						{filters.missionType || filters.status
+						{filters.missionType
 							? "Try adjusting your filters."
 							: "Create your first mission record."}
 					</div>
@@ -462,6 +463,9 @@ const MissionRecords = () => {
 									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 										Created By
 									</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+										Actions
+									</th>
 								</tr>
 							</thead>
 							<tbody className="bg-white divide-y divide-gray-200">
@@ -486,8 +490,19 @@ const MissionRecords = () => {
 												{mission.description}
 											</div>
 										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-											{mission.inventoryItems.length} items
+										<td className="px-6 py-4 whitespace-normal text-sm text-gray-900">
+											{mission.inventoryItems && mission.inventoryItems.length > 0 ? (
+												<div className="space-y-1">
+													{mission.inventoryItems.map((it, idx) => (
+														<div key={idx} className="text-xs">
+															<span className="font-medium">{it.itemCode}</span>
+															{` (Available: ${it.quantity}, Used: ${it.usedQuantity})`}
+														</div>
+													))}
+												</div>
+											) : (
+												<span className="text-gray-500">No items</span>
+											)}
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
@@ -504,6 +519,22 @@ const MissionRecords = () => {
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 											{mission.createdBy?.name || "Unknown"}
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap text-sm">
+											<div className="flex items-center gap-2">
+												<button
+													onClick={() => startEditMission(mission)}
+													className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
+												>
+													Edit
+												</button>
+												<button
+													onClick={() => deleteMission(mission._id)}
+													className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded"
+												>
+													Delete
+												</button>
+											</div>
 										</td>
 									</tr>
 								))}
