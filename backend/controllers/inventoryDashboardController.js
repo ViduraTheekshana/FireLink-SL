@@ -115,7 +115,8 @@ const getInventoryDashboardStats = async (req, res) => {
         },
         recentLogs: recentLogs || [],
         trends: {
-          itemsAddedLast7Days: trends
+          itemsAddedLast7Days: trends.itemsAdded,
+          itemsRemovedLast7Days: trends.itemsRemoved
         },
         categories: categories.map(cat => ({
           category: cat._id,
@@ -137,43 +138,113 @@ const getInventoryDashboardStats = async (req, res) => {
   }
 };
 
-// Helper function to generate 7-day trend data
+// Helper function to generate detailed 7-day trend data for both added and removed items
 const generateTrendData = async () => {
   try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const trends = [];
+    const itemsAdded = [];
+    const itemsRemoved = [];
+    
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
+      const dayStart = new Date(dateStr);
+      const dayEnd = new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000);
       
-      const count = await Inventory.countDocuments({
-        createdAt: {
-          $gte: new Date(dateStr),
-          $lt: new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000)
-        }
+      // Get items added (from Inventory collection - new items created)
+      const [itemsAddedToday, quantityAddedToday] = await Promise.all([
+        Inventory.countDocuments({
+          createdAt: {
+            $gte: dayStart,
+            $lt: dayEnd
+          }
+        }),
+        Inventory.aggregate([
+          {
+            $match: {
+              createdAt: {
+                $gte: dayStart,
+                $lt: dayEnd
+              }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalQuantity: { $sum: '$quantity' }
+            }
+          }
+        ])
+      ]);
+      
+      // Get items removed (from InventoryLog collection - DELETE actions)
+      const [itemsRemovedToday, quantityRemovedToday] = await Promise.all([
+        InventoryLog.countDocuments({
+          timestamp: {
+            $gte: dayStart,
+            $lt: dayEnd
+          },
+          action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
+        }),
+        InventoryLog.aggregate([
+          {
+            $match: {
+              timestamp: {
+                $gte: dayStart,
+                $lt: dayEnd
+              },
+              action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalItems: { $sum: 1 }
+            }
+          }
+        ])
+      ]);
+      
+      const dayQuantityAdded = quantityAddedToday[0]?.totalQuantity || 0;
+      const dayQuantityRemoved = quantityRemovedToday[0]?.totalItems || 0;
+      
+      itemsAdded.push({
+        date: dateStr,
+        count: itemsAddedToday,
+        quantity: dayQuantityAdded,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
       });
       
-      trends.push({
+      itemsRemoved.push({
         date: dateStr,
-        count: count
+        count: itemsRemovedToday,
+        quantity: dayQuantityRemoved,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
       });
     }
     
-    return trends;
+    return {
+      itemsAdded,
+      itemsRemoved
+    };
   } catch (error) {
     console.error('Trend data error:', error);
     // Return safe default data
-    return Array.from({ length: 7 }, (_, i) => {
+    const defaultData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
       return {
         date: date.toISOString().split('T')[0],
-        count: 0
+        count: 0,
+        quantity: 0,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
       };
     });
+    
+    return {
+      itemsAdded: defaultData,
+      itemsRemoved: defaultData
+    };
   }
 };
 

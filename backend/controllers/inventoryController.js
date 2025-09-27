@@ -112,19 +112,60 @@ const getItems = async (req, res) => {//get all inventory items
 
     // Build filter object
     const filter = {};
+    const andConditions = [];
     
-    //add search filter
+    //add search filter with special keywords
     if (search) {
-      filter.$or = [
-        { item_name: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
-        { location: { $regex: search, $options: 'i' } }
-      ];
+      if (search.toLowerCase() === 'lowstock') {
+        // Special keyword for low stock items
+        andConditions.push({
+          $expr: { $lte: ['$quantity', '$threshold'] }
+        });
+      } else if (search.toLowerCase() === 'expiring') {
+        // Special keyword for items expiring soon (within 30 days)
+        andConditions.push({
+          expire_date: {
+            $gte: new Date(),
+            $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          }
+        });
+      } else {
+        // Regular text search
+        andConditions.push({
+          $or: [
+            { item_name: { $regex: search, $options: 'i' } },
+            { category: { $regex: search, $options: 'i' } },
+            { location: { $regex: search, $options: 'i' } }
+          ]
+        });
+      }
     }
     
     //add specific filters
     if (category) filter.category = category;
-    if (condition) filter.condition = condition;
+    if (condition) {
+      if (condition === 'Expired') {
+        // For expired condition, include items with condition 'Expired' OR past expire_date
+        andConditions.push({
+          $or: [
+            { condition: 'Expired' },
+            { expire_date: { $lt: new Date() } }
+          ]
+        });
+      } else if (condition === 'Low Stock') {
+        // For low stock condition, include items where quantity <= threshold
+        andConditions.push({
+          $expr: { $lte: ['$quantity', '$threshold'] }
+        });
+      } else {
+        filter.condition = condition;
+      }
+    }
+    
+    // Combine all conditions with $and if there are multiple
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
     if (status) filter.status = status;
     if (location) filter.location = { $regex: location, $options: 'i' };
 

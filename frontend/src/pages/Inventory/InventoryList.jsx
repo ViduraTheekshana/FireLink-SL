@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getItems, getCategories, getLocations, deleteItem } from '../../api/inventoryApi';
+import { createReorder } from '../../api/inventoryReorderApi';
 
 const InventoryList = () => {
+  const [searchParams] = useSearchParams();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   
-  // Search and filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedCondition, setSelectedCondition] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
+  // Search and filter state - Initialize from URL parameters
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || '');
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || '');
+  const [selectedLocation, setSelectedLocation] = useState(searchParams.get('location') || '');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,9 +36,24 @@ const InventoryList = () => {
     loadInitialData();
   }, []);
 
+  // Handle URL parameter changes
   useEffect(() => {
-    loadInventoryData();// runs when components mout or filters change
-  }, [currentPage, itemsPerPage, sortBy, sortOrder]);
+    const search = searchParams.get('search') || '';
+    const category = searchParams.get('category') || '';
+    const condition = searchParams.get('condition') || '';
+    const status = searchParams.get('status') || '';
+    const location = searchParams.get('location') || '';
+    
+    setSearchTerm(search);
+    setSelectedCategory(category);
+    setSelectedCondition(condition);
+    setSelectedStatus(status);
+    setSelectedLocation(location);
+  }, [searchParams]);
+
+  useEffect(() => {
+    loadInventoryData();// runs when components mount or filters change
+  }, [currentPage, itemsPerPage, sortBy, sortOrder, searchTerm, selectedCategory, selectedCondition, selectedStatus, selectedLocation]);
 
   const loadInitialData = async () => {
     try {
@@ -133,7 +150,7 @@ const InventoryList = () => {
     }
   };
 
-  const handleBulkReorder = () => {
+  const handleBulkReorder = async () => {
     if (selectedItems.length === 0) {
       setError('Please select items to create reorders');
       return;
@@ -147,10 +164,63 @@ const InventoryList = () => {
       setError('No low stock items selected for reorder');
       return;
     }
-    
-    // Navigate to bulk reorder page or show modal
-    const itemIds = lowStockItems.map(item => item._id).join(',');
-    window.open(`/inventory/bulk-reorder?items=${itemIds}`, '_blank');
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Create reorders for each selected low stock item with progress feedback
+      const results = [];
+      const failed = [];
+      
+      for (let i = 0; i < lowStockItems.length; i++) {
+        const item = lowStockItems[i];
+        try {
+          const reorderData = {
+            inventoryItemId: item._id,
+            quantity: Math.max(item.threshold - item.quantity, 10), // Suggest reorder quantity
+            supplier: 'To be determined', // To be determined by user later
+            priority: item.quantity === 0 ? 'Urgent' : 'Medium',
+            notes: `Bulk reorder - Item below threshold (${item.quantity}/${item.threshold})`,
+            expectedDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 2 weeks from now
+          };
+          
+          const result = await createReorder(reorderData);
+          results.push({ item: item.item_name, success: true, data: result });
+        } catch (itemError) {
+          console.error(`Failed to create reorder for ${item.item_name}:`, itemError);
+          failed.push({ item: item.item_name, error: itemError.message });
+        }
+      }
+      
+      // Clear selection and show detailed results
+      setSelectedItems([]);
+      setSelectAll(false);
+      
+      if (results.length > 0) {
+        const successMessage = `Successfully created ${results.length} reorder request(s)!\n\nItems processed:\n${results.map(r => `✓ ${r.item}`).join('\n')}`;
+        
+        if (failed.length > 0) {
+          const failedMessage = `\n\nFailed items:\n${failed.map(f => `✗ ${f.item}: ${f.error}`).join('\n')}`;
+          alert(successMessage + failedMessage);
+        } else {
+          alert(successMessage);
+        }
+        
+        // Optionally redirect to reorders page
+        if (window.confirm('Would you like to view the created reorder requests?')) {
+          window.open('/inventory/reorders', '_blank');
+        }
+      } else {
+        setError('Failed to create any reorder requests. Please try again or create individual reorders.');
+      }
+      
+    } catch (error) {
+      console.error('Bulk reorder error:', error);
+      setError(`Failed to create reorders: ${error.message || 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clearFilters = () => {
@@ -163,7 +233,12 @@ const InventoryList = () => {
     loadInventoryData();
   };
 
-  const getConditionColor = (condition) => {
+  const getConditionColor = (condition, item = null) => {
+    // Check for low stock condition
+    if (condition === 'Low Stock' || (item && isLowStock(item))) {
+      return 'text-amber-600 bg-amber-100';
+    }
+    
     switch (condition) {
       case 'Good': return 'text-green-600 bg-green-100';
       case 'Damaged': return 'text-orange-600 bg-orange-100';
@@ -251,6 +326,12 @@ const InventoryList = () => {
               📋 View Logs
             </Link>
             <Link
+              to="/inventory/reorders"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              📦 Ordered Items
+            </Link>
+            <Link
               to="/inventory/add"
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
@@ -301,6 +382,7 @@ const InventoryList = () => {
               <option value="Good">Good</option>
               <option value="Damaged">Damaged</option>
               <option value="Expired">Expired</option>
+              <option value="Low Stock">Low Stock</option>
             </select>
           </div>
 
@@ -371,9 +453,14 @@ const InventoryList = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleBulkReorder}
-                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                disabled={loading || inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length === 0}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                📋 Bulk Reorder ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length})
+                {loading ? (
+                  <>⏳ Creating Reorders...</>
+                ) : (
+                  <>📋 Bulk Reorder ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length})</>
+                )}
               </button>
               <button
                 onClick={() => setSelectedItems([])}
@@ -486,9 +573,16 @@ const InventoryList = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getConditionColor(item.condition)}`}>
-                      {item.condition}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getConditionColor(item.condition, item)}`}>
+                        {item.condition}
+                      </span>
+                      {isLowStock(item) && (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full text-amber-600 bg-amber-100">
+                          Low Stock
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
