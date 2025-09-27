@@ -14,6 +14,9 @@ import UpdateSession from "./pages/TraningSessionManagement/UpdateSession";
 import ViewSessions from "./pages/TraningSessionManagement/AllSessionsDetails";
 import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
 import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
+import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+
+
 
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
@@ -36,6 +39,7 @@ import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForS
 import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
 
@@ -57,6 +61,7 @@ const App = () => {
         <Route path="/update-user/:id" element={<UpdateUser />} />
         <Route path="/userdetails/:id" element={<UserDetails />} />
 
+        <Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 
         <Route
           path="/training-dashboard"

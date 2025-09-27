@@ -25,12 +25,14 @@ const Sidebar = ({ user, onLogout }) => {
 
     switch (user.position.toLowerCase()) {
       case "1stclass officer":
-        links.push(
-          { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
-          { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
-          { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> }
-        );
-        break;
+      links.push(
+        { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
+        { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
+        { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> },
+        { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },  // NEW
+        { name: "Staff Management", path: `/staff-management/${user._id}`, icon: <FaUsers /> } // NEW
+      );
+      break;
 
       case "fighter":
         links.push({ name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> });

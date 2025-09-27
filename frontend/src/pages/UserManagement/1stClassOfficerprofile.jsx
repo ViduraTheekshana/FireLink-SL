@@ -3,14 +3,21 @@ import axios from "axios";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import StaffManagementTable from "./StaffManagementTable";
 
-const OfficerProfile = () => {
-  const { id } = useParams();
+const OfficerProfile = ({ officerId }) => {
+  const { id: paramId } = useParams();
+  const id = officerId || paramId; // Use prop if provided, otherwise URL param
   const navigate = useNavigate();
   const [officer, setOfficer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!id) {
+      setError("No officer ID provided");
+      setLoading(false);
+      return;
+    }
+
     const fetchOfficerData = async () => {
       try {
         setLoading(true);
@@ -54,7 +61,7 @@ const OfficerProfile = () => {
   return (
     <div className="min-h-screen bg-[#1e2a38] py-8 px-4">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        {/* Header Section */}
+        {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 relative">
           <div className="absolute top-4 right-4">
             <span className="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full">
@@ -63,6 +70,7 @@ const OfficerProfile = () => {
           </div>
           <div className="flex items-center space-x-4">
             <div className="bg-white/20 p-3 rounded-full">
+              {/* Profile Icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-10 w-10"
@@ -98,7 +106,7 @@ const OfficerProfile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Staff ID */}
             <div className="col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 Identification
               </h2>
               <div className="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
@@ -140,28 +148,16 @@ const OfficerProfile = () => {
 
           {/* Action Buttons */}
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
-            <Link
-              to="/stafflogin"
-              className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition"
-            >
+            <Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
               Back to Login
             </Link>
-            <Link
-              to="/shiftschedule"
-              className="px-6 py-3 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition"
-            >
+            <Link to="/shiftschedule" className="px-6 py-3 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition">
               Make Shift
             </Link>
-            <Link
-              to={`/update-user/${officer._id}`}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
-            >
+            <Link to={`/update-user/${officer._id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
               Edit Profile
             </Link>
-            <Link
-              to="/firstaff"
-              className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
-            >
+            <Link to="/firstaff" className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
               Add Staff Members
             </Link>
           </div>

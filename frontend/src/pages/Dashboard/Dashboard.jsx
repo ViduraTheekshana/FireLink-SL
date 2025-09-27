@@ -28,8 +28,7 @@ const DynamicDashboard = () => {
   const renderContent = () => {
     switch (user.position.toLowerCase()) {
       case "1stclass officer":
-        return  <OfficerProfile id={user._id} />;
-;
+    return <OfficerProfile officerId={user._id} />;
 
       case "fighter":
         return (
