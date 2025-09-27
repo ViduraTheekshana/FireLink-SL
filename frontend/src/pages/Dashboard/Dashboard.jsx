@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../../pages/UserManagement/Sidebar";
 import TrainingSession from "../TraningSessionManagement/TrainingSessionManager";
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
+import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
 
 
 const DynamicDashboard = () => {
@@ -48,12 +49,7 @@ const DynamicDashboard = () => {
         );
 
       case "inventorymanager":
-        return (
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Inventory Manager Dashboard</h1>
-            <p>Track equipment and stock levels.</p>
-          </div>
-        );
+        return <InventoryManagerDashboard />;
 
       case "recordmanager":
         return (
