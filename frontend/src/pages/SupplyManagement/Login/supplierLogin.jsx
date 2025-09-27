@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/auth";
 import { useNavigate } from "react-router-dom";
 import "./supplier.css";
 import Loader from "../../../components/Loader";
+import extractErrorMessage from "../../../utils/errorMessageParser";
 
 const SupplierLogin = () => {
 	const [formData, setFormData] = useState({
@@ -34,8 +35,7 @@ const SupplierLogin = () => {
 			await login(formData.email, formData.password);
 			navigate("/supplier/supply-requests", { replace: true });
 		} catch (exception) {
-			const apiMessage = exception?.response?.data?.message;
-			setError(apiMessage || "Supplier login failed");
+			setError(extractErrorMessage(exception));
 		} finally {
 			setLoading(false);
 		}
@@ -58,7 +58,7 @@ const SupplierLogin = () => {
 		}
 	}, [error, setError, toast]);
 
-	if (authLoading) return <Loader />;
+	if (loading) return <Loader />;
 
 	return (
 		<div className="supplier-login-container">

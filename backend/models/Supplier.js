@@ -23,10 +23,6 @@ const supplierSchema = new mongoose.Schema(
 			minLength: [6, "Password must be at least 6 characters"],
 			select: false,
 		},
-		roles: {
-			type: [String],
-			default: ["supplier"],
-		},
 		lastLogin: {
 			type: Date,
 		},

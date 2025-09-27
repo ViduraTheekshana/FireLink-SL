@@ -114,7 +114,9 @@ const Bids = () => {
 	const handleCancel = () => {
 		setShowForm(false);
 		if (requestId) {
-			navigate("/supply-requests");
+			navigate("/supplier/supply-requests", {
+				replace: true,
+			});
 		}
 	};
 
