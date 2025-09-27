@@ -16,6 +16,8 @@ import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
 import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
 import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
+import Profile from "./pages/UserManagement/profile";
+import Settings from "./pages/UserManagement/setting";
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
@@ -57,7 +59,8 @@ const App = () => {
         <Route path="/update-user/:id" element={<UpdateUser />} />
         <Route path="/userdetails/:id" element={<UserDetails />} />
         <Route path="/civilian-dashboard" element={<CivilianDashboard />} />
-
+<Route path="/profile" element={<Profile />} />
+<Route path="/settings" element={<Settings />} />
         {/* Training / Staff routes */}
         <Route path="/training-dashboard" element={<TrainingSessionManager />} />
         <Route path="/update-session/:id" element={<UpdateSession />} />
@@ -170,12 +173,23 @@ const App = () => {
         />
 
         {/* Catch all */}
-        <Route
-          path="*"
-          element={
-            user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
-          }
-        />
+        {/* Catch all */}
+<Route
+  path="*"
+  element={
+    user ? (
+      // 👇 Check if profile is incomplete
+      !user.name || !user.phone || !user.address ? (
+        <Navigate to="/profile" replace />
+      ) : (
+        <Navigate to="/dashboard" replace />
+      )
+    ) : (
+      <Navigate to="/" replace />
+    )
+  }
+/>
+
       </Routes>
 
       <ToastContainer
