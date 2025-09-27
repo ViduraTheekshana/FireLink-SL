@@ -25,14 +25,13 @@ const Sidebar = ({ user, onLogout }) => {
 
     switch (user.position.toLowerCase()) {
       case "1stclass officer":
-      links.push(
-        { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
-        { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
-        { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> },
-        { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },  // NEW
-        { name: "Staff Management", path: `/staff-management/${user._id}`, icon: <FaUsers /> } // NEW
-      );
-      break;
+        links.push(
+          { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
+          { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> },
+          { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },  // NEW
+          { name: "Staff Management", path: "/staff-management", icon: <FaUsers /> }
+        );
+        break;
 
       case "fighter":
         links.push({ name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> });
@@ -47,7 +46,10 @@ const Sidebar = ({ user, onLogout }) => {
         );
         break;
       case "recordmanager":
-        links.push({ name: "Records", path: "/records", icon: <FaClipboardList /> });
+        links.push({ name: "Records", path: "/records", icon: <FaClipboardList /> },
+          { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
+
+        );
         break;
       case "preventionmanager":
         links.push({ name: "Prevention", path: "/prevention", icon: <FaClipboardList /> });
@@ -99,18 +101,22 @@ const Sidebar = ({ user, onLogout }) => {
         </nav>
       </div>
 
-      {/* Logout Button */}
-      <button
-        onClick={() => {
-          localStorage.removeItem("user");
-          localStorage.removeItem("staffId");
-          onLogout ? onLogout() : navigate("/staff-login");
-        }}
-        className="flex items-center gap-3 mt-6 px-3 py-2 rounded bg-red-600 hover:bg-red-700 transition"
-      >
-        <FaSignOutAlt />
-        Logout
-      </button>
+     {/* Logout Button */}
+<button
+  onClick={() => {
+    const confirmLogout = window.confirm("Do you want to log out?");
+    if (confirmLogout) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("staffId");
+      onLogout ? onLogout() : navigate("/staff-login");
+    }
+  }}
+  className="flex items-center gap-3 mt-6 px-3 py-2 rounded bg-red-600 hover:bg-red-700 transition"
+>
+  <FaSignOutAlt />
+  Logout
+</button>
+
     </div>
   );
 };

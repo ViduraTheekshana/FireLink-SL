@@ -18,7 +18,7 @@ const shiftScheduleSchema = new Schema({
   },
   members: [{
     type: Schema.Types.ObjectId,
-    ref: "UserReg",
+    ref: "Users",
     required: true
   }],
   notes: {
