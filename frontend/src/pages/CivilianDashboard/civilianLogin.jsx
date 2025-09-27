@@ -8,7 +8,6 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-c
 const CivilianLogin = () => {
   const navigate = useNavigate();
 
-  // States
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
     firstName: "",
@@ -37,6 +36,21 @@ const CivilianLogin = () => {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pw);
   const validatePhone = (phone) => /^0\d{9}$/.test(phone);
   const validateUsername = (username) => /^[a-zA-Z0-9_\.]{4,20}$/.test(username);
+
+  const isLoginFormValid = () => formData.email && formData.password && validateEmail(formData.email);
+  const isSignupFormValid = () =>
+    signupData.firstName &&
+    signupData.lastName &&
+    signupData.username &&
+    signupData.phoneNumber &&
+    signupData.address &&
+    signupData.email &&
+    signupData.password &&
+    signupData.confirmPassword &&
+    signupData.password === signupData.confirmPassword &&
+    validateEmail(signupData.email) &&
+    validatePhone(signupData.phoneNumber) &&
+    validatePassword(signupData.password);
 
   // ----------------------
   // Input handlers
@@ -115,6 +129,7 @@ const CivilianLogin = () => {
   // ----------------------
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (!isLoginFormValid()) return;
     setLoading(true);
     setError("");
 
@@ -141,17 +156,12 @@ const CivilianLogin = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    if (!isSignupFormValid()) {
+      setError("Please fill all fields correctly");
+      return;
+    }
     setLoading(true);
     setError("");
-
-    // Validation
-    if (!validateName(signupData.firstName)) return setError("Invalid first name");
-    if (!validateName(signupData.lastName)) return setError("Invalid last name");
-    if (!validateEmail(signupData.email)) return setError("Invalid email");
-    if (!validateUsername(signupData.username)) return setError("Invalid username");
-    if (!validatePassword(signupData.password)) return setError("Invalid password");
-    if (signupData.password !== signupData.confirmPassword) return setError("Passwords do not match");
-    if (!validatePhone(signupData.phoneNumber)) return setError("Invalid phone number");
 
     try {
       const { data } = await axios.post(
@@ -216,9 +226,7 @@ const CivilianLogin = () => {
     }
   };
 
-  // ----------------------
   // Auto redirect if logged in
-  // ----------------------
   useEffect(() => {
     if (localStorage.getItem("accessToken")) navigate("/civilian-dashboard");
   }, [navigate]);
@@ -233,11 +241,9 @@ const CivilianLogin = () => {
           <h2 className="text-2xl font-bold text-gray-900">Civilian Portal</h2>
         </div>
 
-        {/* Error / Success Messages */}
         {error && <div className="mb-4 text-red-700 bg-red-50 px-4 py-2 rounded">{error}</div>}
         {success && <div className="mb-4 text-green-700 bg-green-50 px-4 py-2 rounded">{success}</div>}
 
-        {/* Forms */}
         {isForgotPassword ? (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <input
@@ -266,7 +272,9 @@ const CivilianLogin = () => {
                   placeholder="First Name"
                   value={signupData.firstName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    signupData.firstName && !validateName(signupData.firstName) ? "border-red-500" : "border-gray-300"
+                  }`}
                   disabled={loading}
                 />
                 <input
@@ -274,7 +282,9 @@ const CivilianLogin = () => {
                   placeholder="Last Name"
                   value={signupData.lastName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    signupData.lastName && !validateName(signupData.lastName) ? "border-red-500" : "border-gray-300"
+                  }`}
                   disabled={loading}
                 />
                 <input
@@ -282,7 +292,9 @@ const CivilianLogin = () => {
                   placeholder="Username"
                   value={signupData.username}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    signupData.username && !validateUsername(signupData.username) ? "border-red-500" : "border-gray-300"
+                  }`}
                   disabled={loading}
                 />
                 <input
@@ -290,7 +302,9 @@ const CivilianLogin = () => {
                   placeholder="Phone Number"
                   value={signupData.phoneNumber}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    signupData.phoneNumber && !validatePhone(signupData.phoneNumber) ? "border-red-500" : "border-gray-300"
+                  }`}
                   disabled={loading}
                 />
                 <textarea
@@ -307,7 +321,9 @@ const CivilianLogin = () => {
                   placeholder="Password"
                   value={signupData.password}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    signupData.password && !validatePassword(signupData.password) ? "border-red-500" : "border-gray-300"
+                  }`}
                   disabled={loading}
                 />
                 <input
@@ -316,7 +332,11 @@ const CivilianLogin = () => {
                   placeholder="Confirm Password"
                   value={signupData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    signupData.confirmPassword && signupData.confirmPassword !== signupData.password
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                   disabled={loading}
                 />
               </>
@@ -328,7 +348,12 @@ const CivilianLogin = () => {
               placeholder="Email"
               value={isSignup ? signupData.email : formData.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg"
+              className={`w-full px-3 py-2 border rounded-lg ${
+                (isSignup ? signupData.email : formData.email) &&
+                !validateEmail(isSignup ? signupData.email : formData.email)
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
               disabled={loading}
             />
             {!isSignup && (
@@ -351,13 +376,24 @@ const CivilianLogin = () => {
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="w-full bg-gray-900 text-white py-2 rounded-lg">
+            <button
+              type="submit"
+              disabled={loading || (isSignup ? !isSignupFormValid() : !isLoginFormValid())}
+              className={`w-full py-2 rounded-lg text-white ${
+                isSignup
+                  ? isSignupFormValid()
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                  : isLoginFormValid()
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
+            >
               {loading ? (isSignup ? "Creating..." : "Signing in...") : isSignup ? "Sign Up" : "Login"}
             </button>
           </form>
         )}
 
-        {/* Google Login */}
         {!isForgotPassword && (
           <button
             onClick={handleGoogleLogin}
@@ -368,7 +404,6 @@ const CivilianLogin = () => {
           </button>
         )}
 
-        {/* Switch Login/Signup */}
         <div className="mt-4 text-center">
           {isSignup ? (
             <p>

@@ -15,6 +15,9 @@ const ShiftScheduler = () => {
   const vehicleOptions = ["Engine 1", "Engine 2", "Ladder 1", "Rescue 1", "Tanker 1", "Command 1"];
   const shiftTypeOptions = ["Day Shift (08:00-20:00)", "Night Shift (20:00-08:00)", "24-Hour Shift"];
 
+
+
+
   useEffect(() => {
     fetchSchedules();
     fetchMembers();
@@ -33,6 +36,33 @@ const ShiftScheduler = () => {
       setMembers(res.data.users);
     } catch (err) { console.error(err); }
   };
+const isFormValid = () => {
+  const newErrors = {};
+
+  // Required field validation
+  if (!formData.date) newErrors.date = 'Date is required';
+  else {
+    const dateError = validateDate(formData.date);
+    if (dateError) newErrors.date = dateError;
+  }
+
+  if (!formData.vehicle) newErrors.vehicle = 'Vehicle selection is required';
+  if (!formData.shiftType) newErrors.shiftType = 'Shift type is required';
+
+  // Team composition validation
+  if (formData.members.length === 0) {
+    newErrors.members = 'At least one member must be assigned';
+  } else {
+    const teamError = validateTeamComposition(formData.members);
+    if (teamError) newErrors.members = teamError;
+  }
+
+  // Availability validation
+  const availabilityErrors = checkAvailability();
+  Object.assign(newErrors, availabilityErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
 
 
   // Validate date - cannot select past dates
@@ -107,6 +137,7 @@ const ShiftScheduler = () => {
     setErrors(prev => ({ ...prev, members: teamError || '' }));
   };
 
+  
   const validateForm = () => {
     const newErrors = {};
 
@@ -209,6 +240,34 @@ const ShiftScheduler = () => {
     month: 'short',
     day: 'numeric'
   });
+
+  const checkAvailability = () => {
+  const selectedDate = formData.date;
+  const selectedVehicle = formData.vehicle;
+  const selectedMembers = formData.members;
+
+  let availabilityErrors = {};
+
+  // Vehicle conflict
+  const vehicleConflict = schedules.some(
+    s => s.date.split('T')[0] === selectedDate &&
+         s.vehicle === selectedVehicle &&
+         (!editingSchedule || s._id !== editingSchedule._id)
+  );
+  if (vehicleConflict) availabilityErrors.vehicle = "This vehicle is already assigned on the selected date.";
+
+  // Member conflicts
+  const memberConflicts = schedules
+    .filter(s => s.date.split('T')[0] === selectedDate && (!editingSchedule || s._id !== editingSchedule._id))
+    .flatMap(s => s.members.map(m => m._id));
+  const overlappingMembers = selectedMembers.filter(m => memberConflicts.includes(m));
+  if (overlappingMembers.length > 0) {
+    availabilityErrors.members = `These members are already assigned on this date: ${overlappingMembers.map(id => getMemberName(id)).join(', ')}`;
+  }
+
+  return availabilityErrors;
+};
+
 // search bar
 
 const [searchDate, setSearchDate] = useState('');

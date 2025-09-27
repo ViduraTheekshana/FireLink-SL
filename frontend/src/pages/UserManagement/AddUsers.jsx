@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUser, FaPhone, FaBirthdayCake, FaEnvelope, FaBriefcase, FaFlag, FaMapMarkerAlt, FaLock } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ const URL = "http://localhost:5000/users";
 
 function AddFireStaff() {
   const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user")); // logged-in user for sidebar
+  const user = JSON.parse(localStorage.getItem("user")); // logged-in user for sidebar
 
   const [formData, setFormData] = useState({
     name: "",
@@ -20,6 +20,8 @@ function AddFireStaff() {
     address: "",
     password: "",
   });
+
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const positions = [
@@ -39,15 +41,82 @@ function AddFireStaff() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+
+    // Validate input as user types
+    validateField(name, value);
+  };
+
+  const validateField = (name, value) => {
+    let err = { ...errors };
+
+    if (name === "name") {
+      if (value.trim().length < 5) err.name = "Full name must be at least 5 characters";
+      else delete err.name;
+    }
+
+    if (name === "age") {
+      const ageNum = Number(value);
+      if (ageNum < 20 || ageNum > 55) err.age = "Age must be between 20 and 55";
+      else delete err.age;
+    }
+
+    if (name === "gmail") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) err.gmail = "Invalid email format";
+      else delete err.gmail;
+    }
+
+    if (name === "address") {
+      const wordCount = value.trim().split(/\s+/).length;
+      if (wordCount < 4 || wordCount > 15) err.address = "Address must be 4 to 15 words";
+      else delete err.address;
+    }
+
+    if (name === "phone") {
+      const phonePattern = /^0\d{9}$/; // must start with 0 and be 10 digits
+      if (!phonePattern.test(value)) err.phone = "Phone must start with 0 and contain 10 digits";
+      else delete err.phone;
+    }
+
+    // Password validation
+    if (name === "password") {
+      const passwordPattern =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
+      if (!passwordPattern.test(value))
+        err.password =
+          "Password must be at least 6 characters and include uppercase, lowercase, number, and special character";
+      else delete err.password;
+    }
+
+    setErrors(err);
+  };
+
+  const isFormValid = () => {
+    return (
+      formData.name &&
+      formData.age &&
+      formData.phone &&
+      formData.gmail &&
+      formData.position &&
+      formData.status &&
+      formData.address &&
+      formData.password &&
+      Object.keys(errors).length === 0
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormValid()) {
+      alert("Please fix the errors before submitting.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axios.post(URL, formData);
       if (res.data.status === "ok") {
-      alert(`Staff added successfully! Staff ID: ${res.data.staffId}`);
+        alert(`Staff added successfully! Staff ID: ${res.data.staffId}`);
         setFormData({
           name: "",
           phone: "",
@@ -66,11 +135,13 @@ function AddFireStaff() {
     }
     setLoading(false);
   };
-const handleLogout = () => {
+
+  const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     navigate("/staff-login");
   };
+
   return (
     <div className="flex min-h-screen bg-[#1E2A38]">
       {/* Sidebar */}
@@ -96,13 +167,14 @@ const handleLogout = () => {
                 className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
                 required
               />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
 
             {/* Phone */}
             <div className="relative">
               <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
-                type="number"
+                type="text"
                 name="phone"
                 placeholder="Phone Number"
                 value={formData.phone}
@@ -110,6 +182,7 @@ const handleLogout = () => {
                 className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
                 required
               />
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
 
             {/* Age */}
@@ -124,6 +197,7 @@ const handleLogout = () => {
                 className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
                 required
               />
+              {errors.age && <p className="text-red-500 text-sm mt-1">{errors.age}</p>}
             </div>
 
             {/* Email */}
@@ -138,6 +212,7 @@ const handleLogout = () => {
                 className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
                 required
               />
+              {errors.gmail && <p className="text-red-500 text-sm mt-1">{errors.gmail}</p>}
             </div>
 
             {/* Position */}
@@ -190,6 +265,7 @@ const handleLogout = () => {
                 rows={3}
                 required
               />
+              {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
             </div>
 
             {/* Password */}
@@ -204,13 +280,18 @@ const handleLogout = () => {
                 className="w-full pl-10 p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
                 required
               />
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full p-3 bg-[#FF9800] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition"
+              disabled={!isFormValid() || loading}
+              className={`w-full p-3 text-white font-semibold rounded-xl shadow-lg transition ${
+                isFormValid() && !loading
+                  ? "bg-[#FF9800] hover:shadow-xl"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
             >
               {loading ? "Adding..." : "Add Staff"}
             </button>
@@ -218,7 +299,6 @@ const handleLogout = () => {
         </div>
       </div>
     </div>
-    
   );
 }
 
