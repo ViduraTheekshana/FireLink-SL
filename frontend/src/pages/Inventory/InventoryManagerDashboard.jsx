@@ -178,18 +178,26 @@ const InventoryManagerDashboard = () => {
           {/* Category Distribution */}
           <div className="bg-white rounded-lg shadow p-5">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Category Distribution</h2>
-            <ul className="space-y-2 text-sm max-h-48 overflow-y-auto">
-              {categories.length > 0 ? (
-                categories.slice(0, 8).map((cat, index) => (
-                  <li key={index} className="flex justify-between">
-                    <span className="font-medium text-gray-700">{cat.category || 'Uncategorized'}</span>
-                    <span className="text-gray-600">{cat.items || 0} / {cat.quantity || 0}</span>
-                  </li>
-                ))
-              ) : (
-                <li className="text-gray-500">No category data available</li>
-              )}
-            </ul>
+            {categories.length > 0 ? (
+              <div className="text-sm max-h-48 overflow-y-auto">
+                {/* Column Headers */}
+                <div className="flex justify-between mb-3 pb-2 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase">
+                  <span>Category</span>
+                  <span>ITEM types / Quantity</span>
+                </div>
+                {/* Data Rows */}
+                <ul className="space-y-2">
+                  {categories.slice(0, 8).map((cat, index) => (
+                    <li key={index} className="flex justify-between">
+                      <span className="font-medium text-gray-700">{cat.category || 'Uncategorized'}</span>
+                      <span className="text-gray-600">{cat.items || 0} / {cat.quantity || 0}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="text-gray-500 text-sm">No category data available</div>
+            )}
           </div>
         </div>
 
