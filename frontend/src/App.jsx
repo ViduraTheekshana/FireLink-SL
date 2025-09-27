@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import LoginFireStaff from "./pages/UserManagement/StaffLogin";
+import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 import DynamicDashboard from "./pages/Dashboard/Dashboard";
@@ -20,6 +20,7 @@ import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
 
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
+import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
 import InventoryForm from "./pages/Inventory/InventoryForm";
 import InventoryDetail from "./pages/Inventory/InventoryDetail";
@@ -42,10 +43,11 @@ import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
+import { Bounce, ToastContainer } from "react-toastify";
 
 const App = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const supplier = JSON.parse(localStorage.getItem("supplier")); // example for supplier login
+	const user = JSON.parse(localStorage.getItem("user"));
+	const supplier = JSON.parse(localStorage.getItem("supplier")); // example for supplier login
 
   return (
     <BrowserRouter>
@@ -81,140 +83,125 @@ const App = () => {
         <Route
           path="/mission-records"
           element={
-            <ProtectedRoute user={user}>
               <MissionRecords />
-            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/salary-management"
+          element={
+              <SalaryManagement />
           }
         />
 
-        {/* Inventory routes */}
-        <Route
-          path="/inventory"
-          element={
-            <InventoryList />
-          }
-        />
-        <Route
-          path="/inventory/add"
-          element={
-            <InventoryForm />
-          }
-        />
-        <Route
-          path="/inventory/vehicles"
-          element={
-            <VehicleList />
-          }
-        />
-        <Route
-          path="/inventory/vehicles/add"
-          element={
-            <VehicleForm />
-          }
-        />
-        <Route
-          path="/inventory/vehicles/:id"
-          element={
-            <VehicleDetail />
-          }
-        />
-        <Route
-          path="/inventory/edit/:id"
-          element={
-            <InventoryForm />
-          }
-        />
-        <Route
-          path="/inventory/vehicle-items"
-          element={
-            <VehicleItemsPage />
-          }
-        />
-        <Route
-          path="/inventory/:id/reorder"
-          element={
-            <ReorderPage />
-          }
-        />
-        <Route
-          path="/inventory/reorders"
-          element={
-            <ReordersList />
-          }
-        />
-        <Route
-          path="/inventory/reorders/list"
-          element={
-            <ReordersList />
-          }
-        />
-        <Route
-          path="/inventory/logs"
-          element={
-            <InventoryLogs />
-          }
-        />
-        <Route
-          path="/inventory/:id"
-          element={
-            <InventoryDetail />
-          }
-        />
+				{/* Protected user routes */}
+				<Route path="/dashboard" element={<DynamicDashboard />} />
+				<Route
+					path="/mission-records"
+					element={
+						<ProtectedRoute user={user}>
+							<MissionRecords />
+						</ProtectedRoute>
+					}
+				/>
 
+				{/* Inventory routes */}
+				<Route path="/inventory" element={<InventoryList />} />
+				<Route path="/inventory/add" element={<InventoryForm />} />
+				<Route path="/inventory/vehicles" element={<VehicleList />} />
+				<Route path="/inventory/vehicles/add" element={<VehicleForm />} />
+				<Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
+				<Route path="/inventory/edit/:id" element={<InventoryForm />} />
+				<Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
+				<Route path="/inventory/:id/reorder" element={<ReorderPage />} />
+				<Route path="/inventory/reorders" element={<ReordersList />} />
+				<Route path="/inventory/reorders/list" element={<ReordersList />} />
+				<Route path="/inventory/logs" element={<InventoryLogs />} />
+				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
-        {/* Supplier routes */}
-        <Route
-          path="/suppliers"
-          element={
-            <SupplierManagement />
-          }
-        />
-        <Route
-          path="/supply-requests"
-          element={
-            <SupplyRequests />
-          }
-        />
-        <Route
-          path="/supplier/supply-requests"
-          element={
-            <SupplyRequestForSupplier />
-          }
-        />
-        <Route
-          path="/supplier/bids"
-          element={
-            <Bids />
-          }
-        />
-        <Route
-          path="/supplier/bids/new/:requestId?"
-          element={
-            <Bids />
-          }
-        />
-        <Route
-          path="/supplier/profile"
-          element={
-            <SupplierProfile />
-          }
-        />
+				{/* Shift Management routes */}
+				<Route path="/shifts" element={<ShiftDashboard />} />
+				<Route path="/shifts/create" element={<CreateShift />} />
+				<Route path="/shifts/my-shifts" element={<MyShifts />} />
+				<Route path="/shifts/change-requests" element={<ChangeRequests />} />
+				<Route path="/shifts/messages" element={<Messages />} />
 
+				{/* Supplier routes */}
+				<Route
+					path="/suppliers"
+					element={
+						<ProtectedRoute allowedRoles={["supply_manager"]}>
+							<SupplierManagement />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/supply-requests"
+					element={
+						<ProtectedRoute allowedRoles={["supply_manager"]}>
+							<SupplyRequests />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/supplier/supply-requests"
+					element={
+						<ProtectedSupplierRoute>
+							<SupplyRequestForSupplier />
+						</ProtectedSupplierRoute>
+					}
+				/>
+				<Route
+					path="/supplier/bids"
+					element={
+						<ProtectedSupplierRoute>
+							<Bids />
+						</ProtectedSupplierRoute>
+					}
+				/>
+				<Route
+					path="/supplier/bids/new/:requestId?"
+					element={
+						<ProtectedSupplierRoute>
+							<Bids />
+						</ProtectedSupplierRoute>
+					}
+				/>
+				<Route
+					path="/supplier/profile"
+					element={
+						<ProtectedSupplierRoute>
+							<SupplierProfile />
+						</ProtectedSupplierRoute>
+					}
+				/>
 
-        {/* Catch all route */}
-        <Route
-          path="*"
-
-          element={
-            user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-
-  );
+				{/* Catch all route */}
+				<Route
+					path="*"
+					element={
+						user ? (
+							<Navigate to="/dashboard" replace />
+						) : (
+							<Navigate to="/" replace />
+						)
+					}
+				/>
+			</Routes>
+			<ToastContainer
+				position="bottom-right"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick={false}
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme="dark"
+				transition={Bounce}
+			/>
+		</BrowserRouter>
+	);
 };
-
-
 
 export default App;

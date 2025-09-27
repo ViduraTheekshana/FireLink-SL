@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../../pages/UserManagement/Sidebar";
 import TrainingSession from "../TraningSessionManagement/TrainingSessionManager";
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
-
+import MissionRecords from "../MissionRecords/MissionRecords"
 
 const DynamicDashboard = () => {
   const location = useLocation();
@@ -55,12 +55,7 @@ const DynamicDashboard = () => {
         );
 
       case "recordmanager":
-        return (
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Record Manager Dashboard</h1>
-            <p>Manage fire incident records and reports.</p>
-          </div>
-        );
+        return <MissionRecords/>;
 
       case "preventionmanager":
         return (

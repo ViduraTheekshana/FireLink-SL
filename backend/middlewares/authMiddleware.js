@@ -1,44 +1,48 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/UserManagement/UserReg");
+const catchAsyncErrors = require("./catchAsyncErrors");
 
-const auth = (req, res, next) => {
-  //  Check for Authorization header
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+exports.protect = catchAsyncErrors(async (req, res, next) => {
+	let token;
 
-  // 2 Extract token
-  const token = authHeader.split(" ")[1];
+	if (
+		req.headers.authorization &&
+		req.headers.authorization.startsWith("Bearer")
+	) {
+		token = req.headers.authorization.split(" ")[1];
+	}
 
-  try {
-    // 3 Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // attach decoded payload to request
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid token" });
-  }
-};
+	if (!token) {
+		return res
+			.status(401)
+			.json({ success: false, message: "Not authorized, token missing" });
+	}
 
-module.exports = auth;
+	const decoded = jwt.verify(token, process.env.JWT_SECRET);
+	req.user = await User.findById(decoded.userId);
+	if (!req.user) {
+		res.status(404);
+		return next(new ErrorHandler("User not found", 404));
+	}
+	next();
+});
 
-exports.protect = async (req, res, next) => {
-  let token;
+exports.auth = (req, res, next) => {
+	//  Check for Authorization header
+	const authHeader = req.headers.authorization;
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return res.status(401).json({ message: "Unauthorized" });
+	}
 
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-    token = req.headers.authorization.split(" ")[1];
-  }
+	// 2 Extract token
+	const token = authHeader.split(" ")[1];
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: "Not authorized, token missing" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { userId: decoded.userId, userType: decoded.userType };
-    next();
-  } catch (error) {
-    console.error("JWT verification error:", error);
-    return res.status(401).json({ success: false, message: "Not authorized, token invalid" });
-  }
+	try {
+		// 3 Verify token
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		req.user = decoded; // attach decoded payload to request
+		next();
+	} catch (err) {
+		return res.status(401).json({ message: "Invalid token" });
+	}
 };
