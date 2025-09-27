@@ -3,7 +3,6 @@ const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const generateId = require("../utils/generateUniqueId");
 
-
 const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 	const { title, description, category, quantity, applicationDeadline, unit } =
 		req.body;
@@ -47,10 +46,7 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 
 	// Made only supply_manager can see every request other insiders can see only requests made by them
 	// suppliers only can see public requests
-	if (
-		req.user &&
-		!req.user.roles.some((role) => role.name === "supply_manager")
-	) {
+	if (req.user && !req.user.position === "supply_manager") {
 		query.createdBy = req.user._id;
 	}
 	if (req.supplier) {
