@@ -8,6 +8,16 @@ import DynamicDashboard from "./pages/Dashboard/Dashboard";
 import AddFireStaff from "./pages/UserManagement/AddUsers";
 import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
 import UserDetails from "./pages/UserManagement/StaffDetails";
+import UpdateUser from "./pages/UserManagement/updateStaff";
+import TrainingSessionManager from "./pages/TraningSessionManagement/TrainingSessionManager";
+import UpdateSession from "./pages/TraningSessionManagement/UpdateSession";
+import ViewSessions from "./pages/TraningSessionManagement/AllSessionsDetails";
+import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
+import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
+import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+
+
+
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
@@ -22,17 +32,14 @@ import ReorderPage from "./pages/Inventory/ReorderPage";
 import ReordersList from "./pages/Inventory/ReordersList";
 import InventoryLogs from "./pages/Inventory/InventoryLogs";
 
-import ShiftDashboard from "./pages/ShiftManagement/ShiftDashboard";
-import CreateShift from "./pages/ShiftManagement/CreateShift";
-import MyShifts from "./pages/ShiftManagement/MyShifts";
-import ChangeRequests from "./pages/ShiftManagement/ChangeRequests";
-import Messages from "./pages/ShiftManagement/Messages";
+
 
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
 import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForSupplier";
 import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
+
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
@@ -52,13 +59,25 @@ const App = () => {
         <Route path="/supplier-login" element={<SupplierLogin />} />
         <Route path="/firstaff" element={<AddFireStaff />} />
         <Route path="/officer/:id" element={<OfficerProfile />} />
-        <Route path="/userdetails" element={<UserDetails />} />
-        
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/update-user/:id" element={<UpdateUser />} />
+        <Route path="/userdetails/:id" element={<UserDetails />} />
+
+        <Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+
+        <Route
+          path="/training-dashboard"
+          element={<TrainingSessionManager />}
+        />
+        <Route path="/update-session/:id" element={<UpdateSession />} />
+        <Route path="/shiftschedule" element={<ShiftScheduler />} />
+        <Route path="/sessions" element={<ViewSessions />} />
+        <Route path="/attendance/:id" element={<AttendanceForm />} />
         {/* Protected user routes */}
         <Route
           path="/dashboard"
           element={
-              <DynamicDashboard />
+            <DynamicDashboard />
           }
         />
         <Route

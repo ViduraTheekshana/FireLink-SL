@@ -3,14 +3,21 @@ import axios from "axios";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import StaffManagementTable from "./StaffManagementTable";
 
-const OfficerProfile = () => {
-  const { id } = useParams();
+const OfficerProfile = ({ officerId }) => {
+  const { id: paramId } = useParams();
+  const id = officerId || paramId; // Use prop if provided, otherwise URL param
   const navigate = useNavigate();
   const [officer, setOfficer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!id) {
+      setError("No officer ID provided");
+      setLoading(false);
+      return;
+    }
+
     const fetchOfficerData = async () => {
       try {
         setLoading(true);
@@ -63,6 +70,7 @@ const OfficerProfile = () => {
           </div>
           <div className="flex items-center space-x-4">
             <div className="bg-white/20 p-3 rounded-full">
+              {/* Profile Icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-10 w-10"
@@ -95,58 +103,61 @@ const OfficerProfile = () => {
 
         {/* Profile Content */}
         <div className="p-6 md:p-8">
-          {/* ID */}
-          <div className="col-span-2">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-red-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 2a1 1 0 00-1 1v1a1
-                     1 0 002 0V3a1 1 0 00-1-1zM4
-                     4h3a3 3 0 006 0h3a2 2 0 012
-                     2v9a2 2 0 01-2 2H4a2 2 0
-                     01-2-2V6a2 2 0 012-2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Identification
-            </h2>
-            <div className="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <span className="font-medium text-gray-700 mr-3">Staff ID:</span>
-              <span className="text-blue-800 font-mono bg-blue-100 px-3 py-1 rounded">
-                {officer.staffId || officer._id}
-              </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Staff ID */}
+            <div className="col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                Identification
+              </h2>
+              <div className="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <span className="font-medium text-gray-700 mr-3">Staff ID:</span>
+                <span className="text-blue-800 font-mono bg-blue-100 px-3 py-1 rounded">
+                  {officer.staffId || officer._id}
+                </span>
+              </div>
+            </div>
+
+            {/* Personal Info */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                Personal Information
+              </h2>
+              <p><b>Full Name:</b> {officer.name || "N/A"}</p>
+              <p><b>Age:</b> {officer.age || "N/A"}</p>
+              <p><b>Phone:</b> {officer.phone || "N/A"}</p>
+            </div>
+
+            {/* Professional Info */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                Professional Information
+              </h2>
+              <p><b>Email:</b> {officer.gmail || "N/A"}</p>
+              <p><b>Position:</b> {officer.position || "N/A"}</p>
+              <p><b>Status:</b> {officer.status || "N/A"}</p>
+            </div>
+
+            {/* Address */}
+            <div className="col-span-2">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                Address
+              </h2>
+              <p>{officer.address || "N/A"}</p>
             </div>
           </div>
 
-          {/* Other fields... */}
-          {/* Keep same structure for Personal, Professional Info, Address */}
-
           {/* Action Buttons */}
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
-            <Link
-              to="/stafflogin"
-              className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition flex items-center"
-            >
+            <Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
               Back to Login
             </Link>
-
-            <Link
-              to={`/update-user/${officer._id}`}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition flex items-center"
-            >
+            <Link to="/shiftschedule" className="px-6 py-3 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition">
+              Make Shift
+            </Link>
+            <Link to={`/update-user/${officer._id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
               Edit Profile
             </Link>
-
-            <Link
-              to="/firstaff"
-              className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition flex items-center"
-            >
+            <Link to="/firstaff" className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
               Add Staff Members
             </Link>
           </div>
