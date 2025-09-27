@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import LoginFireStaff from "./pages/UserManagement/StaffLogin";
+import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 import DynamicDashboard from "./pages/Dashboard/Dashboard";
@@ -15,6 +15,7 @@ import ViewSessions from "./pages/TraningSessionManagement/AllSessionsDetails";
 import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
 import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
 
 
 
@@ -71,6 +72,8 @@ const App = () => {
         <Route path="/shiftschedule" element={<ShiftScheduler />} />
         <Route path="/sessions" element={<ViewSessions />} />
         <Route path="/attendance/:id" element={<AttendanceForm />} />
+        <Route path="/staff-management" element={<StaffManagementTable />} />
+
         {/* Protected user routes */}
         <Route
           path="/dashboard"

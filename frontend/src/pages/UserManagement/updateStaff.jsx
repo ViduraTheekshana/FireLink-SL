@@ -7,8 +7,12 @@ import {
   FiBriefcase, FiActivity, FiLock, FiEye, FiEyeOff,
   FiArrowLeft, FiSave
 } from 'react-icons/fi';
+import Navbar from '../UserManagement/Sidebar';
+
 
 function UpdateUser() {
+
+  
   const [inputs, setInputs] = useState({});
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
@@ -19,22 +23,36 @@ function UpdateUser() {
   const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
   const { id } = useParams();
-  
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user"))); // logged-in user
+
+  const token = localStorage.getItem("token"); // JWT from login
+
   useEffect(() => {
+    if (!token) {
+      navigate("/staff-login");
+      return;
+    }
+
     const fetchHandler = async() => {
-      try {
-        const response = await axios.get(`http://localhost:5006/users/${id}`);
-        setInputs(response.data.user);
-      } catch (error) {
+     try {
+      const token = localStorage.getItem("token"); // or "user" depending on your storage
+      const response = await axios.get(`http://localhost:5000/users/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setInputs(response.data.user);
+    }catch (error) {
         console.error("Error fetching user data:", error);
+        alert("Failed to fetch user data. Make sure you are logged in.");
       }
     };
     fetchHandler();
-  }, [id]);
-  
+  }, [id, navigate, token]);
+
   const sendRequest = async() => {
     try {
-      await axios.put(`http://localhost:5006/users/${id}`, {
+      await axios.put(`http://localhost:5000/users/${id}`, {
         name: String(inputs.name),
         gmail: String(inputs.gmail),
         age: Number(inputs.age),
@@ -42,17 +60,23 @@ function UpdateUser() {
         phone: String(inputs.phone),
         position: String(inputs.position),
         status: String(inputs.status),
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
+      alert("User updated successfully!");
     } catch (error) {
       console.error("Error updating user:", error);
+      alert("Failed to update user");
     }
   };
 
   const updatePassword = async() => {
     if (passwordData.newPassword && passwordData.newPassword === passwordData.confirmPassword) {
       try {
-        await axios.put(`http://localhost:5006/users/${id}/password`, {
+        await axios.put(`http://localhost:5000/users/${id}/password`, {
           password: passwordData.newPassword
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
         });
         setPasswordData({ newPassword: '', confirmPassword: '' });
         setPasswordError('');
@@ -65,19 +89,11 @@ function UpdateUser() {
   };
 
   const handleChange = (e) => {
-    setInputs((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
-    }));
+    setInputs(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handlePasswordChange = (e) => {
-    setPasswordData({
-      ...passwordData,
-      [e.target.name]: e.target.value
-    });
-    
-    // Clear error when user starts typing
+    setPasswordData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     if (passwordError) setPasswordError('');
   };
 
@@ -101,35 +117,34 @@ function UpdateUser() {
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    if (validatePasswords()) {
-      updatePassword();
-    }
+    if (validatePasswords()) updatePassword();
   };
-
+const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/staff-login");
+  };
   return (
     <div className="min-h-screen bg-[#1e2a38] py-8 px-4">
+      
       <div className="max-w-3xl mx-auto">
+        
         <button 
           onClick={() => navigate(`/userdetails/${id}`)}
           className="flex items-center text-white mb-6 hover:text-gray-300 transition-colors"
         >
           <FiArrowLeft className="mr-2" /> Back to User Details
         </button>
-        
+
+        {/* Update User Info */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-          {/* Header Section */}
           <div className="bg-[#c62828] text-white p-6">
+
             <h1 className="text-3xl font-bold text-center">Update User Information</h1>
           </div>
 
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
-                  <FiUser className="mr-2" /> Personal Information
-                </h2>
-              </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center">
                   <FiUser className="mr-2" /> Full Name
@@ -192,51 +207,37 @@ function UpdateUser() {
                 <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center">
                   <FiBriefcase className="mr-2" /> Position
                 </label>
-                <div className="relative">
-                  <select
-                    name="position"
-                    value={inputs.position || ''}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-[#c62828] focus:border-transparent outline-none appearance-none transition"
-                    required
-                  >
-                    <option value="">Select Position</option>
-                    <option value="1stclass officer">1st Class Officer</option>
-                    <option value="financeManager">Finance Manager</option>
-                    <option value="firefighter">Firefighter</option>
-                    <option value="admin">Administrator</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
-                  </div>
-                </div>
+                <select
+                  name="position"
+                  value={inputs.position || ''}
+                  onChange={handleChange}
+                  className="w-full bg-gray-50 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-[#c62828] focus:border-transparent outline-none"
+                  required
+                >
+                  <option value="">Select Position</option>
+                  <option value="1stclass officer">1st Class Officer</option>
+                  <option value="financeManager">Finance Manager</option>
+                  <option value="firefighter">Firefighter</option>
+                  <option value="admin">Administrator</option>
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center">
                   <FiActivity className="mr-2" /> Status
                 </label>
-                <div className="relative">
-                  <select
-                    name="status"
-                    value={inputs.status || ''}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-[#c62828] focus:border-transparent outline-none appearance-none transition"
-                    required
-                  >
-                    <option value="">Select Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="On Leave">On Leave</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
-                  </div>
-                </div>
+                <select
+                  name="status"
+                  value={inputs.status || ''}
+                  onChange={handleChange}
+                  className="w-full bg-gray-50 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-[#c62828] focus:border-transparent outline-none"
+                  required
+                >
+                  <option value="">Select Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
               </div>
 
               <div className="md:col-span-2">
@@ -258,7 +259,7 @@ function UpdateUser() {
               <button
                 type="button"
                 className="px-6 py-3 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition flex items-center"
-                onClick={() => navigate(`/userdetails/${id}`)}
+                onClick={() => navigate(`/dashboard`)}
               >
                 <FiArrowLeft className="mr-2" /> Cancel
               </button>
@@ -272,8 +273,9 @@ function UpdateUser() {
           </form>
         </div>
 
-        {/* Password Update Section */}
+        {/* Password Update */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          
           <div className="bg-[#2c3e50] text-white p-6">
             <h2 className="text-2xl font-bold text-center flex items-center justify-center">
               <FiLock className="mr-2" /> Update Password
