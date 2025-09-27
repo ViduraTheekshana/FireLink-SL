@@ -27,13 +27,14 @@ function StaffLogin() {
       const res = await axios.post(URL, formData);
       const data = res.data;
 
-      // Inside StaffLogin.js -> handleSubmit
-    if (data.status === "ok") {
-
-             localStorage.setItem("user", JSON.stringify(data.user)); 
-  alert(`Login successful! Welcome ${data.user.name}`);
-  navigate("/dashboard", { state: { user: data.user } });
-    }
+      if (data.status === "ok") {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        if (data.token) {
+          localStorage.setItem("fire_access_token", data.token);
+        }
+        alert(`Login successful! Welcome ${data.user.name}`);
+        navigate("/dashboard", { state: { user: data.user } });
+      }
     else {
         alert("Login failed: " + (data.err || "Invalid credentials"));
       }

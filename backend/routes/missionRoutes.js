@@ -9,8 +9,7 @@ const {
   deleteMission,
   getMissionStats
 } = require('../controllers/missionControllers');
-const authModule = require('../middlewares/authMiddleware');
-const protect = authModule.protect || authModule;
+const { userOrSupplier } = require('../middlewares/auth');
 
 // Validation middleware
 const validateMission = [
@@ -134,31 +133,31 @@ const validateId = [
 // @route   POST /api/missions
 // @desc    Create a new mission record
 // @access  Private
-router.post('/', protect, validateMission, createMission);
+router.post('/', userOrSupplier, validateMission, createMission);
 
 // @route   GET /api/missions
 // @desc    Get all mission records with pagination and filtering
 // @access  Private
-router.get('/', protect, validateQueryParams, getMissions);
+router.get('/', userOrSupplier, validateQueryParams, getMissions);
 
 // @route   GET /api/missions/stats
 // @desc    Get mission statistics
 // @access  Private
-router.get('/stats', protect, getMissionStats);
+router.get('/stats', userOrSupplier, getMissionStats);
 
 // @route   GET /api/missions/:id
 // @desc    Get a single mission record by ID
 // @access  Private
-router.get('/:id', protect, validateId, getMissionById);
+router.get('/:id', userOrSupplier, validateId, getMissionById);
 
 // @route   PUT /api/missions/:id
 // @desc    Update a mission record
 // @access  Private
-router.put('/:id', protect, validateId, validateMissionUpdate, updateMission);
+router.put('/:id', userOrSupplier, validateId, validateMissionUpdate, updateMission);
 
 // @route   DELETE /api/missions/:id
 // @desc    Delete a mission record
 // @access  Private
-router.delete('/:id', protect, validateId, deleteMission);
+router.delete('/:id', userOrSupplier, validateId, deleteMission);
 
 module.exports = router;

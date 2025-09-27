@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import LoginFireStaff from "./pages/UserManagement/StaffLogin";
+import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 import DynamicDashboard from "./pages/Dashboard/Dashboard";
@@ -10,6 +10,7 @@ import OfficerProfile from "./pages/UserManagement/1stClassOfficerprofile";
 import UserDetails from "./pages/UserManagement/StaffDetails";
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
+import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
 import InventoryForm from "./pages/Inventory/InventoryForm";
 import InventoryDetail from "./pages/Inventory/InventoryDetail";
@@ -62,9 +63,13 @@ const App = () => {
         <Route
           path="/mission-records"
           element={
-            <ProtectedRoute user={user}>
               <MissionRecords />
-            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/salary-management"
+          element={
+              <SalaryManagement />
           }
         />
 

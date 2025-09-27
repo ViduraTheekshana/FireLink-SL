@@ -23,6 +23,18 @@ const createMission = async (req, res) => {
 			inventoryItems,
 		} = req.body;
 
+		// Resolve current actor (user via Bearer token or supplier via cookie)
+		const currentUserId =
+			(req.user && (req.user.userId || req.user.id)) ||
+			(req.supplier && req.supplier._id);
+
+		if (!currentUserId) {
+			return res.status(401).json({
+				success: false,
+				message: "Not authorized: missing authenticated identity",
+			});
+		}
+
 		// Validate inventory items
 		if (inventoryItems && inventoryItems.length > 0) {
 			for (const item of inventoryItems) {
@@ -41,12 +53,12 @@ const createMission = async (req, res) => {
 			missionTime,
 			description,
 			inventoryItems: inventoryItems || [],
-			createdBy: req.user.id,
+			createdBy: currentUserId,
 		});
 
 		const savedMission = await mission.save();
 
-		await savedMission.populate("createdBy", "name email");
+		await savedMission.populate("createdBy", "name gmail");
 
 		res.status(201).json({
 			success: true,
@@ -108,7 +120,7 @@ const getMissions = async (req, res) => {
 			sort,
 			populate: {
 				path: "createdBy",
-				select: "name email",
+				select: "name gmail",
 			},
 		};
 
