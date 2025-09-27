@@ -16,9 +16,6 @@ import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
 import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
 
-
-
-
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -32,14 +29,11 @@ import ReorderPage from "./pages/Inventory/ReorderPage";
 import ReordersList from "./pages/Inventory/ReordersList";
 import InventoryLogs from "./pages/Inventory/InventoryLogs";
 
-
-
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
 import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForSupplier";
 import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
-
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
@@ -49,49 +43,34 @@ const App = () => {
 	const user = JSON.parse(localStorage.getItem("user"));
 	const supplier = JSON.parse(localStorage.getItem("supplier")); // example for supplier login
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<LoginFireStaff />} />
-        <Route path="/staff-login" element={<LoginFireStaff />} />
-        <Route path="/civilian-login" element={<CivilianLogin />} />
-        <Route path="/supplier-login" element={<SupplierLogin />} />
-        <Route path="/firstaff" element={<AddFireStaff />} />
-        <Route path="/officer/:id" element={<OfficerProfile />} />
-        <Route path="/firstaff" element={<AddFireStaff />} />
-        <Route path="/update-user/:id" element={<UpdateUser />} />
-        <Route path="/userdetails/:id" element={<UserDetails />} />
+	return (
+		<BrowserRouter>
+			<Routes>
+				{/* Public routes */}
+				<Route path="/" element={<LoginFireStaff />} />
+				<Route path="/staff-login" element={<LoginFireStaff />} />
+				<Route path="/civilian-login" element={<CivilianLogin />} />
+				<Route path="/supplier-login" element={<SupplierLogin />} />
+				<Route path="/firstaff" element={<AddFireStaff />} />
+				<Route path="/officer/:id" element={<OfficerProfile />} />
+				<Route path="/firstaff" element={<AddFireStaff />} />
+				<Route path="/update-user/:id" element={<UpdateUser />} />
+				<Route path="/userdetails/:id" element={<UserDetails />} />
 
-        <Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 
-        <Route
-          path="/training-dashboard"
-          element={<TrainingSessionManager />}
-        />
-        <Route path="/update-session/:id" element={<UpdateSession />} />
-        <Route path="/shiftschedule" element={<ShiftScheduler />} />
-        <Route path="/sessions" element={<ViewSessions />} />
-        <Route path="/attendance/:id" element={<AttendanceForm />} />
-        {/* Protected user routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <DynamicDashboard />
-          }
-        />
-        <Route
-          path="/mission-records"
-          element={
-              <MissionRecords />
-          }
-        />
-        <Route
-          path="/salary-management"
-          element={
-              <SalaryManagement />
-          }
-        />
+				<Route
+					path="/training-dashboard"
+					element={<TrainingSessionManager />}
+				/>
+				<Route path="/update-session/:id" element={<UpdateSession />} />
+				<Route path="/shiftschedule" element={<ShiftScheduler />} />
+				<Route path="/sessions" element={<ViewSessions />} />
+				<Route path="/attendance/:id" element={<AttendanceForm />} />
+				{/* Protected user routes */}
+				<Route path="/dashboard" element={<DynamicDashboard />} />
+				<Route path="/mission-records" element={<MissionRecords />} />
+				<Route path="/salary-management" element={<SalaryManagement />} />
 
 				{/* Protected user routes */}
 				<Route path="/dashboard" element={<DynamicDashboard />} />
@@ -119,11 +98,11 @@ const App = () => {
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
 				{/* Shift Management routes */}
-				<Route path="/shifts" element={<ShiftDashboard />} />
-				<Route path="/shifts/create" element={<CreateShift />} />
-				<Route path="/shifts/my-shifts" element={<MyShifts />} />
-				<Route path="/shifts/change-requests" element={<ChangeRequests />} />
-				<Route path="/shifts/messages" element={<Messages />} />
+				{/* <Route path="/shifts" element={<ShiftDashboard />} /> */}
+				{/* <Route path="/shifts/create" element={<CreateShift />} /> */}
+				{/* <Route path="/shifts/my-shifts" element={<MyShifts />} /> */}
+				{/* <Route path="/shifts/change-requests" element={<ChangeRequests />} /> */}
+				{/* <Route path="/shifts/messages" element={<Messages />} /> */}
 
 				{/* Supplier routes */}
 				<Route
