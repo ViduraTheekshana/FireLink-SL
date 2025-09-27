@@ -32,10 +32,13 @@ app.use((req, res, next) => {
 
 // import all routes
 const mission = require("./routes/missionRoutes");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes");
+
+const salaryRoutes = require("./routes/salaryRoutes");
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
 
 // mount routes
 app.use("/api/v1/missions", mission);
+app.use("/api/v1/salaries", salaryRoutes);
 
 app.use("/api/inventory", require("./routes/inventoryRoutes"));
 

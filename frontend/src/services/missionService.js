@@ -10,7 +10,8 @@ export const missionService = {
 	// Get all missions with pagination and filtering
 	getMissions: async (params = {}) => {
 		const response = await api.get("/v1/missions", { params });
-		return response.data;
+		// Backend returns { success, message, data }
+		return response.data?.data || response.data;
 	},
 
 	// Get a single mission by ID

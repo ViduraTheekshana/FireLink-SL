@@ -27,7 +27,6 @@ function StaffLogin() {
 			const res = await axios.post(URL, formData);
 			const data = res.data;
 
-			// Inside StaffLogin.js -> handleSubmit
 			if (data.status === "ok") {
 				localStorage.setItem("user", JSON.stringify(data.user));
 				localStorage.setItem("token", data.token);
