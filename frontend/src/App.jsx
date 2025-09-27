@@ -100,6 +100,12 @@ const App = () => {
           }
         />
         <Route
+          path="/inventory/vehicles/edit/:id"
+          element={
+              <VehicleForm />
+          }
+        />
+        <Route
           path="/inventory/edit/:id"
           element={
               <InventoryForm />
@@ -107,6 +113,12 @@ const App = () => {
         />
         <Route
           path="/inventory/vehicle-items"
+          element={
+              <VehicleItemsPage />
+          }
+        />
+        <Route
+          path="/inventory/vehicle-items/vehicle/:vehicleId"
           element={
               <VehicleItemsPage />
           }

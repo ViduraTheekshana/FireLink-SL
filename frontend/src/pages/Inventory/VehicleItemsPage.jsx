@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getAllVehicleItems } from '../../api/inventoryVehicleItemsApi';
 import { getItems } from '../../api/inventoryApi';
 import { getVehicles } from '../../api/inventoryVehicleApi';
 
 const VehicleItemsPage = () => {
+  const { vehicleId } = useParams(); // Get vehicleId from URL if present
   const [vehicleItems, setVehicleItems] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
@@ -18,12 +19,19 @@ const VehicleItemsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   
   // Filters
-  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState(vehicleId || ''); // Auto-select if vehicleId in URL
   const [selectedItem, setSelectedItem] = useState('');
 
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    // Update selected vehicle when vehicleId from URL changes
+    if (vehicleId && vehicleId !== selectedVehicle) {
+      setSelectedVehicle(vehicleId);
+    }
+  }, [vehicleId]);
 
   useEffect(() => {
     loadVehicleItemsData();
@@ -126,10 +134,25 @@ const VehicleItemsPage = () => {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Vehicle Items Management</h1>
-            <p className="text-gray-600">Manage items assigned to vehicles</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {vehicleId ? 'Vehicle Items - Specific Vehicle' : 'Vehicle Items Management'}
+            </h1>
+            <p className="text-gray-600">
+              {vehicleId 
+                ? `Viewing items for selected vehicle${selectedVehicle ? ` (${availableVehicles.find(v => v._id === selectedVehicle)?.vehicle_name || 'Loading...'})` : ''}`
+                : 'Manage items assigned to vehicles'
+              }
+            </p>
           </div>
           <div className="flex gap-4">
+            {vehicleId && (
+              <Link
+                to={`/inventory/vehicles/${vehicleId}`}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+              >
+                🚛 Back to Vehicle
+              </Link>
+            )}
             <Link
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
