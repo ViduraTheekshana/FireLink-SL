@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 
 // import all routes
 const mission = require("./routes/missionRoutes");
+
 const salaryRoutes = require("./routes/salaryRoutes");
 const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
 
@@ -61,43 +62,23 @@ app.use("/api/prevention/certificates", preventionCertificateRoutes);
 // Middleware to handle errors
 app.use(errorMiddleware);
 
-// Register schemas BEFORE routes
-require("./models/UserManagement/Attendance.js"); // Attendance schema
-require("./models/UserManagement/UserReg.js");    // User schema
-
 // Routes
 const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 
+// User Registration endpoint
+app.use("/users", userRouter);
+
+// Civilian login endpoint
+const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
+app.use("/api/v1/civilian-auth", civilianAuthRoutes);
 
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
 
-console.log("DB_URI from env:", process.env.DB_URI);
-
-// Connect to MongoDB
-mongoose
-  .connect(process.env.DB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then((con) => console.log(`MongoDB connected: ${con.connection.host}`))
-  .catch((err) => console.error("Database connection error:", err));
- 
-  app.get("/", (req, res) => {
-  res.send("Fire Handling System API running");
+app.get("/", (req, res) => {
+	res.send("Fire Handling System API running");
 });
 
-  // User Registration endpoint
-app.use("/users", userRouter);
-
-// covi login endpoint
-const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
-app.use("/api/v1/civilian-auth", civilianAuthRoutes);
-
-
-
-
-
-module.exports = app;
+module.exports = app;

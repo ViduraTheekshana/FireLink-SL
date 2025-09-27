@@ -9,7 +9,7 @@ import Sidebar from "../../components/SideBar";
 import SearchBox from "../../components/SearchBox";
 
 const SupplierManagement = () => {
-	const { hasRole } = useAuth();
+	const { checkRole } = useAuth();
 	const navigate = useNavigate();
 
 	const [filterCategory, setFilterCategory] = useState("all");
@@ -21,7 +21,7 @@ const SupplierManagement = () => {
 	const itemsPerPage = 20;
 
 	useEffect(() => {
-		if (!hasRole("supply_manager")) {
+		if (!checkRole("supply_manager")) {
 			navigate("/dashboard");
 			setError("Role not found! supply manager");
 		}
