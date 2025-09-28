@@ -15,6 +15,7 @@ const MissionRecords = () => {
 		missionTime: "",
 		description: "",
 		inventoryItems: [],
+		status: "Active",
 	});
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
@@ -147,6 +148,7 @@ const MissionRecords = () => {
 				quantity: Number(it.quantity) || 0,
 				usedQuantity: Number(it.usedQuantity) || 0,
 			})),
+			status: mission.status || "Active",
 		});
 		setShowForm(true);
 	};
@@ -295,6 +297,23 @@ const MissionRecords = () => {
 								/>
 							</div>
 						</div>
+						<div>
+	<label className="block text-sm font-medium text-gray-700 mb-2">
+		Status *
+	</label>
+	<select
+		name="status"
+		value={formData.status}
+		onChange={handleInputChange}
+		required
+		className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+	>
+		<option value="Active">Active</option>
+		<option value="Completed">Completed</option>
+		<option value="Cancelled">Cancelled</option>
+	</select>
+</div>
+
 
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">
