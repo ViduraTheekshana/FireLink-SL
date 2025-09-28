@@ -324,7 +324,7 @@ const InventoryList = () => {
     const threshold = Number(item.threshold);
     if (isNaN(quantity) || isNaN(threshold)) return false;
 
-    return threshold > 0 && quantity < threshold && quantity >= 0;
+    return threshold > 0 && quantity < threshold;
   };
 
   const isExpired = (item) => item.expire_date && new Date(item.expire_date) < new Date();
