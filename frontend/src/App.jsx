@@ -59,8 +59,8 @@ const App = () => {
         <Route path="/update-user/:id" element={<UpdateUser />} />
         <Route path="/userdetails/:id" element={<UserDetails />} />
         <Route path="/civilian-dashboard" element={<CivilianDashboard />} />
-<Route path="/profile" element={<Profile />} />
-<Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
         {/* Training / Staff routes */}
         <Route path="/training-dashboard" element={<TrainingSessionManager />} />
         <Route path="/update-session/:id" element={<UpdateSession />} />
@@ -73,33 +73,21 @@ const App = () => {
         <Route
           path="/dashboard"
           element={
-              <DynamicDashboard />
+            <DynamicDashboard />
           }
         />
         <Route
           path="/mission-records"
           element={
-            <ProtectedRoute user={user}>
-              <MissionRecords />
+            <MissionRecords />
           }
         />
         <Route
           path="/salary-management"
           element={
-              <SalaryManagement />
+            <SalaryManagement />
           }
         />
-
-				{/* Protected user routes */}
-				<Route path="/dashboard" element={<DynamicDashboard />} />
-				<Route
-					path="/mission-records"
-					element={
-						<ProtectedRoute user={user}>
-							<MissionRecords />
-						</ProtectedRoute>
-					}
-				/>
 
 				{/* Inventory routes */}
 				<Route path="/inventory" element={<InventoryList />} />
@@ -174,21 +162,21 @@ const App = () => {
 
         {/* Catch all */}
         {/* Catch all */}
-<Route
-  path="*"
-  element={
-    user ? (
-      // 👇 Check if profile is incomplete
-      !user.name || !user.phone || !user.address ? (
-        <Navigate to="/profile" replace />
-      ) : (
-        <Navigate to="/dashboard" replace />
-      )
-    ) : (
-      <Navigate to="/" replace />
-    )
-  }
-/>
+        <Route
+          path="*"
+          element={
+            user ? (
+              // 👇 Check if profile is incomplete
+              !user.name || !user.phone || !user.address ? (
+                <Navigate to="/profile" replace />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
 
       </Routes>
 
