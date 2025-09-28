@@ -159,7 +159,7 @@ const OfficerProfile = ({ officerId }) => {
             </div>
           </div>
 
-          {/* Action Buttons 
+          
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
             <Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
               Back to Login
@@ -173,7 +173,7 @@ const OfficerProfile = ({ officerId }) => {
             <Link to="/firstaff" className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
               Add Staff Members
             </Link>
-          </div>*/}
+          </div>
         </div>
       </div>
 
