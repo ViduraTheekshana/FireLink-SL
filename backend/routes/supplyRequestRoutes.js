@@ -15,16 +15,9 @@ const {
 } = require("../controllers/supplyRequestController");
 
 const { isAuthenticatedUser, userOrSupplier } = require("../middlewares/auth");
-const authModule = require("../middlewares/authMiddleware");
-const protect = authModule.protect || authModule;
+const { protect } = require("../middlewares/authMiddleware");
 
-let roleModule = {};
-try {
-    roleModule = require("../middlewares/roleMiddleware");
-} catch (err) {
-    console.warn("roleMiddleware not found, applying no-op role/permission guards");
-}
-const requireAnyRole = roleModule.requireAnyRole || (() => (req, res, next) => next());
+const { authorizePositions } = require("../middlewares/roleMiddleware");
 
 const {
 	validateCreateSupplyRequest,
@@ -41,7 +34,7 @@ router
 	.route("/")
 	.post(
 		protect,
-		requireAnyRole(["supply_manager"]),
+		authorizePositions(["supply_manager"]),
 		validateCreateSupplyRequest(),
 		validate,
 		createSupplyRequest
@@ -56,13 +49,13 @@ router
 router
 	.route("/:id")
 	.put(protect, validateUpdateSupplyRequest(), validate, updateSupplyRequest)
-	.delete(protect, requireAnyRole(["supply_manager"]), deleteSupplyRequest);
+	.delete(protect, authorizePositions(["supply_manager"]), deleteSupplyRequest);
 
 router
 	.route("/admin/:id")
 	.get(
 		protect,
-		requireAnyRole(["supply_manager"]),
+		authorizePositions(["supply_manager"]),
 		idValidationRules(),
 		validate,
 		getSupplyRequestByIdByAdmin
@@ -72,7 +65,7 @@ router
 	.route("/:id/assign")
 	.put(
 		protect,
-		requireAnyRole(["supplier_manager"]),
+		authorizePositions(["supplier_manager"]),
 		idValidationRules(),
 		validateAssignSupplier(),
 		validate,
@@ -106,4 +99,4 @@ router
 	)
 	.delete(isAuthenticatedUser, idValidationRules(), validate, deleteBid);
 
-module.exports = router;
+module.exports = router;

@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
 	Users,
 	ClipboardList,
 	LogOut,
 	Flame,
 	UserIcon,
-	FileTextIcon,
 	ClipboardCheckIcon,
 	ShoppingCartIcon,
 } from "lucide-react";
 import { useAuth } from "../context/auth";
 import { useSupplierAuth } from "../context/supplierAuth";
-import Loader from "./Loader";
 
 const Sidebar = () => {
-	const { hasRole, logout, loading, user } = useAuth();
+	const { checkRole, logout } = useAuth();
 	const { user: supplier, logout: supplierLogout } = useSupplierAuth();
 	const location = useLocation();
+	const navigate = useNavigate();
 
 	const [isSupplier, setIsSupplier] = useState(false);
 
@@ -38,9 +37,10 @@ const Sidebar = () => {
 	const logoutHandler = (e) => {
 		e.preventDefault();
 		logout();
+		navigate("/staff-login");
 	};
 
-	if (hasRole("supply_manager")) {
+	if (checkRole("supply_manager")) {
 		menuItems = [
 			{
 				id: "suppliers",
@@ -81,8 +81,6 @@ const Sidebar = () => {
 			icon: <LogOut size={20} />,
 		},
 	];
-
-	if (loading) return <Loader />;
 
 	return (
 		<div className="w-64 bg-gray-900 text-white flex flex-col h-full hidden md:block">

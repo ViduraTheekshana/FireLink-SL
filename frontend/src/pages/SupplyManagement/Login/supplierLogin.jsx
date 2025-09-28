@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/auth";
 import { useNavigate } from "react-router-dom";
 import "./supplier.css";
 import Loader from "../../../components/Loader";
+import extractErrorMessage from "../../../utils/errorMessageParser";
 
 const SupplierLogin = () => {
 	const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ const SupplierLogin = () => {
 	const [error, setError] = useState("");
 
 	const { login, user: supplier, loading: authLoading } = useSupplierAuth();
-	const { user, loading: userLoading } = useAuth();
+	const { user } = useAuth();
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -34,22 +35,21 @@ const SupplierLogin = () => {
 			await login(formData.email, formData.password);
 			navigate("/supplier/supply-requests", { replace: true });
 		} catch (exception) {
-			const apiMessage = exception?.response?.data?.message;
-			setError(apiMessage || "Supplier login failed");
+			setError(extractErrorMessage(exception));
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		if (!userLoading && user) {
+		if (user) {
 			navigate("/dashboard", { replace: true });
 		}
 
 		if (!authLoading && supplier) {
 			navigate("/supplier/supply-requests", { replace: true });
 		}
-	}, [userLoading, authLoading]);
+	}, [authLoading]);
 
 	useEffect(() => {
 		if (error) {
@@ -58,7 +58,7 @@ const SupplierLogin = () => {
 		}
 	}, [error, setError, toast]);
 
-	if (authLoading || userLoading) return <Loader />;
+	if (loading) return <Loader />;
 
 	return (
 		<div className="supplier-login-container">

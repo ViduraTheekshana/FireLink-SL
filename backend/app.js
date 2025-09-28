@@ -8,6 +8,15 @@ const bodyParser = require("body-parser");
 
 const errorMiddleware = require("./middlewares/errors");
 
+
+const userRouter = require("./routes/UserManagement/UserRoute.js");
+const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
+const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
+const shiftScheduleRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
+
+// Register schemas BEFORE routes
+require("./models/UserManagement/Attendance.js"); // Attendance schema
+require("./models/UserManagement/UserReg.js");    
 // setting up config file
 dotenv.config({ path: "config/config.env" });
 
@@ -32,10 +41,13 @@ app.use((req, res, next) => {
 
 // import all routes
 const mission = require("./routes/missionRoutes");
+
+const salaryRoutes = require("./routes/salaryRoutes");
 const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
 
 // mount routes
 app.use("/api/v1/missions", mission);
+app.use("/api/v1/salaries", salaryRoutes);
 
 // Mount dashboard stats FIRST to avoid being captured by dynamic :id route in inventoryRoutes
 app.use("/api/inventory", require("./routes/inventoryDashboardRoutes"));
@@ -61,43 +73,19 @@ app.use("/api/prevention/certificates", preventionCertificateRoutes);
 // Middleware to handle errors
 app.use(errorMiddleware);
 
-// Register schemas BEFORE routes
-require("./models/UserManagement/Attendance.js"); // Attendance schema
-require("./models/UserManagement/UserReg.js");    // User schema
-
-// Routes
-const userRouter = require("./routes/UserManagement/UserRoute.js");
-const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
-const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
-
-
+// User Registration endpoint
+app.use("/users", userRouter);
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
+app.use("/shift-schedules", shiftScheduleRoutes);
 
-console.log("DB_URI from env:", process.env.DB_URI);
-
-// Connect to MongoDB
-mongoose
-  .connect(process.env.DB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then((con) => console.log(`MongoDB connected: ${con.connection.host}`))
-  .catch((err) => console.error("Database connection error:", err));
- 
-  app.get("/", (req, res) => {
-  res.send("Fire Handling System API running");
-});
-
-  // User Registration endpoint
-app.use("/users", userRouter);
-
-// covi login endpoint
+// Civilian login endpoint
 const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
 app.use("/api/v1/civilian-auth", civilianAuthRoutes);
 
 
+app.get("/", (req, res) => {
+	res.send("Fire Handling System API running");
+});
 
-
-
-module.exports = app;
+module.exports = app;

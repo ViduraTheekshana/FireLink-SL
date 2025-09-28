@@ -6,6 +6,7 @@ import TrainingSession from "../TraningSessionManagement/TrainingSessionManager"
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
 
+import MissionRecords from "../MissionRecords/MissionRecords"
 
 const DynamicDashboard = () => {
   const location = useLocation();
@@ -29,8 +30,7 @@ const DynamicDashboard = () => {
   const renderContent = () => {
     switch (user.position.toLowerCase()) {
       case "1stclass officer":
-        return  <OfficerProfile id={user._id} />;
-;
+    return <OfficerProfile officerId={user._id} />;
 
       case "fighter":
         return (
@@ -52,12 +52,7 @@ const DynamicDashboard = () => {
         return <InventoryManagerDashboard />;
 
       case "recordmanager":
-        return (
-          <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Record Manager Dashboard</h1>
-            <p>Manage fire incident records and reports.</p>
-          </div>
-        );
+        return <MissionRecords/>;
 
       case "preventionmanager":
         return (
