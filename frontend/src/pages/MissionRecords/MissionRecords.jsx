@@ -15,6 +15,7 @@ const MissionRecords = () => {
 		missionTime: "",
 		description: "",
 		inventoryItems: [],
+		status: "Active",
 	});
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
@@ -147,6 +148,7 @@ const MissionRecords = () => {
 				quantity: Number(it.quantity) || 0,
 				usedQuantity: Number(it.usedQuantity) || 0,
 			})),
+			status: mission.status || "Active",
 		});
 		setShowForm(true);
 	};
@@ -295,6 +297,23 @@ const MissionRecords = () => {
 								/>
 							</div>
 						</div>
+						<div>
+	<label className="block text-sm font-medium text-gray-700 mb-2">
+		Status *
+	</label>
+	<select
+		name="status"
+		value={formData.status}
+		onChange={handleInputChange}
+		required
+		className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+	>
+		<option value="Active">Active</option>
+		<option value="Completed">Completed</option>
+		<option value="Cancelled">Cancelled</option>
+	</select>
+</div>
+
 
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">
@@ -306,6 +325,7 @@ const MissionRecords = () => {
 								onChange={handleInputChange}
 								required
 								rows="4"
+								maxLength={25}
 								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 								placeholder="Provide a detailed description of the mission..."
 							/>
@@ -332,23 +352,32 @@ const MissionRecords = () => {
 									className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded"
 								>
 									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Item Code
-										</label>
-										<input
-											type="text"
-											value={item.itemCode}
-											onChange={(e) =>
-												handleInventoryItemChange(
-													index,
-													"itemCode",
-													e.target.value
-												)
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-											placeholder="e.g., FIRE001"
-										/>
-									</div>
+                                       <label className="block text-sm font-medium text-gray-700 mb-1">
+                                          Item Code
+                                        </label>
+                                <input
+                                 type="text"
+                                 value={item.itemCode}
+                                 onChange={(e) => {
+                                 let value = e.target.value.toUpperCase();
+
+      
+                                if (!value.startsWith("IT")) {
+                                   value = "IT" + value.replace(/^IT/, "");
+                                    }
+
+    
+                                  if (value.length > 5) {
+                                    value = value.slice(0, 5);
+                                    }
+
+                                   handleInventoryItemChange(index, "itemCode", value);
+                                   }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="e.g., IT001"
+                                    required
+                                />
+                            </div>
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-1">
 											Available Quantity
