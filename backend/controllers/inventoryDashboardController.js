@@ -27,7 +27,7 @@ const getInventoryDashboardStats = async (req, res) => {
         Inventory.countDocuments({ 
           expire_date: { 
             $gte: new Date(), 
-            $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) 
+            $lte: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000) 
           } 
         })
       ]),

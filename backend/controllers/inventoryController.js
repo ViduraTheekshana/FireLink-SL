@@ -122,11 +122,11 @@ const getItems = async (req, res) => {//get all inventory items
           $expr: { $lte: ['$quantity', '$threshold'] }
         });
       } else if (search.toLowerCase() === 'expiring') {
-        // Special keyword for items expiring soon (within 30 days)
+        // Special keyword for items expiring soon (within 120 days)
         andConditions.push({
           expire_date: {
             $gte: new Date(),
-            $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            $lte: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000)
           }
         });
       } else {
