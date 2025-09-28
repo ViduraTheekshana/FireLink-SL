@@ -53,7 +53,7 @@ const preventionCertificateSchema = new mongoose.Schema({
   ],
   status: {
     type: String,
-    enum: ["Pending", "Approved", "Rejected"],
+    enum: ["Pending", "Approved", "Rejected", "Payment Assigned", "Inspected", "Completed"],
     default: "Pending",
   },
   assignedOfficer: {
@@ -63,6 +63,31 @@ const preventionCertificateSchema = new mongoose.Schema({
   appliedDate: {
     type: Date,
     default: Date.now,
+  },
+  approvedAt: {
+    type: Date,
+  },
+  rejectedAt: {
+    type: Date,
+  },
+  rejectionReason: {
+    type: String,
+  },
+  payment: {
+    type: Number,
+    default: null,
+  },
+  // Inspection-related fields
+  inspectionNotes: {
+    type: String,
+    default: "",
+  },
+  inspectionDate: {
+    type: Date,
+  },
+  inspectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
 });
 

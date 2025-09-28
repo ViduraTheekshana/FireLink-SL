@@ -33,6 +33,7 @@ import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForS
 import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 import PreventionCertificateForm from "./pages/PreventionManagement/PreventionCertificateForm";
+import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionOfficerDashboard";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
@@ -213,7 +214,7 @@ const App = () => {
           }
         />
         <Route path="/prevention-certificate" element={<PreventionCertificateForm />} />
-
+        <Route path="/officer-dashboard" element={<PreventionOfficerDashboard />} /> 
 
         {/* Catch all route */}
         <Route

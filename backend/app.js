@@ -35,7 +35,8 @@ const auth = require("./routes/authRoutes");
 const civilianAuth = require("./routes/civilianAuthRoutes");
 const mission = require("./routes/missionRoutes");
 const userManagement = require("./routes/userManagementRoutes");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); // <-- added
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
+const preventionOfficerRoutes = require("./routes/preventionOfficerRoutes");
 
 // mount routes
 app.use("/api/v1/auth", auth);
@@ -73,6 +74,7 @@ app.use("/api/v1/messages", require("./routes/messageRoutes"));
 
 // Prevention certificate route
 app.use("/api/prevention/certificates", preventionCertificateRoutes); 
+app.use("/api/prevention-officer", preventionOfficerRoutes);
 
 // Middleware to handle errors
 app.use(errorMiddleware);
