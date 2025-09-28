@@ -114,7 +114,7 @@ const App = () => {
         {/* <Route path="/shifts/change-requests" element={<ChangeRequests />} /> */}
         {/* <Route path="/shifts/messages" element={<Messages />} /> */}
 
-        {/* Supplier routes */}
+        {/* Supplier routes  */}
         <Route
           path="/suppliers"
           element={
