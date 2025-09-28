@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getItemById } from '../../api/inventoryApi';
 import { createReorder, getReorders } from '../../api/inventoryReorderApi';
+import firelinkLogo from '../../assets/images/firelink-logo.png';
 import Sidebar from '../UserManagement/Sidebar';
 
 const ReorderPage = () => {
@@ -274,36 +275,132 @@ const ReorderPage = () => {
     }
   };
 
-  // Enhanced PDF Generation with reorder items table
+  // Enhanced PDF Generation with reorder items table - matches inventory report style
   const handleGeneratePDF = () => {
     try {
       console.log('Generating PDF with reorder items table...');
       
-      // Show the printable content temporarily
       const printContent = printRef.current;
       if (!printContent) {
         alert('Print content not found. Please refresh the page.');
         return;
       }
 
-      // Make the content visible for printing
-      printContent.style.display = 'block';
-      printContent.style.position = 'absolute';
-      printContent.style.left = '-9999px';
-      printContent.style.top = '0';
-      printContent.style.zIndex = '9999';
-
-      // Trigger print
-      window.print();
-
-      // Hide the content again after printing
+      // Create a new window for PDF generation (matching inventory report method)
+      const printWindow = window.open('', '', 'width=800,height=600');
+      let reportContent = printContent.innerHTML;
+      
+      // Remove emojis, icons, and interactive elements from content
+      reportContent = reportContent.replace(/🔥|📄|📊|📈|📋|⚠️|🖨️|🚒/g, '');
+      reportContent = reportContent.replace(/✕/g, '');
+      
+      // Remove any input, select, or button elements
+      reportContent = reportContent.replace(/<input[^>]*>/g, '');
+      reportContent = reportContent.replace(/<select[^>]*>.*?<\/select>/g, '');
+      reportContent = reportContent.replace(/<button[^>]*>.*?<\/button>/g, '');
+      
+      // Create a temporary DOM to manipulate the content
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = reportContent;
+      
+      // Remove all hidden headers and cells
+      const hiddenHeaders = tempDiv.querySelectorAll('th[class*="print:hidden"]');
+      hiddenHeaders.forEach(header => {
+        console.log('Removing hidden header from PDF:', header.textContent);
+        header.remove();
+      });
+      
+      const hiddenCells = tempDiv.querySelectorAll('td[class*="print:hidden"]');
+      hiddenCells.forEach(cell => {
+        console.log('Removing hidden cell from PDF');
+        cell.remove();
+      });
+      
+      reportContent = tempDiv.innerHTML;
+      
+      // Set custom filename for PDF
+      const currentDatePDF = new Date().toISOString().split('T')[0];
+      const customFilenamePDF = `FireLink-SL_Reorder_Report_${currentDatePDF}`;
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${customFilenamePDF}</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            @page { size: A4; margin: 15mm; }
+            body { 
+              font-size: 12px; 
+              line-height: 1.3; 
+              color: black !important;
+              background: white !important;
+            }
+            * {
+              color: black !important;
+              background: white !important;
+              border-color: black !important;
+            }
+            /* Hide any interactive elements in PDF */
+            input, select, button, .search, .filter, .dropdown,
+            .form-control, input[type="text"], input[type="search"] {
+              display: none !important;
+            }
+            table { 
+              page-break-inside: auto; 
+              width: 100%; 
+              border-collapse: collapse;
+            }
+            th, td {
+              border: 1px solid black !important;
+              background: white !important;
+              color: black !important;
+              padding: 8px;
+            }
+            th {
+              background: #f5f5f5 !important;
+              font-weight: bold;
+            }
+            tr { 
+              page-break-inside: avoid; 
+              page-break-after: auto; 
+            }
+            .print\\:hidden { display: none !important; }
+            .print\\:text-xs { font-size: 10px; }
+            .print\\:bg-white { background-color: white !important; }
+            .print\\:border-b { border-bottom: 1px solid black; }
+            .print\\:border-red-600 { border-color: black; }
+            .print\\:break-inside-avoid { page-break-inside: avoid; }
+            .bg-red-600, .bg-green-100, .bg-yellow-100, .bg-red-100,
+            .bg-gray-50, .bg-red-50, .bg-orange-100, .bg-blue-100 {
+              background: white !important;
+              color: black !important;
+            }
+            .text-red-600, .text-green-600, .text-yellow-600,
+            .text-red-800, .text-green-800, .text-yellow-800,
+            .text-orange-600, .text-blue-600, .text-gray-600 {
+              color: black !important;
+            }
+            .border-red-600, .border-red-300, .border-red-200,
+            .border-gray-300, .border-gray-200 {
+              border-color: black !important;
+            }
+            .rounded-full, .rounded, .rounded-lg, .rounded-md {
+              border-radius: 0 !important;
+            }
+          </style>
+        </head>
+        <body class="bg-white p-4">
+          ${reportContent}
+        </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
       setTimeout(() => {
-        printContent.style.display = 'none';
-        printContent.style.position = 'static';
-        printContent.style.left = 'auto';
-        printContent.style.top = 'auto';
-        printContent.style.zIndex = 'auto';
-      }, 1000);
+        printWindow.print();
+        printWindow.close();
+      }, 500);
 
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -603,10 +700,10 @@ const ReorderPage = () => {
             <button
               type="button"
               onClick={handleGeneratePDF}
-              disabled={allReorders.length === 0}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+              disabled={!item || !reorderData.quantity}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              📄 Generate PDF Report
+              📄 Download PDF Report
             </button>
             <Link
               to="/inventory"
@@ -621,232 +718,268 @@ const ReorderPage = () => {
       {/* Hidden Printable Component for PDF */}
       <div ref={printRef} className="hidden">
         <div className="print-content p-8 max-w-4xl mx-auto bg-white">
-          {/* Company Header */}
-          <div className="text-center mb-8 border-b-2 border-gray-300 pb-4">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">FireLink SL</h1>
-            <p className="text-lg text-gray-600">Fire Response Monitoring and Management System</p>
-            <p className="text-sm text-gray-500">123 Fire Station Road, Colombo, Sri Lanka</p>
-            <p className="text-sm text-gray-500">Phone: +94 11 234 5678 | Email: orders@firelink.lk</p>
+          {/* Official Government Header */}
+          <div className="border-b-2 border-red-600 pb-3 print:pb-2 mb-4 print:mb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3 print:space-x-2">
+                <div className="w-12 h-12 print:w-8 print:h-8 mr-2 flex-shrink-0">
+                  <img 
+                    src={firelinkLogo} 
+                    alt="FireLink-SL Logo" 
+                    className="w-full h-full object-contain rounded print:rounded-none"
+                    onError={(e) => {
+                      console.log('Logo failed to load, showing fallback');
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="w-full h-full bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm print:text-xs hidden">
+                    🚒
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-red-600 print:text-base">FIRELINK-SL</h1>
+                  <p className="text-xs font-semibold print:text-[10px] text-gray-700">Fire and Rescue Service</p>
+                </div>
+              </div>
+              
+              {/* Report Title & Quick Stats */}
+              <div className="text-right">
+                <h2 className="text-base font-bold text-gray-800 print:text-sm">INVENTORY REORDER REPORT</h2>
+                <p className="text-[10px] text-gray-600 print:text-[8px]">{new Date().toLocaleDateString()} | Item: {item.item_name} | Priority: {reorderData.priority}</p>
+              </div>
+            </div>
           </div>
 
-          {/* Document Title */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">INVENTORY REORDER REPORT</h2>
-            <p className="text-gray-600">Generated on: {new Date().toLocaleDateString()}</p>
+          {/* Reorder Summary */}
+          <div className="border border-gray-300 p-2 print:p-1 mb-1 print:mb-0">
+            <div className="grid grid-cols-4 gap-2 print:gap-1 text-center text-xs print:text-[10px]">
+              <div>
+                <p className="font-semibold text-gray-700 print:text-[8px]">Current Stock</p>
+                <p className="text-sm print:text-[10px] font-bold text-blue-600">{item.quantity}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700 print:text-[8px]">Reorder Quantity</p>
+                <p className="text-sm print:text-[10px] font-bold text-green-600">{reorderData.quantity}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700 print:text-[8px]">Priority Level</p>
+                <p className={`text-sm print:text-[10px] font-bold ${
+                  reorderData.priority === 'Urgent' ? 'text-red-600' :
+                  reorderData.priority === 'High' ? 'text-orange-600' :
+                  reorderData.priority === 'Medium' ? 'text-blue-600' : 'text-gray-600'
+                }`}>{reorderData.priority}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700 print:text-[8px]">Status</p>
+                <p className={`text-sm print:text-[10px] font-bold ${(item.threshold > 0 && item.quantity < item.threshold) ? 'text-red-600' : 'text-green-600'}`}>
+                  {(item.threshold > 0 && item.quantity < item.threshold) ? 'LOW STOCK' : 'NORMAL'}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Current Reorder Details */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">Current Reorder</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Item Name:</p>
-                <p className="text-lg text-gray-900 font-semibold">{item.item_name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Item ID:</p>
-                <p className="text-lg text-gray-900">{item.item_ID}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Category:</p>
-                <p className="text-lg text-gray-900">{item.category}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Current Stock:</p>
-                <p className="text-lg text-gray-900">{item.quantity} units</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Reorder Threshold:</p>
-                <p className="text-lg text-gray-900">{item.threshold} units</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Stock Status:</p>
-                              <p className={`text-lg font-semibold ${(item.threshold > 0 && item.quantity < item.threshold) ? 'text-red-600' : 'text-green-600'}`}>
-                {(item.threshold > 0 && item.quantity < item.threshold) ? 'LOW STOCK' : 'NORMAL'}
-                </p>
+          <div className="border border-gray-300 mt-0 print:mt-0 mb-4">
+            <h3 className="text-base font-semibold mb-1 print:mb-0 p-2 print:p-1 bg-gray-50 text-red-600 print:bg-white print:border-b print:border-red-600 print:text-sm">ITEM DETAILS</h3>
+            <div className="p-3 print:p-2">
+              <div className="grid grid-cols-3 gap-4 text-sm print:text-xs">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Item Name:</p>
+                  <p className="font-semibold text-gray-900">{item.item_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Item ID:</p>
+                  <p className="font-semibold text-gray-900">{item.item_ID}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Category:</p>
+                  <p className="font-semibold text-gray-900">{item.category}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Current Stock:</p>
+                  <p className="font-semibold text-gray-900">{item.quantity} units</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Reorder Threshold:</p>
+                  <p className="font-semibold text-gray-900">{item.threshold} units</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Location:</p>
+                  <p className="font-semibold text-gray-900">{item.location || 'N/A'}</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Reorder Information */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">Reorder Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Quantity to Order:</p>
-                <p className="text-2xl font-bold text-blue-600">{reorderData.quantity} units</p>
+          <div className="border border-gray-300 mt-2 print:mt-1 mb-4">
+            <h3 className="text-base font-semibold mb-1 print:mb-0 p-2 print:p-1 bg-gray-50 text-red-600 print:bg-white print:border-b print:border-red-600 print:text-sm">REORDER DETAILS</h3>
+            <div className="p-3 print:p-2">
+              <div className="grid grid-cols-2 gap-4 text-sm print:text-xs mb-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Quantity to Order:</p>
+                  <p className="text-lg font-bold text-red-600">{reorderData.quantity} units</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Priority Level:</p>
+                  <p className={`text-lg font-semibold ${
+                    reorderData.priority === 'Urgent' ? 'text-red-600' :
+                    reorderData.priority === 'High' ? 'text-orange-600' :
+                    reorderData.priority === 'Medium' ? 'text-blue-600' : 'text-gray-600'
+                  }`}>
+                    {reorderData.priority.toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Expected Delivery:</p>
+                  <p className="font-semibold text-gray-900">{reorderData.expectedDate || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Supplier:</p>
+                  <p className="font-semibold text-gray-900">{reorderData.supplier || 'To be determined'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Priority Level:</p>
-                <p className={`text-lg font-semibold ${
-                  reorderData.priority === 'Urgent' ? 'text-red-600' :
-                  reorderData.priority === 'High' ? 'text-orange-600' :
-                  reorderData.priority === 'Medium' ? 'text-blue-600' : 'text-gray-600'
-                }`}>
-                  {reorderData.priority.toUpperCase()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Expected Delivery:</p>
-                <p className="text-lg text-gray-900">{reorderData.expectedDate || 'Not specified'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Supplier:</p>
-                <p className="text-lg text-gray-900">{reorderData.supplier || 'To be determined'}</p>
-              </div>
-            </div>
-            
-            {/* Additional Notes */}
-            {reorderData.notes && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-500 mb-2">Additional Notes:</p>
-                <p className="text-gray-900 bg-gray-50 p-3 rounded border">{reorderData.notes}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Debug Information for PDF - Shows Current Form Data */}
-          <div className="mb-8 bg-yellow-50 p-4 rounded border border-yellow-200">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">Current Reorder Form Data</h3>
-            <div className="text-sm text-yellow-800">
-              <p><strong>Quantity:</strong> {reorderData.quantity} units</p>
-              <p><strong>Priority:</strong> {reorderData.priority}</p>
-              <p><strong>Expected Date:</strong> {reorderData.expectedDate || 'Not set'}</p>
-              <p><strong>Supplier:</strong> {reorderData.supplier || 'Not set'}</p>
-              <p><strong>Notes:</strong> {reorderData.notes || 'No notes'}</p>
+              
+              {/* Additional Notes */}
+              {reorderData.notes && (
+                <div className="border-t border-gray-200 pt-3">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Additional Notes:</p>
+                  <p className="text-gray-900 bg-gray-50 p-2 rounded text-sm">{reorderData.notes}</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Detailed Reorder Summary */}
-          <div className="mb-8 bg-blue-50 p-4 rounded border border-blue-200">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Detailed Reorder Summary</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-blue-700">Item Being Reordered:</p>
-                <p className="text-lg font-bold text-blue-900">{item.item_name}</p>
-                <p className="text-sm text-blue-600">ID: {item.item_ID} | Category: {item.category}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-700">Reorder Details:</p>
-                <p className="text-lg font-bold text-blue-900">{reorderData.quantity} units</p>
-                <p className="text-sm text-blue-600">Priority: {reorderData.priority}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-700">Delivery Information:</p>
-                <p className="text-lg text-blue-900">{reorderData.expectedDate || 'Date not set'}</p>
-                <p className="text-sm text-blue-600">Supplier: {reorderData.supplier || 'To be determined'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-700">Current Stock Status:</p>
-                <p className="text-lg text-blue-900">{item.quantity} units available</p>
-                <p className="text-sm text-blue-600">Threshold: {item.threshold} units</p>
-              </div>
-            </div>
-            {reorderData.notes && (
-              <div className="mt-3 pt-3 border-t border-blue-200">
-                <p className="text-sm font-medium text-blue-700">Additional Notes:</p>
-                <p className="text-blue-900 bg-white p-2 rounded">{reorderData.notes}</p>
-              </div>
-            )}
-          </div>
+
 
           {/* All Reorder Items Table */}
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">All Reorder Items</h3>
+          <div className="border border-gray-300 mt-2 print:mt-1 mb-4">
+            <h3 className="text-base font-semibold mb-1 print:mb-0 p-2 print:p-1 bg-gray-50 text-red-600 print:bg-white print:border-b print:border-red-600 print:text-sm">REORDER REQUESTS LISTING</h3>
             {allReorders.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full border border-gray-300">
-                  <thead className="bg-gray-50">
+              <div className="overflow-x-auto print:overflow-visible">
+                <table className="w-full text-sm print:text-xs">
+                  <thead className="bg-red-600 text-white">
                     <tr>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Item Name</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Category</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Quantity</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Priority</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Status</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Expected Date</th>
-                      <th className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700">Supplier</th>
+                      <th className="px-3 py-2 text-left">Item Name</th>
+                      <th className="px-3 py-2 text-center">Category</th>
+                      <th className="px-3 py-2 text-center">Quantity</th>
+                      <th className="px-3 py-2 text-center">Priority</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                      <th className="px-3 py-2 text-center">Expected Date</th>
+                      <th className="px-3 py-2 text-center print:hidden">Supplier</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white">
+                  <tbody>
                     {allReorders.map((reorder, index) => (
                       <tr key={reorder._id || index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">{reorder.item_name}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">{reorder.category}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">{reorder.quantity}</td>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
-                          <span className={`font-semibold ${
-                            reorder.priority === 'Urgent' ? 'text-red-600' :
-                            reorder.priority === 'High' ? 'text-orange-600' :
-                            reorder.priority === 'Medium' ? 'text-blue-600' : 'text-gray-600'
+                        <td className="px-3 py-2 border-b">{reorder.item_name}</td>
+                        <td className="px-3 py-2 border-b text-center">{reorder.category}</td>
+                        <td className="px-3 py-2 border-b text-center">{reorder.quantity}</td>
+                        <td className="px-3 py-2 border-b text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            reorder.priority === 'Urgent' ? 'bg-red-100 text-red-800' :
+                            reorder.priority === 'High' ? 'bg-orange-100 text-orange-800' :
+                            reorder.priority === 'Medium' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                           }`}>
                             {reorder.priority}
                           </span>
                         </td>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
-                          <span className={`font-semibold ${
-                            reorder.status === 'Pending' ? 'text-yellow-600' :
-                            reorder.status === 'Approved' ? 'text-green-600' :
-                            reorder.status === 'In Transit' ? 'text-blue-600' :
-                            reorder.status === 'Delivered' ? 'text-green-600' : 'text-red-600'
+                        <td className="px-3 py-2 border-b text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            reorder.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                            reorder.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                            reorder.status === 'In Transit' ? 'bg-blue-100 text-blue-800' :
+                            reorder.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                           }`}>
                             {reorder.status}
                           </span>
                         </td>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">
+                        <td className="px-3 py-2 border-b text-center">
                           {new Date(reorder.expectedDate).toLocaleDateString()}
                         </td>
-                        <td className="border border-gray-300 px-4 py-2 text-sm text-gray-900">{reorder.supplier || 'N/A'}</td>
+                        <td className="px-3 py-2 border-b text-center print:hidden">{reorder.supplier || 'N/A'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500 italic">No reorders found</p>
+              <div className="p-4 text-center text-gray-500 italic">No reorder requests found</div>
             )}
           </div>
 
-          {/* Summary */}
-          <div className="mb-8 bg-blue-50 p-4 rounded border border-blue-200">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Order Summary</h3>
-            <p className="text-blue-800">
-              <strong>Total Reorders:</strong> {allReorders.length} items
-              <br />
-              <strong>Current Reorder:</strong> {reorderData.quantity} units of {item.item_name}
-              {(item.threshold > 0 && item.quantity < item.threshold) && (
-                <span className="block mt-2 text-red-700 font-semibold">
-                  ⚠️ URGENT: Current stock ({item.quantity}) is below threshold ({item.threshold})
-                </span>
-              )}
-            </p>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-12 pt-8 border-t-2 border-gray-300">
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Prepared By:</p>
-                <p className="text-gray-900">Inventory Manager</p>
-                <p className="text-sm text-gray-500">FireLink SL</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Approved By:</p>
-                <p className="text-gray-900">_________________</p>
-                <p className="text-sm text-gray-500">Date: _________________</p>
+          {/* Critical Items Section */}
+          {(item.threshold > 0 && item.quantity < item.threshold) && (
+            <div className="border border-red-300 p-4 mt-4 bg-red-50">
+              <h3 className="text-lg font-semibold mb-3 text-red-600">
+                <span className="print:hidden">⚠️ </span>URGENT REORDER REQUIRED
+              </h3>
+              <div className="bg-white p-3 rounded border border-red-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-semibold">{item.item_name}</span>
+                    <span className="text-gray-600 ml-2">({item.item_ID})</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-red-600 font-bold">Stock: {item.quantity}</span>
+                    <span className="text-gray-500 ml-2">/ Threshold: {item.threshold}</span>
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-gray-700">
+                  <strong>Requesting:</strong> {reorderData.quantity} units | <strong>Priority:</strong> {reorderData.priority}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Terms and Conditions */}
-          <div className="mt-8 text-xs text-gray-600">
-            <p className="font-medium mb-2">Terms and Conditions:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Delivery must be made by the expected date specified</li>
-              <li>Items must meet quality standards and specifications</li>
-              <li>Payment terms: Net 30 days from delivery</li>
-              <li>Returns accepted within 7 days for defective items</li>
-              <li>This reorder request is valid for 30 days</li>
-            </ul>
+          {/* Report Footer */}
+          <div className="border-t-2 border-red-600 mt-6 pt-4 print:mt-4 print:pt-2">
+            <div className="grid grid-cols-3 gap-4 text-sm print:text-xs">
+              <div>
+                <h4 className="font-semibold text-red-600 mb-2 print:mb-1">SYSTEM INFORMATION</h4>
+                <p><strong>Generated By:</strong> FireLink-SL IMS</p>
+                <p><strong>Platform Version:</strong> 2.1.0</p>
+                <p><strong>Database:</strong> MongoDB Atlas</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-red-600 mb-2 print:mb-1">CONTACT INFORMATION</h4>
+                <p><strong>Emergency Hotline:</strong> 110</p>
+                <p><strong>Admin Office:</strong> +94-11-XXXXXXX</p>
+                <p><strong>Email:</strong> inventory@firelink.lk</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-red-600 mb-2 print:mb-1">DOCUMENT CONTROL</h4>
+                <p><strong>Valid Until:</strong> {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+                <p><strong>Next Review:</strong> {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+                <p><strong>Page:</strong> 1 of 1</p>
+              </div>
+            </div>
+            
+            {/* Official Disclaimer */}
+            <div className="bg-red-50 print:bg-gray-100 p-3 print:p-2 rounded print:rounded-none mt-4 print:mt-2 border border-red-200 print:border-gray-300">
+              <p className="text-xs print:text-[10px] text-gray-700 text-center">
+                <strong>CONFIDENTIAL DOCUMENT</strong> - This reorder report contains sensitive procurement data of the Fire and Rescue Service of Sri Lanka. 
+                Distribution is restricted to authorized personnel only. Any unauthorized disclosure, copying, or distribution is strictly prohibited. 
+                For questions regarding this reorder, contact the Inventory Management Department at inventory@firelink.lk
+              </p>
+            </div>
+            
+            {/* Report Signature Section */}
+            <div className="grid grid-cols-2 gap-8 mt-6 print:mt-4 text-sm print:text-xs">
+              <div className="text-center">
+                <div className="border-t border-gray-400 pt-2 print:pt-1 mt-8 print:mt-6">
+                  <p><strong>Inventory Manager</strong></p>
+                  <p className="text-gray-600">Fire and Rescue Service</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="border-t border-gray-400 pt-2 print:pt-1 mt-8 print:mt-6">
+                  <p><strong>Department Head</strong></p>
+                  <p className="text-gray-600">Emergency Services Division</p>
+                </div>
+              </div>
+            </div>
           </div>
           </div>
         </div>
