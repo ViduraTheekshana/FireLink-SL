@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Sidebar from "../UserManagement/Sidebar"; // adjust path if needed
+import firelinkLogo from '../../assets/images/firelink-logo.png';
 
 const ShiftScheduler = () => {
   const [schedules, setSchedules] = useState([]);
@@ -11,6 +12,11 @@ const ShiftScheduler = () => {
   });
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [errors, setErrors] = useState({});
+
+  // Report generation state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [allScheduleData, setAllScheduleData] = useState([]);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   const vehicleOptions = ["Engine 1", "Engine 2", "Ladder 1", "Rescue 1", "Tanker 1", "Command 1"];
   const shiftTypeOptions = ["Day Shift (08:00-20:00)", "Night Shift (20:00-08:00)", "24-Hour Shift"];
@@ -307,6 +313,16 @@ const filteredSchedules = searchDate
     }
   };
 
+  // Load all schedule data for report generation
+  const loadAllScheduleData = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/shift-schedules');
+      return res.data.schedules || [];
+    } catch (error) {
+      console.error('Error loading schedule data for report:', error);
+      return [];
+    }
+  };
 
   // Get today's date in YYYY-MM-DD format for min attribute
   const getTodayDate = () => {
@@ -564,12 +580,27 @@ const filteredSchedules = searchDate
   </div>
 </div>
 
-        <button
-          onClick={downloadSchedules}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300"
-        >
-          Download
-        </button>
+        <div className="flex gap-1">
+          <button
+            onClick={downloadSchedules}
+            className="bg-green-600 text-white px-2 py-1 text-xs rounded hover:bg-green-700 transition duration-300"
+          >
+            Download CSV
+          </button>
+          <button
+            onClick={async () => {
+              setLoadingReport(true);
+              const allData = await loadAllScheduleData();
+              setAllScheduleData(allData);
+              setShowReportModal(true);
+              setLoadingReport(false);
+            }}
+            disabled={loadingReport}
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-2 py-1 text-xs rounded transition duration-300"
+          >
+            {loadingReport ? '⏳ Loading...' : '📄 Generate PDF Report'}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -665,6 +696,173 @@ const filteredSchedules = searchDate
 
         </div>
       </div>
+
+      {/* PDF Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 print:bg-white print:relative print:inset-auto print:flex-none print:items-start print:justify-start">
+          <div className="bg-white rounded-lg p-6 w-4/5 max-w-6xl max-h-[90vh] overflow-y-auto print:w-full print:max-w-none print:max-h-none print:overflow-visible print:rounded-none print:p-4">
+            <div className="flex justify-between items-center mb-4 print:hidden">
+              <h2 className="text-xl font-bold text-gray-800">Shift Schedule Report</h2>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="border border-red-600 p-2 print:p-1 mb-1 print:mb-0">
+              <div className="flex items-center justify-between mb-1 print:mb-0">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 print:w-8 print:h-8 mr-2 flex-shrink-0">
+                    <img
+                      src={firelinkLogo}
+                      alt="FireLink Logo"
+                      className="w-full h-full object-contain rounded print:rounded-none"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-bold text-red-600 print:text-base">FIRELINK-SL</h1>
+                    <p className="text-xs text-gray-600 print:text-xs">Fire Service Management System</p>
+                  </div>
+                </div>
+                <div className="text-right text-sm text-gray-600 print:text-xs">
+                  <p>Generated: {new Date().toLocaleDateString()}</p>
+                  <p>Time: {new Date().toLocaleTimeString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-center text-gray-800 mb-2 print:text-lg">SHIFT SCHEDULE REPORT</h2>
+              <p className="text-center text-gray-600 text-sm">Total Schedules: {allScheduleData.length}</p>
+            </div>
+
+            <div className="space-y-4">
+              {allScheduleData.map((schedule, index) => (
+                <div key={schedule._id || index} className="border border-gray-300 rounded-lg p-4 print:p-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:gap-2">
+                    <div>
+                      <h3 className="font-semibold text-gray-800">Schedule #{index + 1}</h3>
+                      <p><strong>Date:</strong> {new Date(schedule.date).toLocaleDateString()}</p>
+                      <p><strong>Vehicle:</strong> {schedule.vehicle}</p>
+                      <p><strong>Shift Type:</strong> {schedule.shiftType}</p>
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <h4 className="font-semibold text-gray-700 mb-2">Assigned Members:</h4>
+                      <div className="grid grid-cols-2 gap-2 print:gap-1">
+                        {schedule.members && schedule.members.map((member, idx) => (
+                          <div key={idx} className="bg-gray-50 p-2 print:p-1 rounded text-sm">
+                            <p><strong>Name:</strong> {member.name}</p>
+                            <p><strong>Position:</strong> {member.position}</p>
+                            <p><strong>Role:</strong> {member.role}</p>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {schedule.notes && (
+                        <div className="mt-2 print:mt-1">
+                          <p><strong>Notes:</strong> {schedule.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex gap-4 print:hidden">
+              <button
+                onClick={() => {
+                  // Get the modal content exactly as displayed
+                  const modalContent = document.querySelector('.fixed.inset-0 .bg-white');
+                  const printWindow = window.open('', '', 'width=1200,height=800');
+                  
+                  // Clone the content to avoid modifying the original
+                  const contentClone = modalContent.cloneNode(true);
+                  
+                  // Remove only the button container (print:hidden elements)
+                  const buttonContainer = contentClone.querySelector('.mt-6.flex.gap-4');
+                  if (buttonContainer) buttonContainer.remove();
+                  
+                  // Get all computed styles from the original document
+                  const styles = Array.from(document.styleSheets)
+                    .map(styleSheet => {
+                      try {
+                        return Array.from(styleSheet.cssRules)
+                          .map(rule => rule.cssText)
+                          .join('\n');
+                      } catch (e) {
+                        return '';
+                      }
+                    })
+                    .join('\n');
+
+                  printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <title>Shift Schedule Report - FireLink-SL</title>
+                      <meta charset="utf-8">
+                      <style>
+                        ${styles}
+                        body { 
+                          font-family: system-ui, -apple-system, sans-serif; 
+                          margin: 0; 
+                          padding: 20px;
+                          background: white;
+                        }
+                        .fixed { position: relative !important; }
+                        .inset-0 { inset: auto !important; }
+                        .bg-black { background: transparent !important; }
+                        .bg-opacity-50 { background: transparent !important; }
+                        .flex.items-center.justify-center { display: block !important; }
+                        .z-50 { z-index: auto !important; }
+                        .max-h-\\[90vh\\] { max-height: none !important; }
+                        .overflow-y-auto { overflow: visible !important; }
+                        .w-4\\/5 { width: 100% !important; }
+                        .max-w-6xl { max-width: none !important; }
+                        .rounded-lg { border-radius: 0 !important; }
+                        @media print {
+                          body { print-color-adjust: exact; }
+                          * { box-shadow: none !important; }
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      ${contentClone.innerHTML}
+                    </body>
+                    </html>
+                  `);
+                  
+                  printWindow.document.close();
+                  
+                  // Wait for images and styles to load, then print
+                  printWindow.onload = () => {
+                    setTimeout(() => {
+                      printWindow.print();
+                      printWindow.close();
+                    }, 1000);
+                  };
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                🖨️ Print Report
+              </button>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

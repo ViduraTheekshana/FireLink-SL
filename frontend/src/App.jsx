@@ -123,6 +123,14 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/staff-management"
+          element={
+            <StaffManagementTable />
+          }
+        />
+
         <Route
           path="/supply-requests"
           element={
