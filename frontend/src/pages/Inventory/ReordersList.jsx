@@ -275,22 +275,6 @@ const ReordersList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      {reorder.status === 'Pending' && (
-                        <button 
-                          onClick={() => handleApprove(reorder._id)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Approve
-                        </button>
-                      )}
-                      {reorder.status === 'Approved' && (
-                        <button 
-                          onClick={() => handleMarkDelivered(reorder._id)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Deliver
-                        </button>
-                      )}
                       <button 
                         onClick={() => handleDelete(reorder._id)}
                         className="text-red-600 hover:text-red-900"

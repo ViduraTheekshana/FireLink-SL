@@ -94,14 +94,14 @@ const DynamicDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen max-w-full overflow-hidden">
       {/* Sidebar */}
-      <div className="w-64">
+      <div className="w-64 flex-shrink-0">
         <Sidebar user={user} onLogout={handleLogout} />
       </div>
 
       {/* Main content */}
-      <div className="flex-1 bg-gray-100">{renderContent()}</div>
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">{renderContent()}</div>
     </div>
   );
 };
