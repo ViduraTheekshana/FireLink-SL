@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import StaffManagementTable from "./StaffManagementTable";
 
 const OfficerProfile = ({ officerId }) => {
   const { id: paramId } = useParams();
-  const id = officerId || paramId; // Use prop if provided, otherwise URL param
-  const navigate = useNavigate();
+  const id = officerId || paramId;
   const [officer, setOfficer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,18 +20,31 @@ const OfficerProfile = ({ officerId }) => {
     const fetchOfficerData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/users/${id}`);
+        const token = localStorage.getItem("token");
+        const headers = token
+          ? { Authorization: `Bearer ${token}` }
+          : {};
+
+        // If your backend runs on port 5000
+        const response = await axios.get(`http://localhost:5000/users/${id}`, {
+          headers,
+          withCredentials: true, // if backend uses cookies
+        });
+
         setOfficer(response.data.user);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch officer data");
+        console.error("Officer nmmmfetch error:", err.response || err);
+        // Show backend message if available
+        const message = err.response?.data?.message || "Failed to fetch officer data";
+        setError(message);
         setLoading(false);
-        console.error(err);
       }
     };
 
     fetchOfficerData();
   }, [id]);
+
 
   if (loading) {
     return (
@@ -60,6 +72,7 @@ const OfficerProfile = ({ officerId }) => {
 
   return (
     <div className="min-h-screen bg-[#1e2a38] py-8 px-4">
+      
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 relative">
@@ -146,7 +159,7 @@ const OfficerProfile = ({ officerId }) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
             <Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
               Back to Login
@@ -165,9 +178,7 @@ const OfficerProfile = ({ officerId }) => {
       </div>
 
       {/* Staff Management Table */}
-      <div className="max-w-6xl mx-auto mt-12">
-        <StaffManagementTable officerId={officer._id} />
-      </div>
+     
     </div>
   );
 };

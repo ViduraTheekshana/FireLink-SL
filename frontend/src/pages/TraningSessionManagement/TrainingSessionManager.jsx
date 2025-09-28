@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import QRCodeGenerator from "./QRCodeGenerator"; // add this import
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
@@ -113,19 +114,21 @@ const TrainingSessionManager = () => {
   };
 
   const fetchAttendance = async (sessionId) => {
-  try {
-    const res = await fetch(`http://localhost:5000/attendance/${sessionId}`);
-    const data = await res.json();
-    if (data.status === "ok") {
-      setAttendanceData((prev) => ({
-        ...prev,
-        [sessionId]: data.attendance, // THIS IS THE KEY
-      }));
+    try {
+      const res = await fetch(
+        `http://localhost:5000/sessions/attendance/${sessionId}`
+      ); // <-- updated endpoint
+      const data = await res.json();
+      if (data.status === "ok") {
+        setAttendanceData((prev) => ({
+          ...prev,
+          [sessionId]: data.attendance,
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching attendance:", err);
     }
-  } catch (err) {
-    console.error("Error fetching attendance:", err);
-  }
-};
+  };
 
 
   const handleSendReport = (mobileNumber, session) => {
@@ -138,8 +141,8 @@ const TrainingSessionManager = () => {
       `Attendance report for session "${session.title}" (ID: ${session._id}):\n` +
       (attendanceData[session._id]?.length > 0
         ? attendanceData[session._id]
-            .map((a) => `${a.staffName} (${a.staffId})`)
-            .join("\n")
+          .map((a) => `${a.staffName} (${a.staffId})`)
+          .join("\n")
         : "No attendance yet.");
 
     const WhatsAppUrl = `https://web.whatsapp.com/send?phone=${mobileNumber}&text=${encodeURIComponent(
@@ -161,41 +164,64 @@ const TrainingSessionManager = () => {
         : [...prev.teamMembers, staffId],
     }));
   };
+const [errors, setErrors] = useState({});
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:5000/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          teamMembers: formData.teamMembers,
-        }),
+  e.preventDefault();
+
+  // ✅ Validation
+  if (!formData.title || formData.title.trim().split(" ").length < 2) {
+    alert("Session title must contain at least 2 words.");
+    return;
+  }
+  if (!formData.description || formData.description.trim().split(" ").length < 6) {
+    alert("Description must contain at least 6 words.");
+    return;
+  }
+  if (!formData.venue || formData.venue.trim().split(" ").length < 2) {
+    alert("Venue must contain at least 2 words.");
+    return;
+  }
+  if (formData.teamMembers.length < 5) {
+    alert("You must select at least 5 team members.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res = await fetch("http://localhost:5000/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        teamMembers: formData.teamMembers,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.status === "ok") {
+      alert("Training session created successfully!");
+      setFormData({
+        title: "",
+        description: "",
+        date: "",
+        venue: "",
+        teamMembers: [],
+        newStaffId: "",
+        createdBy: user.staffId,
       });
-      const data = await res.json();
-      if (data.status === "ok") {
-        alert("Training session created successfully!");
-        setFormData({
-          title: "",
-          description: "",
-          date: "",
-          venue: "",
-          teamMembers: [],
-          newStaffId: "",
-          createdBy: user.staffId,
-        });
-        setActiveTab("sessions");
-        fetchSessions();
-      } else alert("Error creating session: " + data.err);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create training session");
-    } finally {
-      setLoading(false);
+      setActiveTab("sessions");
+      fetchSessions();
+    } else {
+      alert("Error creating session: " + data.err);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Failed to create training session");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteSession = async (id) => {
     if (window.confirm("Are you sure you want to delete this session?")) {
@@ -255,12 +281,7 @@ const TrainingSessionManager = () => {
                 <FiHash className="mr-1" /> Staff ID: {user.staffId}
               </p>
             </div>
-            <Link
-              to="/staff-login"
-              className="absolute top-6 right-6 flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30 transition backdrop-blur-sm"
-            >
-              <FiLogOut /> Logout
-            </Link>
+           
           </div>
 
           {/* Tabs */}
@@ -269,11 +290,10 @@ const TrainingSessionManager = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 font-medium transition flex items-center whitespace-nowrap ${
-                  activeTab === tab
-                    ? "bg-white border-t-2 border-[#c62828] text-[#c62828] shadow-sm"
-                    : "text-gray-600 hover:text-[#c62828]"
-                }`}
+                className={`px-6 py-4 font-medium transition flex items-center whitespace-nowrap ${activeTab === tab
+                  ? "bg-white border-t-2 border-[#c62828] text-[#c62828] shadow-sm"
+                  : "text-gray-600 hover:text-[#c62828]"
+                  }`}
               >
                 {tab === "profile" ? (
                   <>
@@ -347,66 +367,70 @@ const TrainingSessionManager = () => {
               ))}
             </div>
           )}
-{activeTab === "attendance" && (
-  <div className="space-y-4">
-    {sessions.length === 0 ? (
-      <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-        <FiList className="mx-auto text-4xl text-gray-400 mb-3" />
-        <p className="text-gray-500">No sessions created yet.</p>
-        <button
-          onClick={() => setActiveTab("create")}
-          className="mt-4 px-4 py-2 bg-[#c62828] text-white rounded-lg hover:bg-red-700 transition"
-        >
-          Create Your First Session
-        </button>
-      </div>
-    ) : (
-      sessions.map((session) => (
-        <div key={session._id} className="border border-gray-300 rounded-xl p-5">
-          <h3 className="font-semibold text-lg mb-2">{session.title}</h3>
-          <p className="text-sm text-gray-600 mb-2">Session ID: {session._id}</p>
-
-          <button
-            onClick={() => fetchAttendance(session._id)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg mb-2 hover:bg-blue-700 transition text-sm"
-          >
-            Load Attendance
-          </button>
-
-          {attendanceData[session._id]?.length > 0 ? (
-            <div className="space-y-1">
-              {attendanceData[session._id].map((att, idx) => (
-                <div key={idx} className="flex justify-between items-center px-3 py-1 bg-gray-100 rounded">
-                  <span>{att.name} ({att.staffId})</span>
-                  <span>{new Date(att.attendedAt).toLocaleString()}</span>
+          {activeTab === "attendance" && (
+            <div className="space-y-4">
+              {sessions.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                  <FiList className="mx-auto text-4xl text-gray-400 mb-3" />
+                  <p className="text-gray-500">No sessions created yet.</p>
+                  <button
+                    onClick={() => setActiveTab("create")}
+                    className="mt-4 px-4 py-2 bg-[#c62828] text-white rounded-lg hover:bg-red-700 transition"
+                  >
+                    Create Your First Session
+                  </button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No attendance yet.</p>
-          )}
+              ) : (
+                sessions.map((session) => (
+                  <div key={session._id} className="border border-gray-300 rounded-xl p-5">
+                    <h3 className="font-semibold text-lg mb-2">{session.title}</h3>
+                    <div className="mt-4">
+                      <QRCodeGenerator sessionId={session._id} />
+                    </div>
 
-          {/* WhatsApp report */}
-          <div className="mt-3 flex gap-2 items-center">
-            <input
-              type="tel"
-              placeholder="Enter mobile number"
-              value={selectedNumber}
-              onChange={(e) => setSelectedNumber(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition flex-1"
-            />
-            <button
-              onClick={() => handleSendReport(selectedNumber, session)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
-            >
-              <FiSend className="mr-2" /> Send Report
-            </button>
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-)}
+                    <p className="text-sm text-gray-600 mb-2">Session ID: {session._id}</p>
+
+                    <button
+                      onClick={() => fetchAttendance(session._id)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg mb-2 hover:bg-blue-700 transition text-sm"
+                    >
+                      Load Attendance
+                    </button>
+
+                    {attendanceData[session._id]?.length > 0 ? (
+                      <div className="space-y-1">
+                        {attendanceData[session._id].map((att, idx) => (
+                          <div key={idx} className="flex justify-between items-center px-3 py-1 bg-gray-100 rounded">
+                            <span>{att.name} ({att.staffId})</span>
+                            <span>{new Date(att.attendedAt).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No attendance yet.</p>
+                    )}
+
+                    {/* WhatsApp report */}
+                    <div className="mt-3 flex gap-2 items-center">
+                      <input
+                        type="tel"
+                        placeholder="Enter mobile number"
+                        value={selectedNumber}
+                        onChange={(e) => setSelectedNumber(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition flex-1"
+                      />
+                      <button
+                        onClick={() => handleSendReport(selectedNumber, session)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                      >
+                        <FiSend className="mr-2" /> Send Report
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
 
           {activeTab === "create" && (
@@ -431,7 +455,18 @@ const TrainingSessionManager = () => {
                   handleInputChange={handleInputChange}
                   type="datetime-local"
                   icon={<FiCalendar className="mr-2 text-[#c62828]" />}
+                  min={(() => {
+                    const now = new Date();
+                    const localDateTime =
+                      now.getFullYear() + "-" +
+                      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+                      String(now.getDate()).padStart(2, "0") + "T" +
+                      String(now.getHours()).padStart(2, "0") + ":" +
+                      String(now.getMinutes()).padStart(2, "0");
+                    return localDateTime;
+                  })()}
                 />
+
                 <InputField
                   label="Venue"
                   name="venue"
@@ -443,69 +478,83 @@ const TrainingSessionManager = () => {
 
               {/* Manual Participant Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <FiUsers className="mr-2 text-[#c62828]" /> Enter Participant
-                  Staff IDs *
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    placeholder="Enter staff ID"
-                    value={formData.newStaffId}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        newStaffId: e.target.value,
-                      }))
-                    }
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
+                {/* Dropdown for selecting staff */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <FiUsers className="mr-2 text-[#c62828]" /> Select Team Members *
+                  </label>
+                  <select
+                    value={formData.selectedDropdownId || ""}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
                       if (
-                        formData.newStaffId &&
-                        !formData.teamMembers.includes(formData.newStaffId)
+                        selectedId &&
+                        !formData.teamMembers.includes(selectedId)
                       ) {
                         setFormData((prev) => ({
                           ...prev,
-                          teamMembers: [...prev.teamMembers, prev.newStaffId],
-                          newStaffId: "",
+                          teamMembers: [...prev.teamMembers, selectedId],
+                          selectedDropdownId: "",
                         }));
                       }
                     }}
-                    className="px-4 py-2 bg-[#c62828] text-white rounded-lg hover:bg-red-700 transition"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   >
-                    Add
-                  </button>
+                    <option value="">-- Select staff --</option>
+                    {staffMembers
+                      .filter(
+                        (staff) =>
+                          staff.position === "fighter" || staff.position === "team captain"
+                      )
+                      .map((staff) => (
+                        <option key={staff.staffId} value={staff.staffId}>
+                          {staff.name} ({staff.staffId})
+                        </option>
+                      ))}
+                  </select>
                 </div>
+
+                {/* Manual input */}
+                <div className="mb-4">
+
+                  <div className="flex gap-2 mb-2">
+
+                  </div>
+                </div>
+
+                {/* Display selected team members */}
                 {formData.teamMembers.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formData.teamMembers.map((id, index) => (
-                      <span
-                        key={index}
-                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-2"
-                      >
-                        {id}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              teamMembers: prev.teamMembers.filter(
-                                (tid) => tid !== id
-                              ),
-                            }))
-                          }
-                          className="text-red-500 font-bold"
+                    {formData.teamMembers.map((id, index) => {
+                      const staff = staffMembers.find((s) => s.staffId === id);
+                      const displayName = staff ? `${staff.name} (${staff.staffId})` : id;
+                      return (
+                        <span
+                          key={index}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-2"
                         >
-                          ×
-                        </button>
-                      </span>
-                    ))}
+                          {displayName}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                teamMembers: prev.teamMembers.filter(
+                                  (tid) => tid !== id
+                                ),
+                              }))
+                            }
+                            className="text-red-500 font-bold"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>
+
 
               {/* Buttons */}
               <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
