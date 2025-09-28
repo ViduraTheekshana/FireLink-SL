@@ -103,12 +103,7 @@ const App = () => {
 				<Route path="/inventory/logs" element={<InventoryLogs />} />
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
-				{/* Shift Management routes */}
-				<Route path="/shifts" element={<ShiftDashboard />} />
-				<Route path="/shifts/create" element={<CreateShift />} />
-				<Route path="/shifts/my-shifts" element={<MyShifts />} />
-				<Route path="/shifts/change-requests" element={<ChangeRequests />} />
-				<Route path="/shifts/messages" element={<Messages />} />
+				
 
         {/* Supplier routes */}
         <Route
