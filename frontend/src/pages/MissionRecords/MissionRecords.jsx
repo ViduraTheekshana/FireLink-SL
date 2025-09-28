@@ -15,6 +15,7 @@ const MissionRecords = () => {
 		missionTime: "",
 		description: "",
 		inventoryItems: [],
+		status: "Active",
 	});
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
@@ -122,6 +123,7 @@ const MissionRecords = () => {
 				missionTime: "",
 				description: "",
 				inventoryItems: [],
+				status: "Active",
 			});
 			setShowForm(false);
 			setEditingMissionId(null);
@@ -147,6 +149,7 @@ const MissionRecords = () => {
 				quantity: Number(it.quantity) || 0,
 				usedQuantity: Number(it.usedQuantity) || 0,
 			})),
+			status: mission.status || "Active",
 		});
 		setShowForm(true);
 	};
@@ -222,7 +225,31 @@ const MissionRecords = () => {
 			{/* Add Mission Button */}
 		<div className="mb-6 flex items-center gap-3">
 			<button
-				onClick={() => setShowForm(!showForm)}
+				onClick={() => {
+					if (showForm) {
+						// Cancel - hide form and reset states
+						setShowForm(false);
+						setEditingMissionId(null);
+						setFormData({
+							missionType: "",
+							missionDate: "",
+							missionTime: "",
+							description: "",
+							inventoryItems: [],
+						});
+					} else {
+						// Add New - show form for new mission
+						setEditingMissionId(null);
+						setFormData({
+							missionType: "",
+							missionDate: "",
+							missionTime: "",
+							description: "",
+							inventoryItems: [],
+						});
+						setShowForm(true);
+					}
+				}}
 				className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
 			>
 				{showForm ? "Cancel" : "Add New Mission"}
@@ -238,7 +265,9 @@ const MissionRecords = () => {
 			{/* Mission Form */}
 			{showForm && (
 				<div className="bg-white rounded-lg shadow-md p-6 mb-6">
-					<h2 className="text-xl font-semibold mb-4">Add New Mission Record</h2>
+					<h2 className="text-xl font-semibold mb-4">
+						{editingMissionId ? "Edit Mission Record" : "Add New Mission Record"}
+					</h2>
 					{error && (
 						<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
 							{error}
@@ -295,6 +324,23 @@ const MissionRecords = () => {
 								/>
 							</div>
 						</div>
+						<div>
+	<label className="block text-sm font-medium text-gray-700 mb-2">
+		Status *
+	</label>
+	<select
+		name="status"
+		value={formData.status}
+		onChange={handleInputChange}
+		required
+		className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+	>
+		<option value="Active">Active</option>
+		<option value="Completed">Completed</option>
+		<option value="Cancelled">Cancelled</option>
+	</select>
+</div>
+
 
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">
@@ -306,6 +352,7 @@ const MissionRecords = () => {
 								onChange={handleInputChange}
 								required
 								rows="4"
+								maxLength={25}
 								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 								placeholder="Provide a detailed description of the mission..."
 							/>
@@ -332,23 +379,32 @@ const MissionRecords = () => {
 									className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded"
 								>
 									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Item Code
-										</label>
-										<input
-											type="text"
-											value={item.itemCode}
-											onChange={(e) =>
-												handleInventoryItemChange(
-													index,
-													"itemCode",
-													e.target.value
-												)
-											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-											placeholder="e.g., FIRE001"
-										/>
-									</div>
+                                       <label className="block text-sm font-medium text-gray-700 mb-1">
+                                          Item Code
+                                        </label>
+                                <input
+                                 type="text"
+                                 value={item.itemCode}
+                                 onChange={(e) => {
+                                 let value = e.target.value.toUpperCase();
+
+      
+                                if (!value.startsWith("IT")) {
+                                   value = "IT" + value.replace(/^IT/, "");
+                                    }
+
+    
+                                  if (value.length > 5) {
+                                    value = value.slice(0, 5);
+                                    }
+
+                                   handleInventoryItemChange(index, "itemCode", value);
+                                   }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="e.g., IT001"
+                                    required
+                                />
+                            </div>
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-1">
 											Available Quantity
@@ -402,7 +458,17 @@ const MissionRecords = () => {
 						<div className="flex justify-end space-x-4">
 							<button
 								type="button"
-								onClick={() => setShowForm(false)}
+								onClick={() => {
+									setShowForm(false);
+									setEditingMissionId(null);
+									setFormData({
+										missionType: "",
+										missionDate: "",
+										missionTime: "",
+										description: "",
+										inventoryItems: [],
+									});
+								}}
 								className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
 							>
 								Cancel
@@ -412,7 +478,10 @@ const MissionRecords = () => {
 								disabled={loading}
 								className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
 							>
-								{loading ? "Creating..." : "Create Mission"}
+								{loading 
+									? (editingMissionId ? "Updating..." : "Creating...") 
+									: (editingMissionId ? "Update Mission" : "Create Mission")
+								}
 							</button>
 						</div>
 					</form>

@@ -343,7 +343,7 @@ const InventoryManagerDashboard = () => {
       value: inventory.expiringSoonCount || 0, 
       color: 'bg-orange-50 text-orange-700 hover:bg-orange-100', 
       link: '/inventory?search=expiring',
-      description: 'Items expiring within 30 days'
+      description: 'Items expiring within 120 days'
     },
     { 
       label: 'Total Vehicles', 

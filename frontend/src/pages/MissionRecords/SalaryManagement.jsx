@@ -51,7 +51,7 @@ const SalaryManagement = () => {
 		const fetchUsers = async () => {
 			try {
 				setError("");
-				const token = localStorage.getItem("fire_access_token");
+				const token = localStorage.getItem("token");
 				const res = await axios.get("http://localhost:5000/users", {
 					headers: token ? { Authorization: `Bearer ${token}` } : {},
 					withCredentials: true,
