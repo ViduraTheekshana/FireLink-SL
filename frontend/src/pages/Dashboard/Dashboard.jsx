@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../../pages/UserManagement/Sidebar";
 import TrainingSession from "../TraningSessionManagement/TrainingSessionManager";
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
-import MissionRecords from "../MissionRecords/MissionRecords"
-
+import MissionRecords from "../MissionRecords/MissionRecords";
+import StaffManagementTable from "../UserManagement/StaffManagementTable";
 const DynamicDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -22,14 +22,36 @@ const DynamicDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/staff-login");
   };
 
   const renderContent = () => {
-    switch (user.position.toLowerCase()) {
-      case "1st class officer":
-      case "1stclass officer":
-    return <OfficerProfile officerId={user._id} />;
+    const position = (user.position || "").toLowerCase().trim().replace(/\s+/g, "");
+    console.log("Normalized position:", position);
+
+    switch (position) {
+      case "chiefofficer":
+        return (
+          <div className="p-6">
+            <h1 className="text-3xl font-bold mb-4">Chief Officer Dashboard</h1>
+            <p>Welcome {user.name}, you have full administrative access.</p>
+          </div>
+        );
+
+      case "1stclassofficer":
+        return (
+          <div className="p-6 space-y-6">
+            {/* Officer profile */}
+            <OfficerProfile officerId={user._id} />
+
+            {/* Staff table */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-4">Staff Members</h2>
+              <StaffManagementTable />
+            </div>
+          </div>
+        );
 
       case "fighter":
         return (
@@ -56,7 +78,7 @@ const DynamicDashboard = () => {
         );
 
       case "recordmanager":
-        return <MissionRecords/>;
+        return <MissionRecords />;
 
       case "preventionmanager":
         return (
@@ -89,9 +111,7 @@ const DynamicDashboard = () => {
         return (
           <div className="p-6">
             <h1 className="text-3xl font-bold mb-4">Staff Dashboard</h1>
-            <p>
-              Welcome {user.name || "Staff Member"}, here is your general dashboard.
-            </p>
+            <p>Welcome {user.name || "Staff Member"}, here is your general dashboard.</p>
           </div>
         );
     }

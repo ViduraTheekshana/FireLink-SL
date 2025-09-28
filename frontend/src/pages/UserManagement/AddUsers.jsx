@@ -25,17 +25,17 @@ function AddFireStaff() {
   const [loading, setLoading] = useState(false);
 
   const positions = [
-    "1stclass officer",
-    "finanaceManager",
-    "inventoryManager",
-    "recordmanager",
-    "preventionManager",
-    "trainingsessionmanager",
-    "suplliermanager",
-    "teamcaptain",
-    "fighter",
-  ];
-
+  "chief officer",       // ✅ New
+  "1stclassofficer",
+  "financemanager",      // fixed typo: was "finanaceManager"
+  "inventorymanager",
+  "recordmanager",
+  "preventionmanager",
+  "trainingsessionmanager",
+  "suppliermanager",     // fixed typo: was "suplliermanager"
+  "teamcaptain",
+  "fighter",
+];
   const statuses = ["active", "inactive", "suspended", "retired"];
 
   const handleChange = (e) => {

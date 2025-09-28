@@ -20,53 +20,78 @@ const Sidebar = ({ user, onLogout }) => {
     const links = [
       { name: "Dashboard", path: "/dashboard", icon: <FaTachometerAlt /> },
       { name: "Profile", path: "/profile", icon: <FaUser /> },
-      { name: "Settings", path: "/settings", icon: <FaCogs /> }, // Can change to settings page
+      { name: "Settings", path: "/settings", icon: <FaCogs /> },
     ];
 
     switch (user.position.toLowerCase()) {
-      case "1stclass officer":
+      case "chief officer":
+        // Full access for Chief Officer
+        links.push(
+          { name: "Staff Management", path: "/staff-management", icon: <FaUsers /> },
+          { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> },
+          { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
+          { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },
+          { name: "Inventory", path: "/inventory", icon: <FaTruck /> },
+          { name: "Finance Reports", path: "/finance", icon: <FaClipboardList /> },
+          { name: "Records", path: "/records", icon: <FaClipboardList /> }
+        );
+        break;
+
+      case "1stclassofficer":
         links.push(
           { name: "Shift Schedule", path: "/shiftschedule", icon: <FaClipboardList /> },
           { name: "Add Staff", path: "/firstaff", icon: <FaUsers /> },
-          { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },  // NEW
+          { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },
           { name: "Staff Management", path: "/staff-management", icon: <FaUsers /> }
         );
         break;
 
       case "fighter":
-        links.push({ name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> });
+        links.push({ name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
+          { name: "View Sessions", path: "/sessions", icon: <FaClipboardList /> }
+        );
         break;
+
       case "financemanager":
         links.push({ name: "Finance Reports", path: "/finance", icon: <FaClipboardList /> });
         break;
+
       case "inventorymanager":
         links.push(
           { name: "Inventory", path: "/inventory", icon: <FaTruck /> },
           { name: "Reorders", path: "/inventory/reorders", icon: <FaClipboardList /> }
         );
         break;
-      case "recordmanager":
-        links.push({ name: "Records", path: "/records", icon: <FaClipboardList /> },
-          { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> },
 
+      case "recordmanager":
+        links.push(
+          { name: "Records", path: "/records", icon: <FaClipboardList /> },
+          { name: "Mission Records", path: "/mission-records", icon: <FaClipboardList /> }
         );
         break;
+
       case "preventionmanager":
         links.push({ name: "Prevention", path: "/prevention", icon: <FaClipboardList /> });
         break;
+
       case "trainingsessionmanager":
         links.push(
           { name: "View Sessions", path: "/sessions", icon: <FaClipboardList /> },
-          { name: "Add Attendance", path: "/attendance/1", icon: <FaClipboardList /> } // example default id
+          { name: "Add Attendance", path: "/attendance/1", icon: <FaClipboardList /> },
+          { name: "Training Sessions", path: "/training-dashboard", icon: <FaClipboardList /> },
         );
         break;
 
       case "suppliermanager":
         links.push({ name: "Suppliers", path: "/suppliers", icon: <FaUsers /> });
         break;
+
       case "teamcaptain":
-        links.push({ name: "Team Management", path: "/team", icon: <FaUsers /> });
+        links.push({ name: "Team Management", path: "/team", icon: <FaUsers /> },
+          { name: "View Sessions", path: "/sessions", icon: <FaClipboardList /> }
+        );
         break;
+
       default:
         break;
     }
@@ -101,22 +126,21 @@ const Sidebar = ({ user, onLogout }) => {
         </nav>
       </div>
 
-     {/* Logout Button */}
-<button
-  onClick={() => {
-    const confirmLogout = window.confirm("Do you want to log out?");
-    if (confirmLogout) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("staffId");
-      onLogout ? onLogout() : navigate("/staff-login");
-    }
-  }}
-  className="flex items-center gap-3 mt-6 px-3 py-2 rounded bg-red-600 hover:bg-red-700 transition"
->
-  <FaSignOutAlt />
-  Logout
-</button>
-
+      {/* Logout Button */}
+      <button
+        onClick={() => {
+          const confirmLogout = window.confirm("Do you want to log out?");
+          if (confirmLogout) {
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            onLogout ? onLogout() : navigate("/staff-login");
+          }
+        }}
+        className="flex items-center gap-3 mt-6 px-3 py-2 rounded bg-red-600 hover:bg-red-700 transition"
+      >
+        <FaSignOutAlt />
+        Logout
+      </button>
     </div>
   );
 };

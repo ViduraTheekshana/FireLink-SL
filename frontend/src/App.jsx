@@ -18,6 +18,9 @@ import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
 import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
 import Profile from "./pages/UserManagement/profile";
 import Settings from "./pages/UserManagement/setting";
+import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
+
+
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
@@ -62,12 +65,17 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
         {/* Training / Staff routes */}
-        <Route path="/training-dashboard" element={<TrainingSessionManager />} />
+        <Route path="/training-dashboard" element={<TrainingSessionManager  />} />
         <Route path="/update-session/:id" element={<UpdateSession />} />
         <Route path="/shiftschedule" element={<ShiftScheduler />} />
         <Route path="/sessions" element={<ViewSessions />} />
         <Route path="/attendance/:id" element={<AttendanceForm />} />
         <Route path="/staff-management" element={<StaffManagementTable />} />
+
+<Route
+  path="/training-session/create"
+  element={<MakeTrainingSession  />}
+/>
 
         {/* Protected user routes */}
         <Route
@@ -89,21 +97,21 @@ const App = () => {
           }
         />
 
-				{/* Inventory routes */}
-				<Route path="/inventory" element={<InventoryList />} />
-				<Route path="/inventory/add" element={<InventoryForm />} />
-				<Route path="/inventory/vehicles" element={<VehicleList />} />
-				<Route path="/inventory/vehicles/add" element={<VehicleForm />} />
-				<Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
-				<Route path="/inventory/edit/:id" element={<InventoryForm />} />
-				<Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
-				<Route path="/inventory/:id/reorder" element={<ReorderPage />} />
-				<Route path="/inventory/reorders" element={<ReordersList />} />
-				<Route path="/inventory/reorders/list" element={<ReordersList />} />
-				<Route path="/inventory/logs" element={<InventoryLogs />} />
-				<Route path="/inventory/:id" element={<InventoryDetail />} />
+        {/* Inventory routes */}
+        <Route path="/inventory" element={<InventoryList />} />
+        <Route path="/inventory/add" element={<InventoryForm />} />
+        <Route path="/inventory/vehicles" element={<VehicleList />} />
+        <Route path="/inventory/vehicles/add" element={<VehicleForm />} />
+        <Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
+        <Route path="/inventory/edit/:id" element={<InventoryForm />} />
+        <Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
+        <Route path="/inventory/:id/reorder" element={<ReorderPage />} />
+        <Route path="/inventory/reorders" element={<ReordersList />} />
+        <Route path="/inventory/reorders/list" element={<ReordersList />} />
+        <Route path="/inventory/logs" element={<InventoryLogs />} />
+        <Route path="/inventory/:id" element={<InventoryDetail />} />
 
-				
+
 
         {/* Supplier routes */}
         <Route

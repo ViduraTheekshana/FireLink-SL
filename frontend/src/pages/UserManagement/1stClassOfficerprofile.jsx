@@ -34,7 +34,7 @@ const OfficerProfile = ({ officerId }) => {
         setOfficer(response.data.user);
         setLoading(false);
       } catch (err) {
-        console.error("Officer fetch error:", err.response || err);
+        console.error("Officer nmmmfetch error:", err.response || err);
         // Show backend message if available
         const message = err.response?.data?.message || "Failed to fetch officer data";
         setError(message);

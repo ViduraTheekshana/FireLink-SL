@@ -32,7 +32,7 @@ function StaffLogin() {
 
       if (data.status === "ok") {
         localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("accessToken", data.accessToken);
+          localStorage.setItem("token", data.accessToken); // FIX: use 'token' key
         localStorage.setItem("staffId", data.user.staffId);
         alert(`Login successful! Welcome ${data.user.name}`);
         navigate("/dashboard", { state: { user: data.user } });
