@@ -29,6 +29,7 @@ const InventoryForm = () => {
     location: '',
     status: 'Available',
     threshold: '30',
+    unit_price: '',
     expire_date: '',
     notes: ''
   });
@@ -87,6 +88,7 @@ const InventoryForm = () => {
           location: item.location || '',
           status: item.status || 'Available',
           threshold: item.threshold || '30',
+          unit_price: item.unit_price || '',
           expire_date: item.expire_date ? new Date(item.expire_date).toISOString().split('T')[0] : '',
           notes: item.notes || ''
         });
@@ -252,43 +254,49 @@ const InventoryForm = () => {
     setError('');
 
     // Item ID validation
-    if (!formData.item_ID || !formData.item_ID.trim()) {
+    const itemIdStr = String(formData.item_ID || '');
+    if (!formData.item_ID || !itemIdStr.trim()) {
       setError('Item ID is required');
       return false;
     }
-    if (formData.item_ID.length < 3) {
-      setError('Item ID must be at least 3 characters long');
-      return false;
+    // For editing, allow existing IDs (they might be numeric and shorter)
+    if (!isEditing) {
+      if (itemIdStr.length < 3) {
+        setError('Item ID must be at least 3 characters long');
+        return false;
+      }
     }
-    if (formData.item_ID.length > 20) {
+    if (itemIdStr.length > 20) {
       setError('Item ID must not exceed 20 characters');
       return false;
     }
-    if (!/^[A-Za-z0-9_-]+$/.test(formData.item_ID)) {
+    if (!/^[A-Za-z0-9_-]+$/.test(itemIdStr)) {
       setError('Item ID can only contain letters, numbers, hyphens, and underscores');
       return false;
     }
 
     // Item name validation
-    if (!formData.item_name || !formData.item_name.trim()) {
+    const itemNameStr = String(formData.item_name || '');
+    if (!formData.item_name || !itemNameStr.trim()) {
       setError('Item name is required');
       return false;
     }
-    if (formData.item_name.trim().length < 2) {
+    if (itemNameStr.trim().length < 2) {
       setError('Item name must be at least 2 characters long');
       return false;
     }
-    if (formData.item_name.length > 100) {
+    if (itemNameStr.length > 100) {
       setError('Item name must not exceed 100 characters');
       return false;
     }
-    if (!/^[A-Za-z0-9\s\-_().,&]+$/.test(formData.item_name.trim())) {
+    if (!/^[A-Za-z0-9\s\-_().,&]+$/.test(itemNameStr.trim())) {
       setError('Item name contains invalid characters');
       return false;
     }
 
     // Category validation
-    if (!formData.category || !formData.category.trim()) {
+    const categoryStr = String(formData.category || '');
+    if (!formData.category || !categoryStr.trim()) {
       setError('Category is required');
       return false;
     }
@@ -332,7 +340,8 @@ const InventoryForm = () => {
     }
 
     // Location validation
-    if (!formData.location || !formData.location.trim()) {
+    const locationStr = String(formData.location || '');
+    if (!formData.location || !locationStr.trim()) {
       setError('Location is required');
       return false;
     }
@@ -371,10 +380,18 @@ const InventoryForm = () => {
   //2. When user clicks "Save", this function runs
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('HandleSubmit called!', { isEditing, id, formData });
     
-    if (!validateForm()) { // Validate form before submitting
+    console.log('Form submission started');
+    console.log('Current form data:', formData);
+    console.log('Is editing:', isEditing);
+    
+    if (!validateForm()) {
+      console.log('Validation failed - stopping submission');
       return;
     }
+    
+    console.log('Validation passed, proceeding with API call...');
 
     try {
       setSubmitting(true);
@@ -384,24 +401,35 @@ const InventoryForm = () => {
       const submitData = {
         ...formData,
         quantity: parseInt(formData.quantity),
-        threshold: parseInt(formData.threshold),
+        threshold: formData.threshold ? parseInt(formData.threshold) : null,
+        unit_price: formData.unit_price ? parseFloat(formData.unit_price) : null,
         expire_date: formData.expire_date || null
       };
 
-      if (isEditing) { //update 12 : If editing, call update API and wait for response
-        await updateItem(id, submitData); 
+      if (isEditing) {
+        console.log('Calling updateItem API with ID:', id);
+        console.log('Calling updateItem API with data:', submitData);
+        const result = await updateItem(id, submitData);
+        console.log('Update API successful, result:', result);
+        alert('✅ Item updated successfully!'); // Temporary success indicator
       } else {
-        //4. Call the API to add a new item AND WAIT FOR RESPONSE //23. THIS LINE ALSO WAIT FOR BACKEND RESPONSE AND CATCHES IT BUT DOESN'T STORE IT
-        await addItem(submitData);//5. Redirect to inventory list --> look inventoryApi.js
+        console.log('Calling addItem API with:', submitData);
+        const result = await addItem(submitData);
+        console.log('Add API successful, result:', result);
+        alert('✅ Item added successfully!'); // Temporary success indicator
       }
-      navigate('/inventory');//24. nOW FETCHES FRESH DATA FROM DATABASE
+      console.log('API call completed successfully, navigating to inventory list...');
+      navigate('/inventory');
 
     } catch (err) {
-      // Handle specific error messages for better user experience
+      console.error('API call failed:', err);
+      console.error('Error response:', err.response);
+      console.error('Error data:', err.response?.data);
+      
       let errorMessage = 'Failed to save item';
       
-      if (err.response?.data?.message) {        //CATCHES ERRORS FROM BACKEND
-        const backendMessage = err.response.data.message; // Extract error message
+      if (err.response?.data?.message) {
+        const backendMessage = err.response.data.message;
         
         if (backendMessage.includes('Item ID already exists')) {
           errorMessage = '❌ Item ID already exists! Please choose a different Item ID.';
@@ -415,7 +443,7 @@ const InventoryForm = () => {
       }
       
       setError(errorMessage);
-      console.error('Form submission error:', err);
+      alert('❌ Error: ' + errorMessage); // Temporary error alert
     } finally {
       setSubmitting(false);
     }
@@ -627,6 +655,37 @@ const InventoryForm = () => {
               )}
             </div>
 
+            {/* Unit Price */}
+            <div>
+              <label htmlFor="unit_price" className="block text-sm font-medium text-gray-700 mb-2">
+                Unit Price
+              </label>
+              <input
+                type="number"
+                id="unit_price"
+                name="unit_price"
+                value={formData.unit_price}
+                onChange={handleInputChange}
+                min="0"
+                step="0.01"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.unit_price
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.unit_price === '' && formData.unit_price
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="Enter unit price (optional, max 999,999.99)"
+              />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.unit_price && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.unit_price}
+                </p>
+              )}
+            </div>
+
             {/* Condition */}
             <div>
               <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-2">
@@ -799,6 +858,10 @@ const InventoryForm = () => {
             </button>
             <button
               type="submit"
+              onClick={(e) => {
+                console.log('Button clicked!');
+                // Don't prevent default here, let the form handle submission
+              }}
               disabled={submitting}
               className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
             >
