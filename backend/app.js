@@ -51,6 +51,8 @@ const preventionCertificateRoutes = require("./routes/preventionCertificateRoute
 app.use("/api/v1/missions", mission);
 app.use("/api/v1/salaries", salaryRoutes);
 
+// Mount dashboard stats FIRST to avoid being captured by dynamic :id route in inventoryRoutes
+app.use("/api/inventory", require("./routes/inventoryDashboardRoutes"));
 app.use("/api/inventory", require("./routes/inventoryRoutes"));
 
 app.use("/api/inventory-reorders", require("./routes/inventoryReorderRoutes"));

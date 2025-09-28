@@ -11,8 +11,10 @@ const {
 } = require("../controllers/inventoryController");
 
 // Import middleware
-const authModule = require("../middlewares/authMiddleware");
-const protect = authModule.protect || authModule;
+// TODO: Auth - Uncomment when auth is implemented
+// const authModule = require("../middlewares/authMiddleware");
+// const protect = authModule.protect || authModule;
+const protect = (req, res, next) => next(); // Temporary bypass for development
 
 let roleModule = {};
 try {
