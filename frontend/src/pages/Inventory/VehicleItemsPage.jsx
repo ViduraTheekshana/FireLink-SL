@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { getAllVehicleItems } from '../../api/inventoryVehicleItemsApi';
+import { Link, useParams } from 'react-router-dom';
+import { getAllVehicleItems, assignItemToVehicle, updateVehicleItem, removeVehicleItem } from '../../api/inventoryVehicleItemsApi';
 import { getItems } from '../../api/inventoryApi';
 import { getVehicles } from '../../api/inventoryVehicleApi';
 
 const VehicleItemsPage = () => {
+  const { vehicleId } = useParams(); // Get vehicleId from URL if present
   const [vehicleItems, setVehicleItems] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  // Modal state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [assignForm, setAssignForm] = useState({ vehicle_ID: vehicleId || '', item_ID: '', quantity: 1 });
+  const [editForm, setEditForm] = useState({ id: '', quantity: 1 });
+  const [feedback, setFeedback] = useState(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,12 +26,19 @@ const VehicleItemsPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   
   // Filters
-  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState(vehicleId || ''); // Auto-select if vehicleId in URL
   const [selectedItem, setSelectedItem] = useState('');
 
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    // Update selected vehicle when vehicleId from URL changes
+    if (vehicleId && vehicleId !== selectedVehicle) {
+      setSelectedVehicle(vehicleId);
+    }
+  }, [vehicleId]);
 
   useEffect(() => {
     loadVehicleItemsData();
@@ -73,6 +88,83 @@ const VehicleItemsPage = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helpers for feedback
+  const flash = (msg, type = 'success') => {
+    setFeedback({ msg, type });
+    setTimeout(() => setFeedback(null), 4000);
+  };
+
+  // Assign modal handlers
+  const openAssignModal = () => {
+    setAssignForm({ vehicle_ID: selectedVehicle || '', item_ID: '', quantity: 1 });
+    setShowAssignModal(true);
+  };
+  const closeAssignModal = () => setShowAssignModal(false);
+
+  const handleAssignChange = (e) => {
+    const { name, value } = e.target;
+    setAssignForm(prev => ({ ...prev, [name]: name === 'quantity' ? Number(value) : value }));
+  };
+
+  const submitAssign = async (e) => {
+    e.preventDefault();
+    if (!assignForm.vehicle_ID || !assignForm.item_ID || assignForm.quantity < 1) {
+      flash('All fields are required and quantity must be >=1', 'error');
+      return;
+    }
+    try {
+      setActionLoading(true);
+      await assignItemToVehicle(assignForm.vehicle_ID, assignForm.item_ID, assignForm.quantity);
+      flash('Item assigned successfully');
+      closeAssignModal();
+      await loadVehicleItemsData();
+    } catch (err) {
+      flash(err.message, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Edit quantity handlers
+  const openEditModal = (assignment) => {
+    setEditForm({ id: assignment._id, quantity: assignment.quantity });
+    setShowEditModal(true);
+  };
+  const closeEditModal = () => setShowEditModal(false);
+  const handleEditChange = (e) => {
+    setEditForm(prev => ({ ...prev, quantity: Number(e.target.value) }));
+  };
+  const submitEdit = async (e) => {
+    e.preventDefault();
+    if (editForm.quantity < 1) { flash('Quantity must be >=1', 'error'); return; }
+    try {
+      setActionLoading(true);
+      await updateVehicleItem(editForm.id, editForm.quantity);
+      flash('Quantity updated');
+      closeEditModal();
+      await loadVehicleItemsData();
+    } catch (err) {
+      flash(err.message, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Remove assignment
+  const removeAssignment = async (assignment) => {
+    if (!window.confirm('Remove this assigned item from vehicle? Stock will be returned.')) return;
+    try {
+      setActionLoading(true);
+      await removeVehicleItem(assignment._id);
+      flash('Assignment removed');
+      await loadVehicleItemsData();
+    } catch (err) {
+      flash(err.message, 'error');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -126,10 +218,30 @@ const VehicleItemsPage = () => {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Vehicle Items Management</h1>
-            <p className="text-gray-600">Manage items assigned to vehicles</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {vehicleId ? 'Vehicle Items - Specific Vehicle' : 'Vehicle Items Management'}
+            </h1>
+            <p className="text-gray-600">
+              {vehicleId 
+                ? `Viewing items for selected vehicle${selectedVehicle ? ` (${availableVehicles.find(v => v._id === selectedVehicle)?.vehicle_name || 'Loading...'})` : ''}`
+                : 'Manage items assigned to vehicles'
+              }
+            </p>
           </div>
           <div className="flex gap-4">
+            <button
+              onClick={openAssignModal}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 disabled:opacity-60"
+              disabled={actionLoading}
+            >➕ Assign Item</button>
+            {vehicleId && (
+              <Link
+                to={`/inventory/vehicles/${vehicleId}`}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+              >
+                🚛 Back to Vehicle
+              </Link>
+            )}
             <Link
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
@@ -200,6 +312,10 @@ const VehicleItemsPage = () => {
         </div>
       </div>
 
+      {feedback && (
+        <div className={`mb-4 p-3 rounded-md border text-sm ${feedback.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>{feedback.msg}</div>
+      )}
+
       {/* Vehicle Items Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -237,12 +353,15 @@ const VehicleItemsPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Assigned Date
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {vehicleItems.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
                     No vehicle items found
                   </td>
                 </tr>
@@ -290,6 +409,20 @@ const VehicleItemsPage = () => {
                         {new Date(vehicleItem.assignedDate).toLocaleDateString()}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openEditModal(vehicleItem)}
+                          className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                          disabled={actionLoading}
+                        >Edit</button>
+                        <button
+                          onClick={() => removeAssignment(vehicleItem)}
+                          className="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                          disabled={actionLoading}
+                        >Remove</button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -327,6 +460,103 @@ const VehicleItemsPage = () => {
           </div>
         )}
       </div>
+      {/* Assign Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="px-5 py-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Assign Item to Vehicle</h3>
+              <button onClick={closeAssignModal} className="text-gray-500 hover:text-gray-700">✖</button>
+            </div>
+            <form onSubmit={submitAssign} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
+                <select
+                  name="vehicle_ID"
+                  value={assignForm.vehicle_ID}
+                  onChange={handleAssignChange}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select a vehicle</option>
+                  {availableVehicles.map(v => (
+                    <option key={v._id} value={v._id}>{v.vehicle_name} ({v.vehicle_type})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Item</label>
+                <select
+                  name="item_ID"
+                  value={assignForm.item_ID}
+                  onChange={handleAssignChange}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select an item</option>
+                  {availableItems.map(i => (
+                    <option key={i._id} value={i._id}>{i.item_name} (Stock: {i.quantity})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  min={1}
+                  value={assignForm.quantity}
+                  onChange={handleAssignChange}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                {assignForm.item_ID && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Max available: {availableItems.find(i => i._id === assignForm.item_ID)?.quantity ?? '—'}
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={closeAssignModal} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">Cancel</button>
+                <button type="submit" disabled={actionLoading} className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm disabled:opacity-60">
+                  {actionLoading ? 'Assigning...' : 'Assign'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+            <div className="px-5 py-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Edit Assigned Quantity</h3>
+              <button onClick={closeEditModal} className="text-gray-500 hover:text-gray-700">✖</button>
+            </div>
+            <form onSubmit={submitEdit} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Quantity</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={editForm.quantity}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={closeEditModal} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">Cancel</button>
+                <button type="submit" disabled={actionLoading} className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-60">
+                  {actionLoading ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

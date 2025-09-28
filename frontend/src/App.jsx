@@ -57,6 +57,8 @@ const App = () => {
 				<Route path="/update-user/:id" element={<UpdateUser />} />
 				<Route path="/userdetails/:id" element={<UserDetails />} />
 
+
+
 				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 
 				<Route

@@ -57,7 +57,8 @@ const getLogs = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit))
       .populate('itemId', 'item_name item_ID category')
-      .populate('performedBy', 'name email');
+      // TODO: Auth - Uncomment when auth is implemented
+      // .populate('performedBy', 'name email');
 
     // Calculate pagination info
     const totalPages = Math.ceil(totalLogs / parseInt(limit));
@@ -95,7 +96,8 @@ const getLogById = async (req, res) => {
     
     const log = await InventoryLog.findById(id)
       .populate('itemId', 'item_name item_ID category')
-      .populate('performedBy', 'name email');
+      // TODO: Auth - Uncomment when auth is implemented
+      // .populate('performedBy', 'name email');
     
     if (!log) {
       return res.status(404).json({
