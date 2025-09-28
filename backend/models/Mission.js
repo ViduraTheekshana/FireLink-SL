@@ -40,7 +40,7 @@ const missionSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    maxlength: 1000
+    maxlength: 25
   },
   inventoryItems: {
     type: [inventoryItemSchema],
@@ -48,7 +48,7 @@ const missionSchema = new mongoose.Schema({
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserReg',
+    ref: 'Users',
     required: true
   },
   status: {

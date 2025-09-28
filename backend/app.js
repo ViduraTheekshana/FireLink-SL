@@ -19,6 +19,7 @@ require("./models/UserManagement/Attendance.js"); // Attendance schema
 require("./models/UserManagement/UserReg.js");
 require("./models/UserManagement/TrainingSession.js");
 require("./models/UserManagement/ShiftSchedule.js")    
+require("./models/Mission.js"); // Mission schema
 // setting up config file
 dotenv.config({ path: "config/config.env" });
 

@@ -1,19 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getItems, getCategories, getLocations, deleteItem } from '../../api/inventoryApi';
 import { createReorder } from '../../api/inventoryReorderApi';
 import firelinkLogo from '../../assets/images/firelink-logo.png';
+import Sidebar from '../UserManagement/Sidebar';
 
 const InventoryList = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+  
   // Search and filter state - Initialize from URL parameters
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || '');
   const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || '');
@@ -45,6 +57,15 @@ const InventoryList = () => {
     loadInitialData();
   }, []);
 
+  // Debounce search term - wait 500ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Handle URL parameter changes
   useEffect(() => {
     const search = searchParams.get('search') || '';
@@ -53,16 +74,21 @@ const InventoryList = () => {
     const status = searchParams.get('status') || '';
     const location = searchParams.get('location') || '';
     
-    setSearchTerm(search);
-    setSelectedCategory(category);
-    setSelectedCondition(condition);
-    setSelectedStatus(status);
-    setSelectedLocation(location);
+    // Only update state if the URL params are different from current state
+    // This prevents infinite loops when user types in search box
+    if (search !== searchTerm) {
+      setSearchTerm(search);
+      setDebouncedSearchTerm(search); // Update debounced term immediately for URL changes
+    }
+    if (category !== selectedCategory) setSelectedCategory(category);
+    if (condition !== selectedCondition) setSelectedCondition(condition);
+    if (status !== selectedStatus) setSelectedStatus(status);
+    if (location !== selectedLocation) setSelectedLocation(location);
   }, [searchParams]);
 
   useEffect(() => {
     loadInventoryData();// runs when components mount or filters change
-  }, [currentPage, itemsPerPage, sortBy, sortOrder, searchTerm, selectedCategory, selectedCondition, selectedStatus, selectedLocation]);
+  }, [currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchTerm, selectedCategory, selectedCondition, selectedStatus, selectedLocation]);
 
   const loadInitialData = async () => {
     try {
@@ -116,7 +142,7 @@ const InventoryList = () => {
         limit: itemsPerPage,
         sortBy,
         sortOrder,
-        search: searchTerm || undefined, //user input search term
+        search: debouncedSearchTerm || undefined, //debounced search term to prevent excessive API calls
         category: selectedCategory || undefined,
         condition: selectedCondition || undefined,
         status: selectedStatus || undefined,
@@ -290,24 +316,14 @@ const InventoryList = () => {
   };
 
   const isLowStock = (item) => {
-    // Only show low stock if quantity is BELOW threshold (not equal to)
-    // AND if threshold is a reasonable value (not 0 or very low)
-    // Add proper validation to prevent errors
-    if (!item || item.quantity === undefined || item.threshold === undefined) {
-      return false;
-    }
-    
-    // Convert to numbers to ensure proper comparison
+    // Logic aligned with backend Inventory.findLowStock(): quantity < threshold and threshold > 0
+    // We purposefully EXCLUDE items where quantity === threshold to match dashboard KPI count
+    if (!item || item.quantity === undefined || item.threshold === undefined) return false;
+
     const quantity = Number(item.quantity);
     const threshold = Number(item.threshold);
-    
-    // Check for NaN values
-    if (isNaN(quantity) || isNaN(threshold)) {
-      return false;
-    }
-    
+    if (isNaN(quantity) || isNaN(threshold)) return false;
 
-    
     return threshold > 0 && quantity < threshold;
   };
 
@@ -336,44 +352,46 @@ const InventoryList = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header with Navigation */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
-            <p className="text-gray-600">Manage fire department equipment and supplies</p>
-          </div>
-          <div className="flex gap-4">
-            <Link
-              to="/dashboard"
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-            >
-              🏠 Dashboard
-            </Link>
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="max-w-full mx-auto px-3 py-4">
+          {/* Header with Navigation */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
+                <p className="text-sm text-gray-600">Manage fire department equipment and supplies</p>
+              </div>
+          <div className="flex gap-2 flex-wrap">
             <Link
               to="/inventory/vehicles"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
               🚛 Vehicles
             </Link>
             <Link
               to="/inventory/vehicle-items"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
               🚗 Vehicle Items
             </Link>
             <Link
               to="/inventory/logs"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              📋 View Logs
+              📋 Logs
             </Link>
             <Link
               to="/inventory/reorders"
-              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              📦 Ordered Items
+              📦 Reorders
             </Link>
             <button
               onClick={async () => {
@@ -384,73 +402,82 @@ const InventoryList = () => {
                 setLoadingReport(false);
               }}
               disabled={loadingReport}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              {loadingReport ? '⏳ Loading...' : '📄 Generate Report'}
+              {loadingReport ? '⏳ Loading...' : '📄 Report'}
             </button>
             <Link
               to="/inventory/add"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              + Add New Item
+              + Add Item
             </Link>
           </div>
         </div>
       </div>
 
       {/* Compact Dashboard Overview */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-        <h2 className="text-base font-semibold text-gray-900 mb-3">📊Overview</h2>
+      <div className="bg-white rounded-lg shadow-md p-3 mb-3">
+        <h2 className="text-sm font-semibold text-gray-900 mb-2">📊Overview</h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
           {/* Total Items */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-3 text-white">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded p-2 text-white">
             <div className="text-center">
               <p className="text-blue-100 text-xs">Total Items</p>
-              <p className="text-xl font-bold">
+              <p className="text-lg font-bold">
                 {dashboardData.reduce((total, item) => total + (item.quantity || 0), 0)}
               </p>
             </div>
           </div>
 
           {/* Available */}
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-3 text-white">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded p-2 text-white">
             <div className="text-center">
-              <p className="text-green-100 text-xs">Available Item Categories</p>
-              <p className="text-xl font-bold">
-                {dashboardData.filter(item => item.quantity > item.threshold).length}
+              <p className="text-green-100 text-xs">Available</p>
+              <p className="text-lg font-bold">
+                {dashboardData.filter(item => !isLowStock(item) && item.quantity > 0).length}
               </p>
             </div>
           </div>
 
           {/* Low Stock */}
-          <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-3 text-white">
+          <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded p-2 text-white">
             <div className="text-center">
-              <p className="text-yellow-100 text-xs">Low Stock Item Categories</p>
-              <p className="text-xl font-bold">
-                {dashboardData.filter(item => item.quantity <= item.threshold && item.quantity > 0).length}
+              <p className="text-yellow-100 text-xs">Low Stock</p>
+              <p className="text-lg font-bold">
+                {dashboardData.filter(item => isLowStock(item)).length}
               </p>
             </div>
           </div>
 
           {/* Empty */}
-          <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-3 text-white">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 rounded p-2 text-white">
             <div className="text-center">
-              <p className="text-red-100 text-xs">Empty Item Categories</p>
-              <p className="text-xl font-bold">
+              <p className="text-red-100 text-xs">Empty</p>
+              <p className="text-lg font-bold">
                 {dashboardData.filter(item => item.quantity === 0).length}
               </p>
             </div>
           </div>
 
-          {/* Expired Items */}
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-3 text-white">
+          {/* Expires Soon */}
+          <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded p-2 text-white">
             <div className="text-center">
-              <p className="text-orange-100 text-xs">Expired Item Categories</p>
-              <p className="text-xl font-bold">
+              <p className="text-orange-100 text-xs">Expires Soon</p>
+              <p className="text-lg font-bold">
+                {dashboardData.filter(item => isExpiringSoon(item)).length}
+              </p>
+            </div>
+          </div>
+
+          {/* Expired Items */}
+          <div className="bg-gradient-to-r from-red-500 to-red-600 rounded p-2 text-white">
+            <div className="text-center">
+              <p className="text-red-100 text-xs">Expired</p>
+              <p className="text-lg font-bold">
                 {dashboardData.filter(item => item.expire_date && new Date(item.expire_date) < new Date()).length}
               </p>
-              <div className="text-lg opacity-80"></div>
             </div>
           </div>
 
@@ -458,27 +485,27 @@ const InventoryList = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Search & Filters</h2>
+      <div className="bg-white rounded-lg shadow-md p-3 mb-3">
+        <h2 className="text-sm font-semibold text-gray-900 mb-2">Search & Filters</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
           <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Search</label>
             <input
               type="text"
               placeholder="Search items, categories, locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
             >
               <option value="">All Categories</option>
               {categories.map(category => (
@@ -488,11 +515,11 @@ const InventoryList = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Condition</label>
             <select
               value={selectedCondition}
               onChange={(e) => setSelectedCondition(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
             >
               <option value="">All Conditions</option>
               <option value="Good">Good</option>
@@ -504,11 +531,11 @@ const InventoryList = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
             >
               <option value="">All Statuses</option>
               <option value="Available">Available</option>
@@ -518,11 +545,11 @@ const InventoryList = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Location</label>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
             >
               <option value="">All Locations</option>
               {locations.map(location => (
@@ -532,18 +559,18 @@ const InventoryList = () => {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             onClick={handleSearch}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200"
+            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
           >
             Search
           </button>
           <button
             onClick={clearFilters}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
           >
-            Clear Filters
+            Clear
           </button>
         </div>
       </div>
@@ -557,33 +584,33 @@ const InventoryList = () => {
 
       {/* Bulk Actions */}
       {selectedItems.length > 0 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mb-3 bg-blue-50 border border-blue-200 rounded p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-blue-800">
-                {selectedItems.length} item(s) selected
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-blue-800">
+                {selectedItems.length} selected
               </span>
               <span className="text-xs text-blue-600">
-                {inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length} low stock items
+                ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length} low stock)
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <button
                 onClick={handleBulkReorder}
                 disabled={loading || inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length === 0}
-                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 py-1 text-xs font-medium text-white bg-yellow-600 rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <>⏳ Creating Reorders...</>
+                  <>⏳ Creating...</>
                 ) : (
-                  <>📋 Bulk Reorder ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length})</>
+                  <>📋 Reorder ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length})</>
                 )}
               </button>
               <button
                 onClick={() => setSelectedItems([])}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
               >
-                Clear Selection
+                Clear
               </button>
             </div>
           </div>
@@ -596,7 +623,7 @@ const InventoryList = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <input
                     type="checkbox"
                     checked={selectAll}
@@ -604,15 +631,15 @@ const InventoryList = () => {
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Threshold</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Threshold</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -641,7 +668,7 @@ const InventoryList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 font-medium">{item.item_name}</div>
-                    {(isLowStock(item) || isExpired(item)) && (
+                    {(isLowStock(item) || isExpired(item) || isExpiringSoon(item)) && (
                       <div className="flex flex-col gap-2 mt-1">
                         {isLowStock(item) && (
                           <div className="flex flex-col gap-1">
@@ -677,9 +704,70 @@ const InventoryList = () => {
                           </div>
                         )}
                         {isExpired(item) && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            ⏰ Expired - Replace Immediately
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              ⏰ Expired - Replace Immediately
+                            </span>
+                            <div className="text-xs text-red-700 bg-red-50 p-3 rounded border border-red-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="font-semibold text-red-800">Item Expired!</p>
+                                <span className="text-xs bg-red-200 px-2 py-1 rounded">
+                                  Expired: {item.expire_date ? new Date(item.expire_date).toLocaleDateString() : 'N/A'}
+                                </span>
+                              </div>
+                              
+                              <p className="text-red-600 mb-3 text-xs">
+                                Item has expired and must be replaced immediately for safety and compliance.
+                              </p>
+                              <div className="flex gap-2">
+                                <Link
+                                  to={`/inventory/${item._id}/reorder`}
+                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-sm"
+                                >
+                                  📋 Replace Item
+                                </Link>
+                                <Link
+                                  to="/inventory/reorders"
+                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                  📋 View All Reorders
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {isExpiringSoon(item) && (
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              ⏰ Expires Soon
+                            </span>
+                            <div className="text-xs text-orange-700 bg-orange-50 p-3 rounded border border-orange-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="font-semibold text-orange-800">Expiring Soon!</p>
+                                <span className="text-xs bg-orange-200 px-2 py-1 rounded">
+                                  Expires: {item.expire_date ? new Date(item.expire_date).toLocaleDateString() : 'N/A'}
+                                </span>
+                              </div>
+                              
+                              <p className="text-orange-600 mb-3 text-xs">
+                                Item expires soon. Consider reordering fresh stock to maintain availability.
+                              </p>
+                              <div className="flex gap-2">
+                                <Link
+                                  to={`/inventory/${item._id}/reorder`}
+                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors shadow-sm"
+                                >
+                                  📋 Create Reorder
+                                </Link>
+                                <Link
+                                  to="/inventory/reorders"
+                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                  📋 View All Reorders
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
@@ -1240,6 +1328,8 @@ const InventoryList = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };
