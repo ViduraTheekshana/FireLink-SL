@@ -133,7 +133,7 @@ const VehicleForm = () => {
 
       {/* Main content */}
       <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto px-4 pt-0 pb-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
