@@ -131,3 +131,24 @@ exports.markAsInspected = async (req, res) => {
     res.status(400).json({ message: "Error marking as inspected", error: error.message });
   }
 };
+
+// Officer deletes application
+exports.deleteCertificate = async (req, res) => {
+  try {
+    const deletedApplication = await PreventionCertificate.findByIdAndDelete(req.params.id);
+    
+    if (!deletedApplication) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+    
+    res.status(200).json({ 
+      message: "Application deleted successfully", 
+      data: deletedApplication 
+    });
+  } catch (error) {
+    res.status(400).json({ 
+      message: "Error deleting application", 
+      error: error.message 
+    });
+  }
+};

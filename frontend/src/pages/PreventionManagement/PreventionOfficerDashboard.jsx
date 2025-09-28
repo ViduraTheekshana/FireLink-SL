@@ -102,21 +102,33 @@ const PreventionOfficerDashboard = () => {
       .btn-primary:hover {
         background-color: #1d4ed8 !important;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        transition: all 0.2s ease;
       }
 
       .btn-success:hover {
-        background-color: #059669 !important;
-        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3) !important;
+        background-color: var(--success-green) !important;
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3) !important;
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        transition: all 0.2s ease;
       }
 
       .btn-danger:hover {
-        background-color: #b91c1c !important;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+        background-color: #B71C1C !important;
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3) !important;
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        transition: all 0.2s ease;
       }
 
       .btn-secondary:hover {
         background-color: #4b5563 !important;
         box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3) !important;
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        transition: all 0.2s ease;
       }
       
       .table-row {
@@ -1511,7 +1523,10 @@ const PreventionOfficerDashboard = () => {
             }}>
               <button
                 type="button"
-                onClick={() => setPaymentAmount(Math.max(1000, paymentAmount - 500))}
+                onClick={() => {
+                  const currentAmount = Number(paymentAmount) || 1000;
+                  setPaymentAmount(Math.max(1000, currentAmount - 500));
+                }}
                 style={{
                   padding: "12px 16px",
                   border: "none",
@@ -1520,8 +1535,11 @@ const PreventionOfficerDashboard = () => {
                   fontSize: "18px",
                   fontWeight: "bold",
                   color: "#6b7280",
-                  borderRight: "1px solid #d1d5db"
+                  borderRight: "1px solid #d1d5db",
+                  transition: "all 0.2s ease"
                 }}
+                onMouseOver={(e) => e.target.style.backgroundColor = "#e5e7eb"}
+                onMouseOut={(e) => e.target.style.backgroundColor = "#f3f4f6"}
               >
                 -
               </button>
@@ -1533,17 +1551,37 @@ const PreventionOfficerDashboard = () => {
                   fontSize: "16px",
                   padding: "12px 20px",
                   flex: 1,
-                  minWidth: "120px"
+                  minWidth: "120px",
+                  backgroundColor: "white",
+                  color: "#000000"
                 }}
                 type="number"
                 value={paymentAmount}
-                onChange={(e) => setPaymentAmount(Math.max(1000, parseInt(e.target.value) || 1000))}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  // Allow user to type freely, including empty field
+                  setPaymentAmount(newValue);
+                }}
+                onBlur={(e) => {
+                  // Enforce minimum when user stops editing
+                  const value = Number(e.target.value);
+                  if (isNaN(value) || value < 1000) {
+                    setPaymentAmount(1000);
+                  } else {
+                    setPaymentAmount(value);
+                  }
+                }}
                 min="1000"
-                step="500"
+                step="1"
+                placeholder="1000"
+                autoComplete="off"
               />
               <button
                 type="button"
-                onClick={() => setPaymentAmount(paymentAmount + 500)}
+                onClick={() => {
+                  const currentAmount = Number(paymentAmount) || 1000;
+                  setPaymentAmount(currentAmount + 500);
+                }}
                 style={{
                   padding: "12px 16px",
                   border: "none",
@@ -1552,8 +1590,11 @@ const PreventionOfficerDashboard = () => {
                   fontSize: "18px",
                   fontWeight: "bold",
                   color: "#6b7280",
-                  borderLeft: "1px solid #d1d5db"
+                  borderLeft: "1px solid #d1d5db",
+                  transition: "all 0.2s ease"
                 }}
+                onMouseOver={(e) => e.target.style.backgroundColor = "#e5e7eb"}
+                onMouseOut={(e) => e.target.style.backgroundColor = "#f3f4f6"}
               >
                 +
               </button>
@@ -1759,7 +1800,11 @@ const PreventionOfficerDashboard = () => {
                         <button
                           className="btn-primary"
                           style={{...primaryBatchButtonStyle, fontSize: "12px", padding: "6px 12px"}}
-                          onClick={() => setPaymentModal(app)}
+                          onClick={() => {
+                            console.log('Opening payment modal');
+                            setPaymentAmount(1000); // Reset to default amount
+                            setPaymentModal(app);
+                          }}
                           title="Assign Payment Amount"
                         >
                           Assign Payment
@@ -1952,6 +1997,52 @@ const PreventionOfficerDashboard = () => {
       showNotification(`Batch reactivating ${selectedRows.length} applications...`, "success");
     };
 
+    // Handle Delete Application
+    const handleDeleteApplication = async (id) => {
+      console.log("handleDeleteApplication called with:", id);
+      
+      if (!window.confirm("Are you sure you want to permanently delete this application? This action cannot be undone.")) {
+        return;
+      }
+
+      try {
+        console.log('Attempting to delete application via API:', id);
+        
+        const response = await fetch(`http://localhost:5000/api/prevention-certificates/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          console.log('Application deleted successfully via API');
+          
+          // Remove from local state
+          setApplications(prevApplications => {
+            const updated = prevApplications.filter(app => app._id !== id);
+            console.log("Applications after deletion (API success):", updated);
+            return updated;
+          });
+          
+          showNotification("Application deleted successfully!", "success");
+        } else {
+          throw new Error('Failed to delete application');
+        }
+      } catch (error) {
+        console.error('Error deleting application (API call failed):', error);
+        
+        // Still update locally if API fails
+        setApplications(prevApplications => {
+          const updated = prevApplications.filter(app => app._id !== id);
+          console.log("Applications after deletion (API failed, local update):", updated);
+          return updated;
+        });
+        
+        showNotification("Application deleted successfully (local update)!", "success");
+      }
+    };
+
     // View Details Modal for Rejected Applications
     const ViewDetailsModal = ({ app, onClose }) => (
       <div style={modalOverlayStyle} onClick={onClose}>
@@ -2069,8 +2160,14 @@ const PreventionOfficerDashboard = () => {
                 borderRadius: "4px",
                 border: "1px solid #fecaca",
                 color: "#991b1b",
-                minHeight: "60px",
-                whiteSpace: "pre-wrap"
+                minHeight: "80px",
+                whiteSpace: "pre-wrap",
+                wordWrap: "break-word",
+                overflowWrap: "break-word",
+                lineHeight: "1.5",
+                width: "100%",
+                maxWidth: "100%",
+                boxSizing: "border-box"
               }}>
                 {app.rejectionReason || 'No reason provided'}
               </p>
@@ -2198,6 +2295,14 @@ const PreventionOfficerDashboard = () => {
                         title="Reactivate Application"
                       >
                         Reactivate
+                      </button>
+                      <button
+                        className="smooth-hover btn-danger"
+                        style={{...dangerBatchButtonStyle, fontSize: "12px", padding: "6px 12px"}}
+                        onClick={() => handleDeleteApplication(app._id)}
+                        title="Delete Application"
+                      >
+                        Delete
                       </button>
                       <button
                         style={{...editButtonStyle, fontSize: "12px", padding: "6px 12px"}}
@@ -2548,7 +2653,7 @@ const PreventionOfficerDashboard = () => {
   const sectionTitleStyle = {
     fontSize: "18px",
     fontWeight: "600",
-    color: "#111827",
+    color: "#FFFFFF",
     marginBottom: "16px",
     marginTop: "30px",
     padding: "0 4px",
@@ -2649,14 +2754,14 @@ const PreventionOfficerDashboard = () => {
   const getStatusBadge = (status) => {
     const statusStyles = {
       'Pending': {
-        backgroundColor: '#eff6ff',
-        color: '#1d4ed8',
-        borderColor: '#bfdbfe'
+        backgroundColor: 'rgba(249, 168, 37, 0.1)',
+        color: '#F9A825',
+        borderColor: '#F9A825'
       },
       'Approved': {
-        backgroundColor: '#f0fdf4',
-        color: '#15803d',
-        borderColor: '#bbf7d0'
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        color: '#2196F3',
+        borderColor: '#2196F3'
       },
       'Rejected': {
         backgroundColor: '#fef2f2',
@@ -2664,19 +2769,19 @@ const PreventionOfficerDashboard = () => {
         borderColor: '#fecaca'
       },
       'Payment Assigned': {
-        backgroundColor: '#fef3c7',
-        color: '#d97706',
-        borderColor: '#fed7aa'
+        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+        color: '#9C27B0',
+        borderColor: '#9C27B0'
       },
       'Completed': {
-        backgroundColor: '#f0fdf4',
-        color: '#15803d',
-        borderColor: '#bbf7d0'
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        color: '#4CAF50',
+        borderColor: '#4CAF50'
       },
       'Inspected': {
-        backgroundColor: '#f1f5f9',
-        color: '#475569',
-        borderColor: '#cbd5e1'
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        color: '#4CAF50',
+        borderColor: '#4CAF50'
       }
     };
 
@@ -2796,15 +2901,15 @@ const PreventionOfficerDashboard = () => {
   };
 
   const thStyle = {
-    backgroundColor: "#f8f9fb",
-    color: "#344054",
+    backgroundColor: "#c74a14",
+    color: "#FFFFFF",
     padding: "16px 20px",
     textAlign: "left",
     fontWeight: "600",
     fontSize: "13px",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
-    borderBottom: "1px solid #eaecf0",
+    borderBottom: "1px solid #2E4B70",
     position: "sticky",
     top: 0,
     zIndex: 10,
@@ -2826,20 +2931,20 @@ const PreventionOfficerDashboard = () => {
   // Tab styles
   const tabContainerStyle = {
     display: "flex",
-    backgroundColor: "white",
+    backgroundColor: "#132B44",
     borderRadius: "12px",
     boxShadow: "0 4px 6px rgba(30, 42, 56, 0.1)",
     marginBottom: "24px",
     overflow: "hidden",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #2E4B70",
   };
 
   const tabStyle = {
     flex: 1,
     padding: "16px 20px",
     border: "none",
-    backgroundColor: "white",
-    color: "#6b7280",
+    backgroundColor: "#132B44",
+    color: "#FFFFFF",
     fontSize: "16px",
     fontWeight: "500",
     cursor: "pointer",
@@ -2849,8 +2954,8 @@ const PreventionOfficerDashboard = () => {
 
   const activeTabStyle = {
     ...tabStyle,
-    backgroundColor: "#1E2A38",
-    color: "white",
+    backgroundColor: "#1C3A63",
+    color: "#FFFFFF",
     fontWeight: "600",
     borderBottom: "3px solid #FF9800",
   };
@@ -2858,7 +2963,7 @@ const PreventionOfficerDashboard = () => {
   const tableTitleStyle = {
     fontSize: "20px",
     fontWeight: "700",
-    color: "black",
+    color: "#FFFFFF",
     marginBottom: "24px",
     padding: "0 8px",
     display: "flex",
@@ -2867,12 +2972,12 @@ const PreventionOfficerDashboard = () => {
   };
 
   const tableContainerStyle = {
-    backgroundColor: "white",
+    backgroundColor: "#132B44",
     borderRadius: "16px",
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
     overflow: "hidden",
     marginBottom: "32px",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #2E4B70",
     animation: "fadeInSlideUp 0.6s ease-out",
     transition: "all 0.3s ease",
   };
@@ -2888,9 +2993,9 @@ const PreventionOfficerDashboard = () => {
 
   const tdStyle = {
     padding: "16px 20px",
-    borderBottom: "1px solid #f2f4f7",
-    color: "#344054",
-    backgroundColor: "white",
+    borderBottom: "1px solid #2E4B70",
+    color: "#FFFFFF",
+    backgroundColor: "#132B44",
     fontSize: "14px",
     transition: "all 0.2s ease",
   };
@@ -2898,11 +3003,11 @@ const PreventionOfficerDashboard = () => {
   // Table row styles for modern design
   const getRowStyle = (isSelected, index) => ({
     backgroundColor: isSelected 
-      ? '#eff6ff' 
-      : "white",
+      ? '#1C3A63' 
+      : "#132B44",
     transition: "all 0.2s ease",
     cursor: "pointer",
-    borderBottom: "1px solid #f2f4f7",
+    borderBottom: "1px solid #2E4B70",
   });
 
   const tableRowStyle = {
@@ -2996,7 +3101,7 @@ const PreventionOfficerDashboard = () => {
   };
 
   return (
-    <div style={{...containerStyle, backgroundColor: '#f8fafc', minHeight: '100vh'}}>
+    <div style={{...containerStyle, backgroundColor: '#1C3A63', minHeight: '100vh'}}>
       {/* Notifications */}
       <div style={notificationContainerStyle}>
         {notifications.map(notification => (

@@ -31,8 +31,12 @@ function StaffLogin() {
     if (data.status === "ok") {
 
              localStorage.setItem("user", JSON.stringify(data.user)); 
-  alert(`Login successful! Welcome ${data.user.name}`);
-  navigate("/dashboard", { state: { user: data.user } });
+            alert(`Login successful! Welcome ${data.user.name}`);
+             if (data.user.position === "preventionManager") {
+              navigate("/officer-dashboard", { state: { user: data.user } });
+            } else {
+              navigate("/dashboard", { state: { user: data.user } });
+            }
     }
     else {
         alert("Login failed: " + (data.err || "Invalid credentials"));

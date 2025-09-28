@@ -38,6 +38,9 @@ router.patch("/:id/inspection-notes", preventionController.updateInspectionNotes
 // Officer marks as inspected
 router.patch("/:id/inspect", preventionController.markAsInspected);
 
+// Officer deletes application
+router.delete("/:id", preventionController.deleteCertificate);
+
 // Route to fetch uploaded photo by file ID
 router.get("/file/:id", async (req, res) => {
   try {
