@@ -20,6 +20,7 @@ const ReorderPage = () => {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [reorderData, setReorderData] = useState({
     quantity: 0,
     supplier: '',
@@ -90,13 +91,159 @@ const ReorderPage = () => {
       ...prev,
       [name]: value
     }));
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+
+    // Real-time validation for specific fields
+    validateField(name, value);
+  };
+
+  // Real-time field validation
+  const validateField = (fieldName, value) => {
+    let errorMessage = '';
+
+    switch (fieldName) {
+      case 'quantity':
+        if (value === '' || value === null || value === undefined) {
+          errorMessage = 'Quantity is required';
+        } else if (isNaN(value) || value <= 0) {
+          errorMessage = 'Quantity must be a positive number';
+        } else if (value > 99999) {
+          errorMessage = 'Quantity cannot exceed 99,999';
+        } else if (!Number.isInteger(Number(value))) {
+          errorMessage = 'Quantity must be a whole number';
+        }
+        break;
+
+      case 'supplier':
+        if (value && value.length > 0) {
+          if (value.trim().length < 2) {
+            errorMessage = 'Supplier name must be at least 2 characters long';
+          } else if (value.length > 100) {
+            errorMessage = 'Supplier name must not exceed 100 characters';
+          } else if (!/^[A-Za-z0-9\s\-_().,&]+$/.test(value.trim())) {
+            errorMessage = 'Supplier name contains invalid characters';
+          }
+        }
+        break;
+
+      case 'expectedDate':
+        if (value) {
+          const selectedDate = new Date(value);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          if (isNaN(selectedDate.getTime())) {
+            errorMessage = 'Please enter a valid date';
+          } else if (selectedDate < today) {
+            errorMessage = 'Expected delivery date cannot be in the past';
+          } else {
+            // Check if date is more than 2 years in the future
+            const twoYearsFromNow = new Date();
+            twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+            if (selectedDate > twoYearsFromNow) {
+              errorMessage = 'Expected delivery date seems too far in the future';
+            }
+          }
+        }
+        break;
+
+      case 'notes':
+        if (value && value.length > 500) {
+          errorMessage = 'Notes must not exceed 500 characters';
+        }
+        break;
+    }
+
+    if (errorMessage) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [fieldName]: errorMessage
+      }));
+    }
+  };
+
+  // Comprehensive form validation
+  const validateForm = () => {
+    const errors = {};
+
+    // Quantity validation (required)
+    if (!reorderData.quantity || reorderData.quantity === '' || reorderData.quantity === 0) {
+      errors.quantity = 'Quantity is required';
+    } else if (isNaN(reorderData.quantity) || reorderData.quantity <= 0) {
+      errors.quantity = 'Quantity must be a positive number';
+    } else if (reorderData.quantity > 99999) {
+      errors.quantity = 'Quantity cannot exceed 99,999';
+    } else if (!Number.isInteger(Number(reorderData.quantity))) {
+      errors.quantity = 'Quantity must be a whole number';
+    }
+
+    // Expected date validation (required)
+    if (!reorderData.expectedDate || reorderData.expectedDate.trim() === '') {
+      errors.expectedDate = 'Expected delivery date is required';
+    } else {
+      const selectedDate = new Date(reorderData.expectedDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (isNaN(selectedDate.getTime())) {
+        errors.expectedDate = 'Please enter a valid date';
+      } else if (selectedDate < today) {
+        errors.expectedDate = 'Expected delivery date cannot be in the past';
+      } else {
+        const twoYearsFromNow = new Date();
+        twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+        if (selectedDate > twoYearsFromNow) {
+          errors.expectedDate = 'Expected delivery date seems too far in the future';
+        }
+      }
+    }
+
+    // Priority validation (required)
+    if (!reorderData.priority || reorderData.priority.trim() === '') {
+      errors.priority = 'Priority is required';
+    } else if (!['Low', 'Medium', 'High', 'Urgent'].includes(reorderData.priority)) {
+      errors.priority = 'Please select a valid priority';
+    }
+
+    // Supplier validation (optional but if provided must be valid)
+    if (reorderData.supplier && reorderData.supplier.trim().length > 0) {
+      if (reorderData.supplier.trim().length < 2) {
+        errors.supplier = 'Supplier name must be at least 2 characters long';
+      } else if (reorderData.supplier.length > 100) {
+        errors.supplier = 'Supplier name must not exceed 100 characters';
+      } else if (!/^[A-Za-z0-9\s\-_().,&]+$/.test(reorderData.supplier.trim())) {
+        errors.supplier = 'Supplier name contains invalid characters';
+      }
+    }
+
+    // Notes validation (optional)
+    if (reorderData.notes && reorderData.notes.length > 500) {
+      errors.notes = 'Notes must not exceed 500 characters';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validate form before submission
+    if (!validateForm()) {
+      setError('Please fix the validation errors before submitting');
+      return;
+    }
+    
     try {
       setSubmitting(true);
+      setError(null);
       
       const reorderPayload = {
         inventoryItemId: id,
@@ -303,9 +450,25 @@ const ReorderPage = () => {
                 value={reorderData.quantity}
                 onChange={handleInputChange}
                 min="1"
+                step="1"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  fieldErrors.quantity
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.quantity === '' && reorderData.quantity > 0
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-red-500'
+                }`}
+                placeholder="Enter quantity to order (1-99,999)"
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.quantity && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.quantity}
+                </p>
+              )}
+              
               <p className="text-xs text-gray-500 mt-1">
                 Recommended: {Math.max(10, item.threshold * 2)} units
               </p>
@@ -320,13 +483,26 @@ const ReorderPage = () => {
                 value={reorderData.priority}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  fieldErrors.priority
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : reorderData.priority
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-red-500'
+                }`}
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
                 <option value="Urgent">Urgent</option>
               </select>
+              
+              {/* Field-specific error message */}
+              {fieldErrors.priority && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.priority}
+                </p>
+              )}
             </div>
 
             <div>
@@ -340,8 +516,21 @@ const ReorderPage = () => {
                 onChange={handleInputChange}
                 required
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  fieldErrors.expectedDate
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.expectedDate === '' && reorderData.expectedDate
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-red-500'
+                }`}
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.expectedDate && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.expectedDate}
+                </p>
+              )}
             </div>
 
             <div>
@@ -353,24 +542,54 @@ const ReorderPage = () => {
                 name="supplier"
                 value={reorderData.supplier}
                 onChange={handleInputChange}
-                placeholder="Enter supplier name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="Enter supplier name (2-100 characters, optional)"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  fieldErrors.supplier
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.supplier === '' && reorderData.supplier
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-red-500'
+                }`}
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.supplier && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.supplier}
+                </p>
+              )}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Additional Notes
+              {reorderData.notes && (
+                <span className="text-xs text-gray-500 ml-2">
+                  ({reorderData.notes.length}/500 characters)
+                </span>
+              )}
             </label>
             <textarea
               name="notes"
               value={reorderData.notes}
               onChange={handleInputChange}
               rows="3"
-              placeholder="Any additional information about this reorder..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              maxLength="500"
+              placeholder="Any additional information about this reorder... (max 500 characters)"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                fieldErrors.notes
+                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                  : 'border-gray-300 focus:ring-red-500'
+              }`}
             />
+            
+            {/* Field-specific error message */}
+            {fieldErrors.notes && (
+              <p className="mt-1 text-xs text-red-600">
+                {fieldErrors.notes}
+              </p>
+            )}
           </div>
 
           <div className="flex gap-4 pt-4">

@@ -191,37 +191,25 @@ const InventoryLogs = () => {
 
       {/* Statistics Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white bg-opacity-20"></div>
-            <div className="relative flex items-center">
-
-              <div className="ml-4">
-                <p className="text-blue-100 text-sm font-medium">Total Logs</p>
-                <p className="text-3xl font-bold">{stats.totalLogs}</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="rounded-lg bg-blue-600 p-4 text-white shadow-md">
+            <div className="text-center">
+              <p className="text-blue-100 text-xs font-medium">Total Logs</p>
+              <p className="text-xl font-bold">{stats.totalLogs}</p>
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-green-600 p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white bg-opacity-20"></div>
-            <div className="relative flex items-center">
-
-              <div className="ml-4">
-                <p className="text-green-100 text-sm font-medium">Today's Activities</p>
-                <p className="text-3xl font-bold">{stats.todayLogs}</p>
-              </div>
+          <div className="rounded-lg bg-green-600 p-4 text-white shadow-md">
+            <div className="text-center">
+              <p className="text-green-100 text-xs font-medium">Today's Activities</p>
+              <p className="text-xl font-bold">{stats.todayLogs}</p>
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white bg-opacity-20"></div>
-            <div className="relative flex items-center">
-
-              <div className="ml-4">
-                <p className="text-purple-100 text-sm font-medium">Action Types</p>
-                <p className="text-3xl font-bold">{stats.actionBreakdown?.length || 0}</p>
-              </div>
+          <div className="rounded-lg bg-purple-600 p-4 text-white shadow-md">
+            <div className="text-center">
+              <p className="text-purple-100 text-xs font-medium">Action Types</p>
+              <p className="text-xl font-bold">{stats.actionBreakdown?.length || 0}</p>
             </div>
           </div>
         </div>
