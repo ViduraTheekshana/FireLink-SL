@@ -4,28 +4,7 @@ const sessionController = require("../../controllers/UserManagement/TrainingSess
 const Session = require("../../models/UserManagement/TrainingSession");
 const Attendance = require("../../models/UserManagement/Attendance");
 const User = require("../../models/UserManagement/UserReg");
-const { validateQRCodeToken } = require("../../utils/qrTokens");
-
-// QR Token utility (temporary 5 min token)
-const crypto = require("crypto");
-const activeTokens = new Map(); // { token: { sessionId, expiresAt } }
-
-function generateQRCodeToken(sessionId) {
-  const token = crypto.randomBytes(16).toString("hex");
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-  activeTokens.set(token, { sessionId, expiresAt });
-  return token;
-}
-
-function validateQRCodeToken(token) {
-  const data = activeTokens.get(token);
-  if (!data) return null;
-  if (Date.now() > data.expiresAt) {
-    activeTokens.delete(token);
-    return null;
-  }
-  return data.sessionId;
-}
+const { generateQRCodeToken, validateQRCodeToken } = require("../../utils/qrTokens"); // ✅ use both from utils
 
 // ----------------- Session CRUD -----------------
 router.post("/", sessionController.createSession);
@@ -112,9 +91,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ✅ Add this at the bottom of TrainingSessionRoutes.js
-const { validateQRCodeToken } = require("../../utils/qrTokens");
-
+// ----------------- QR Scan Form -----------------
 router.get("/attendance/scan/:token", async (req, res) => {
   const { token } = req.params;
   const sessionId = validateQRCodeToken(token);
@@ -132,7 +109,7 @@ router.get("/attendance/scan/:token", async (req, res) => {
         <h1>✅ QR Scanned</h1>
         <p>Session ID: ${sessionId}</p>
         <form method="POST" action="/api/sessions/attendance/mark">
-          <input type="hidden" name="sessionId" value="${sessionId}" />
+          <input type="hidden" name="token" value="${token}" />
           <label>Staff ID: <input name="staffId" /></label><br/><br/>
           <label>Name: <input name="name" /></label><br/><br/>
           <button type="submit">Mark Attendance</button>
