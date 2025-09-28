@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const { generateQRCodeToken, validateQRCodeToken } = require("../../utils/qrTokens");
 
 const TrainingSession = require("../../models/UserManagement/TrainingSession");
 const Attendance = require("../../models/UserManagement/Attendance");
@@ -39,6 +40,35 @@ router.get("/:sessionId", async (req, res) => {
   try {
     const attendanceList = await Attendance.find({ sessionId: req.params.sessionId });
     res.json({ status: "ok", attendance: attendanceList });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "error", err: "Server error" });
+  }
+});
+
+// Generate QR token for a session
+router.get("/generate/:sessionId", (req, res) => {
+  const { sessionId } = req.params;
+  const token = generateQRCodeToken(sessionId);
+  res.json({ status: "ok", token });
+});
+
+// Mark attendance by scanning QR
+router.post("/mark-qr", async (req, res) => {
+  const { token, staffId, name } = req.body;
+
+  const sessionId = validateQRCodeToken(token);
+  if (!sessionId) return res.status(400).json({ status: "error", err: "Invalid or expired QR" });
+
+  try {
+    const attendance = new Attendance({
+      sessionId,
+      staffId,
+      name,
+      attendedAt: new Date(),
+    });
+    await attendance.save();
+    res.json({ status: "ok", message: "Attendance marked ✅" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: "error", err: "Server error" });

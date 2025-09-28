@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import QRCodeGenerator from "./QRCodeGenerator"; // add this import
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
@@ -114,12 +115,14 @@ const TrainingSessionManager = () => {
 
   const fetchAttendance = async (sessionId) => {
     try {
-      const res = await fetch(`http://localhost:5000/attendance/${sessionId}`);
+      const res = await fetch(
+        `http://localhost:5000/sessions/attendance/${sessionId}`
+      ); // <-- updated endpoint
       const data = await res.json();
       if (data.status === "ok") {
         setAttendanceData((prev) => ({
           ...prev,
-          [sessionId]: data.attendance, // THIS IS THE KEY
+          [sessionId]: data.attendance,
         }));
       }
     } catch (err) {
@@ -161,41 +164,64 @@ const TrainingSessionManager = () => {
         : [...prev.teamMembers, staffId],
     }));
   };
+const [errors, setErrors] = useState({});
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:5000/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          teamMembers: formData.teamMembers,
-        }),
+  e.preventDefault();
+
+  // ✅ Validation
+  if (!formData.title || formData.title.trim().split(" ").length < 2) {
+    alert("Session title must contain at least 2 words.");
+    return;
+  }
+  if (!formData.description || formData.description.trim().split(" ").length < 6) {
+    alert("Description must contain at least 6 words.");
+    return;
+  }
+  if (!formData.venue || formData.venue.trim().split(" ").length < 2) {
+    alert("Venue must contain at least 2 words.");
+    return;
+  }
+  if (formData.teamMembers.length < 5) {
+    alert("You must select at least 5 team members.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res = await fetch("http://localhost:5000/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        teamMembers: formData.teamMembers,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.status === "ok") {
+      alert("Training session created successfully!");
+      setFormData({
+        title: "",
+        description: "",
+        date: "",
+        venue: "",
+        teamMembers: [],
+        newStaffId: "",
+        createdBy: user.staffId,
       });
-      const data = await res.json();
-      if (data.status === "ok") {
-        alert("Training session created successfully!");
-        setFormData({
-          title: "",
-          description: "",
-          date: "",
-          venue: "",
-          teamMembers: [],
-          newStaffId: "",
-          createdBy: user.staffId,
-        });
-        setActiveTab("sessions");
-        fetchSessions();
-      } else alert("Error creating session: " + data.err);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create training session");
-    } finally {
-      setLoading(false);
+      setActiveTab("sessions");
+      fetchSessions();
+    } else {
+      alert("Error creating session: " + data.err);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Failed to create training session");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteSession = async (id) => {
     if (window.confirm("Are you sure you want to delete this session?")) {
@@ -255,12 +281,7 @@ const TrainingSessionManager = () => {
                 <FiHash className="mr-1" /> Staff ID: {user.staffId}
               </p>
             </div>
-            <Link
-              to="/staff-login"
-              className="absolute top-6 right-6 flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30 transition backdrop-blur-sm"
-            >
-              <FiLogOut /> Logout
-            </Link>
+           
           </div>
 
           {/* Tabs */}
@@ -270,8 +291,8 @@ const TrainingSessionManager = () => {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-4 font-medium transition flex items-center whitespace-nowrap ${activeTab === tab
-                    ? "bg-white border-t-2 border-[#c62828] text-[#c62828] shadow-sm"
-                    : "text-gray-600 hover:text-[#c62828]"
+                  ? "bg-white border-t-2 border-[#c62828] text-[#c62828] shadow-sm"
+                  : "text-gray-600 hover:text-[#c62828]"
                   }`}
               >
                 {tab === "profile" ? (
@@ -363,6 +384,10 @@ const TrainingSessionManager = () => {
                 sessions.map((session) => (
                   <div key={session._id} className="border border-gray-300 rounded-xl p-5">
                     <h3 className="font-semibold text-lg mb-2">{session.title}</h3>
+                    <div className="mt-4">
+                      <QRCodeGenerator sessionId={session._id} />
+                    </div>
+
                     <p className="text-sm text-gray-600 mb-2">Session ID: {session._id}</p>
 
                     <button
@@ -424,23 +449,23 @@ const TrainingSessionManager = () => {
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InputField
-  label="Date & Time"
-  name="date"
-  value={formData.date}
-  handleInputChange={handleInputChange}
-  type="datetime-local"
-  icon={<FiCalendar className="mr-2 text-[#c62828]" />}
-  min={(() => {
-    const now = new Date();
-    const localDateTime =
-      now.getFullYear() + "-" +
-      String(now.getMonth() + 1).padStart(2, "0") + "-" +
-      String(now.getDate()).padStart(2, "0") + "T" +
-      String(now.getHours()).padStart(2, "0") + ":" +
-      String(now.getMinutes()).padStart(2, "0");
-    return localDateTime;
-  })()}
-/>
+                  label="Date & Time"
+                  name="date"
+                  value={formData.date}
+                  handleInputChange={handleInputChange}
+                  type="datetime-local"
+                  icon={<FiCalendar className="mr-2 text-[#c62828]" />}
+                  min={(() => {
+                    const now = new Date();
+                    const localDateTime =
+                      now.getFullYear() + "-" +
+                      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+                      String(now.getDate()).padStart(2, "0") + "T" +
+                      String(now.getHours()).padStart(2, "0") + ":" +
+                      String(now.getMinutes()).padStart(2, "0");
+                    return localDateTime;
+                  })()}
+                />
 
                 <InputField
                   label="Venue"
