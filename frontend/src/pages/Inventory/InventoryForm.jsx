@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { addItem, updateItem, getItemById, getCategories, getLocations, checkItemIdExists } from '../../api/inventoryApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 // This form is used for both adding new items and editing existing items
 const InventoryForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id); // update 2 : True if editing an existing item
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
 
   // Form state
   //Read 1.1 : User enters this data in the form
@@ -231,8 +241,16 @@ const InventoryForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -484,6 +502,8 @@ const InventoryForm = () => {
             </button>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
   );

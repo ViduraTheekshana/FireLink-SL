@@ -2,10 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getItemById } from '../../api/inventoryApi';
 import { createReorder, getReorders } from '../../api/inventoryReorderApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 const ReorderPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -178,7 +189,15 @@ const ReorderPage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
@@ -610,9 +629,11 @@ const ReorderPage = () => {
               <li>This reorder request is valid for 30 days</li>
             </ul>
           </div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
