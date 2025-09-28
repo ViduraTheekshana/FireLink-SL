@@ -48,7 +48,7 @@ const missionSchema = new mongoose.Schema({
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserReg',
+    ref: 'Users',
     required: true
   },
   status: {

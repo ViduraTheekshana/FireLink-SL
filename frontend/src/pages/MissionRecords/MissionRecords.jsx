@@ -123,6 +123,7 @@ const MissionRecords = () => {
 				missionTime: "",
 				description: "",
 				inventoryItems: [],
+				status: "Active",
 			});
 			setShowForm(false);
 			setEditingMissionId(null);
@@ -224,7 +225,31 @@ const MissionRecords = () => {
 			{/* Add Mission Button */}
 		<div className="mb-6 flex items-center gap-3">
 			<button
-				onClick={() => setShowForm(!showForm)}
+				onClick={() => {
+					if (showForm) {
+						// Cancel - hide form and reset states
+						setShowForm(false);
+						setEditingMissionId(null);
+						setFormData({
+							missionType: "",
+							missionDate: "",
+							missionTime: "",
+							description: "",
+							inventoryItems: [],
+						});
+					} else {
+						// Add New - show form for new mission
+						setEditingMissionId(null);
+						setFormData({
+							missionType: "",
+							missionDate: "",
+							missionTime: "",
+							description: "",
+							inventoryItems: [],
+						});
+						setShowForm(true);
+					}
+				}}
 				className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
 			>
 				{showForm ? "Cancel" : "Add New Mission"}
@@ -240,7 +265,9 @@ const MissionRecords = () => {
 			{/* Mission Form */}
 			{showForm && (
 				<div className="bg-white rounded-lg shadow-md p-6 mb-6">
-					<h2 className="text-xl font-semibold mb-4">Add New Mission Record</h2>
+					<h2 className="text-xl font-semibold mb-4">
+						{editingMissionId ? "Edit Mission Record" : "Add New Mission Record"}
+					</h2>
 					{error && (
 						<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
 							{error}
@@ -431,7 +458,17 @@ const MissionRecords = () => {
 						<div className="flex justify-end space-x-4">
 							<button
 								type="button"
-								onClick={() => setShowForm(false)}
+								onClick={() => {
+									setShowForm(false);
+									setEditingMissionId(null);
+									setFormData({
+										missionType: "",
+										missionDate: "",
+										missionTime: "",
+										description: "",
+										inventoryItems: [],
+									});
+								}}
 								className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
 							>
 								Cancel
@@ -441,7 +478,10 @@ const MissionRecords = () => {
 								disabled={loading}
 								className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
 							>
-								{loading ? "Creating..." : "Create Mission"}
+								{loading 
+									? (editingMissionId ? "Updating..." : "Creating...") 
+									: (editingMissionId ? "Update Mission" : "Create Mission")
+								}
 							</button>
 						</div>
 					</form>

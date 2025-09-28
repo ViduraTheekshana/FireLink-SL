@@ -17,6 +17,7 @@ const shiftScheduleRoutes = require("./routes/UserManagement/ShiftScheduleRoute.
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
 require("./models/UserManagement/UserReg.js");    
+require("./models/Mission.js"); // Mission schema
 // setting up config file
 dotenv.config({ path: "config/config.env" });
 
