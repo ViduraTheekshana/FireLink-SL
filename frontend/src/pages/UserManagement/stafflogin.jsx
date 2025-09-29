@@ -41,7 +41,7 @@ function StaffLogin() {
       }
     } catch (err) {
       console.error(err);
-      alert("Server error: " + err);
+      alert("Server error: invalide credentcial" + err);
     }
 
     setLoading(false);
