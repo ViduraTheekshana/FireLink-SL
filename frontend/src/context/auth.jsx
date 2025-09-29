@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import api from "../services/api";
 
 const AuthContext = createContext();
 
@@ -27,6 +26,8 @@ const getInitialUser = () => {
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(getInitialUser);
 
+	const login = (userData) => setUser(userData);
+
 	const logout = async () => {
 		authUtils.clearTokens();
 		setUser(null);
@@ -35,6 +36,7 @@ export const AuthProvider = ({ children }) => {
 	const value = {
 		user,
 		logout,
+		login,
 		checkRole: (r) => user?.position === r,
 		isAuthenticated: authUtils.isAuthenticated(),
 	};
