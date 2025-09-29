@@ -93,7 +93,45 @@ const deleteSupplier = catchAsyncErrors(async (req, res, next) => {
 		return next(new ErrorHandler("Supplier not found", 404));
 	}
 	await supplier.deleteOne();
-	res.json({ message: "Supplier account removed successfully" });
+	res.json({ message: "Supplier account removed successfully", success: true });
+});
+
+const updateSupplier = catchAsyncErrors(async (req, res, next) => {
+	const { email, password, name, phone, supplierType } = req.body;
+
+	// Check if email already exists for another supplier
+	if (email) {
+		const emailExists = await Supplier.findOne({
+			email,
+			_id: { $ne: req.params.id },
+		});
+
+		if (emailExists) {
+			return next(
+				new ErrorHandler("Supplier with this email already exists", 400)
+			);
+		}
+	}
+
+	let updateData = { email, name, phone, supplierType };
+
+	if (password) {
+		updateData.password = password;
+	}
+
+	const supplier = await Supplier.findByIdAndUpdate(req.params.id, updateData, {
+		new: true,
+		runValidators: true,
+	});
+
+	if (!supplier) {
+		return next(new ErrorHandler("Supplier not found", 404));
+	}
+
+	res.status(200).json({
+		success: true,
+		supplier,
+	});
 });
 
 module.exports = {
@@ -104,4 +142,5 @@ module.exports = {
 	logoutSupplier,
 	GetAllSuppliers,
 	GetSupplierById,
+	updateSupplier,
 };

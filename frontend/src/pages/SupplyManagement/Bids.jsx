@@ -100,12 +100,12 @@ const Bids = () => {
 			try {
 				await deleteBid(currentRequest._id);
 				setCurrentRequest(null);
-				setShowDeleteConfirm(false);
 				fetchInitialData();
 				toast.success("bid deleted");
 			} catch (error) {
 				setError(extractErrorMessage(error));
 			} finally {
+				setShowDeleteConfirm(false);
 				setLoading(false);
 			}
 		};

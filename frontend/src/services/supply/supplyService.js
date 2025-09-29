@@ -21,10 +21,31 @@ export const getSupplierProfile = async () => {
 };
 
 export const createSupplier = async (supplierData) => {
-	const response = await api.post("/supplier", supplierData);
+	const response = await api.post("/v1/supplier/register", supplierData);
 
 	if (!response.data.success) {
 		throw new Error(response.data.message || "Supplier creating failed");
 	}
+	return response.data;
+};
+
+export const updateSupplier = async (requestId, supplierData) => {
+	const response = await api.put(`/v1/supplier/${requestId}`, supplierData);
+
+	if (!response.data.success) {
+		throw new Error(response.data.message || "Supplier creating failed");
+	}
+	return response.data;
+};
+
+export const deleteSupplier = async (requestId) => {
+	const response = await api.delete(`/v1/supplier/${requestId}`);
+
+	if (!response.data.success) {
+		return new Error(
+			response.data.message || "Supply requests deletion failed!"
+		);
+	}
+
 	return response.data;
 };

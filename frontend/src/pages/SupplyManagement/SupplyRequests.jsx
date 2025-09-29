@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Filter, Edit, Trash2 } from "lucide-react";
+import { Filter, Edit, Trash2, Plus, BarChart } from "lucide-react";
 import { toast } from "react-toastify";
-import { getSupplyRequests } from "../../services/supply/supplyRequestService";
+import {
+	deleteSupplyRequest,
+	getSupplyRequests,
+} from "../../services/supply/supplyRequestService";
 import formatDate from "../../utils/convertDate";
 import Loader from "../../components/Loader";
 import Sidebar from "../../components/SideBar";
 import SearchBox from "../../components/SearchBox";
 import StatusBadge from "../../components/StatusBadge";
+import extractErrorMessage from "../../utils/errorMessageParser";
+import ConfirmDeletion from "../../components/ConfirmDeletion";
+import { AddRequestModal } from "../../components/AddRequestModal";
+import { EditRequestModal } from "../../components/EditRequestModal";
+import { BidComparisonModal } from "../../components/BidComparisonModal";
 
 const SupplyRequests = () => {
 	const [filterStatus, setFilterStatus] = useState("all");
@@ -15,20 +23,27 @@ const SupplyRequests = () => {
 	const [error, setError] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showAddModal, setShowAddModal] = useState(false);
+	const [showEditModal, setShowEditModal] = useState(false);
+	const [showComparisonModal, setShowComparisonModal] = useState(false);
+	const [currentRequest, setCurrentRequest] = useState(null);
 	const itemsPerPage = 20;
 
+	const fetchSupplyRequests = async () => {
+		setLoading(true);
+		try {
+			const res = await getSupplyRequests();
+			setSupplyRequests(res.data);
+		} catch (exception) {
+			setError(extractErrorMessage(exception));
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const res = await getSupplyRequests();
-				setSupplyRequests(res.data);
-			} catch (exception) {
-				setError(exception.data.message);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchData();
+		fetchSupplyRequests();
 	}, []);
 
 	useEffect(() => {
@@ -67,6 +82,24 @@ const SupplyRequests = () => {
 		}
 	};
 
+	const handleDeleteRequest = () => {
+		setLoading(true);
+		const fetchData = async () => {
+			try {
+				await deleteSupplyRequest(currentRequest._id);
+				fetchSupplyRequests();
+				setCurrentRequest(null);
+				toast.success("request deleted");
+			} catch (error) {
+				setError(extractErrorMessage(error));
+			} finally {
+				setShowDeleteConfirm(false);
+				setLoading(false);
+			}
+		};
+		fetchData();
+	};
+
 	if (loading) return <Loader />;
 	// TODO: fix 404
 
@@ -81,6 +114,13 @@ const SupplyRequests = () => {
 							<h1 className="text-2xl font-bold text-gray-800">
 								Supplier Requests
 							</h1>
+							<button
+								onClick={() => setShowAddModal(true)}
+								className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+							>
+								<Plus size={18} />
+								<span>Create Request</span>
+							</button>
 						</div>
 						<div className="bg-white rounded-lg shadow">
 							<div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -128,6 +168,7 @@ const SupplyRequests = () => {
 											<th className="py-3 px-4 text-left font-medium">
 												Status
 											</th>
+											<th className="py-3 px-4 text-left font-medium">Bids</th>
 											<th className="py-3 px-4 text-center font-medium">
 												Actions
 											</th>
@@ -139,7 +180,9 @@ const SupplyRequests = () => {
 												<td className="py-3 px-4 font-medium">{request.id}</td>
 												<td className="py-3 px-4">{request.title}</td>
 												<td className="py-3 px-4">{request.category}</td>
-												<td className="py-3 px-4">{request.quantity}</td>
+												<td className="py-3 px-4">
+													{request.quantity} {request.unit}
+												</td>
 												<td className="py-3 px-4">
 													{formatDate(request.createdAt)}
 												</td>
@@ -149,17 +192,44 @@ const SupplyRequests = () => {
 												<td className="py-3 px-4">
 													<StatusBadge status={request.status} />
 												</td>
+												<td className="py-3 px-4">
+													<span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+														{request.bids.length}
+													</span>
+												</td>
 												<td>
 													<div className="flex items-center justify-center gap-2">
-														<button className="p-1 hover:bg-gray-100 rounded">
+														<button
+															className="p-1 hover:bg-gray-100 rounded"
+															onClick={() => {
+																setCurrentRequest(request);
+																setShowEditModal(true);
+															}}
+														>
 															<Edit size={18} className="text-blue-600" />
 														</button>
 														<button
 															className="p-1 hover:bg-red-100 rounded"
 															title="Delete"
+															onClick={() => {
+																setShowDeleteConfirm(true);
+																setCurrentRequest(request);
+															}}
 														>
 															<Trash2 size={18} className="text-red-500" />
 														</button>
+														{request.bids.length > 0 && (
+															<button
+																onClick={() => {
+																	setShowComparisonModal(true);
+																	setCurrentRequest(request);
+																}}
+																className="p-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+																title="View Bids"
+															>
+																<BarChart size={18} />
+															</button>
+														)}
 													</div>
 												</td>
 											</tr>
@@ -204,6 +274,36 @@ const SupplyRequests = () => {
 					</div>
 				</main>
 			</div>
+			{/* Delete Confirmation Modal */}
+			{showDeleteConfirm && (
+				<ConfirmDeletion
+					handleDeleteBid={handleDeleteRequest}
+					setShowDeleteConfirm={setShowDeleteConfirm}
+				/>
+			)}
+			{showAddModal && (
+				<AddRequestModal
+					setShowAddModal={setShowAddModal}
+					setError={setError}
+					fetchRequests={fetchSupplyRequests}
+				/>
+			)}
+			{showEditModal && (
+				<EditRequestModal
+					setShowEditModal={setShowEditModal}
+					request={currentRequest}
+					fetchRequests={fetchSupplyRequests}
+					setError={setError}
+				/>
+			)}
+			{showComparisonModal && (
+				<BidComparisonModal
+					setShowComparisonModal={setShowComparisonModal}
+					request={currentRequest}
+					fetchRequests={fetchSupplyRequests}
+					setError={setError}
+				/>
+			)}
 		</div>
 	);
 };
