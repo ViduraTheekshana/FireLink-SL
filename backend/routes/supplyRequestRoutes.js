@@ -65,7 +65,7 @@ router
 	.route("/:id/assign")
 	.put(
 		protect,
-		authorizePositions(["supplier_manager"]),
+		authorizePositions(["supply_manager"]),
 		idValidationRules(),
 		validateAssignSupplier(),
 		validate,

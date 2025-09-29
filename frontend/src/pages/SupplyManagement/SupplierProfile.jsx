@@ -28,7 +28,6 @@ const SupplierProfile = () => {
 			try {
 				const res = await getSupplierProfile();
 				setSupplierData(res.data);
-				console.log(res.data);
 			} catch (exception) {
 				setError(extractErrorMessage(exception));
 			} finally {

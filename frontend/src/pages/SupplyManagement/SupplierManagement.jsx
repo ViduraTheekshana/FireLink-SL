@@ -2,11 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Plus, Edit, Filter, Trash2 } from "lucide-react";
-import { getSuppliers } from "../../services/supply/supplyService";
+import {
+	deleteSupplier,
+	getSuppliers,
+} from "../../services/supply/supplyService";
 import { useAuth } from "../../context/auth";
 import Loader from "../../components/Loader";
 import Sidebar from "../../components/SideBar";
 import SearchBox from "../../components/SearchBox";
+import ConfirmDeletion from "../../components/ConfirmDeletion";
+import { AddSupplierModal } from "../../components/AddSupplierModal";
+import { EditSupplierModal } from "../../components/EditSupplierModal";
+import extractErrorMessage from "../../utils/errorMessageParser";
 
 const SupplierManagement = () => {
 	const { checkRole } = useAuth();
@@ -18,24 +25,31 @@ const SupplierManagement = () => {
 	const [error, setError] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [showAddModal, setShowAddModal] = useState(false);
+	const [showEditModal, setShowEditModal] = useState(false);
+	const [currentSupplier, setCurrentSupplier] = useState(null);
 	const itemsPerPage = 20;
+
+	const fetchSuppliers = async () => {
+		try {
+			setLoading(true);
+			const res = await getSuppliers();
+			setSuppliers(res.data);
+		} catch (exception) {
+			setError(extractErrorMessage(exception));
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	useEffect(() => {
 		if (!checkRole("supply_manager")) {
 			navigate("/dashboard");
 			setError("Role not found! supply manager");
 		}
-		const fetchData = async () => {
-			try {
-				const res = await getSuppliers();
-				setSuppliers(res.data);
-			} catch (exception) {
-				setError(exception.data.message);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchData();
+
+		fetchSuppliers();
 	}, []);
 
 	useEffect(() => {
@@ -82,6 +96,29 @@ const SupplierManagement = () => {
 		}
 	};
 
+	const calculateSuccessRate = (supplierData) => {
+		const total = supplierData.supplyCount + supplierData.failedSupplyCount;
+		return total > 0 ? Math.round((supplierData.supplyCount / total) * 100) : 0;
+	};
+
+	const handleDeleteRequest = () => {
+		setLoading(true);
+		const fetchData = async () => {
+			try {
+				await deleteSupplier(currentSupplier._id);
+				fetchSuppliers();
+				setCurrentSupplier(null);
+				toast.success("supplier deleted");
+			} catch (error) {
+				setError(extractErrorMessage(error));
+			} finally {
+				setShowDeleteConfirm(false);
+				setLoading(false);
+			}
+		};
+		fetchData();
+	};
+
 	if (loading) return <Loader />;
 
 	return (
@@ -95,13 +132,13 @@ const SupplierManagement = () => {
 							<h1 className="text-2xl font-bold text-gray-800">
 								Supplier Management
 							</h1>
-							<Link
-								to="/add"
+							<button
+								onClick={() => setShowAddModal(true)}
 								className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md"
 							>
 								<Plus size={18} />
 								<span>Add Supplier</span>
-							</Link>
+							</button>
 						</div>
 						<div className="bg-white rounded-lg shadow">
 							<div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -140,6 +177,9 @@ const SupplierManagement = () => {
 											<th className="py-3 px-4 text-left font-medium">
 												Category
 											</th>
+											<th className="py-3 px-4 text-left font-medium">
+												Success Rate
+											</th>
 											<th className="py-3 px-4 text-center font-medium">
 												Actions
 											</th>
@@ -161,13 +201,45 @@ const SupplierManagement = () => {
 												</td>
 												<td className="py-3 px-4">{supplier.supplierType}</td>
 												<td className="py-3 px-4">
+													<div className="flex items-center">
+														<div className="w-24 bg-gray-200 rounded-full h-2.5 mr-2">
+															<div
+																className="bg-blue-600 h-2.5 rounded-full"
+																style={{
+																	width: supplier.supplyCount
+																		? `${
+																				((supplier.supplyCount -
+																					(supplier.failedSupplyCount || 0)) /
+																					supplier.supplyCount) *
+																				100
+																		  }%`
+																		: "0%",
+																}}
+															></div>
+														</div>
+														<span className="text-sm">
+															{calculateSuccessRate(supplier)}%
+														</span>
+													</div>
+												</td>
+												<td className="py-3 px-4">
 													<div className="flex items-center justify-center gap-2">
-														<button className="p-1 hover:bg-gray-100 rounded">
+														<button
+															className="p-1 hover:bg-gray-100 rounded"
+															onClick={() => {
+																setShowEditModal(true);
+																setCurrentSupplier(supplier);
+															}}
+														>
 															<Edit size={18} className="text-blue-600" />
 														</button>
 														<button
 															className="p-1 hover:bg-red-100 rounded"
 															title="Delete"
+															onClick={() => {
+																setShowDeleteConfirm(true);
+																setCurrentSupplier(supplier);
+															}}
 														>
 															<Trash2 size={18} className="text-red-500" />
 														</button>
@@ -215,6 +287,29 @@ const SupplierManagement = () => {
 					</div>
 				</main>
 			</div>
+			{/* Delete Confirmation Modal */}
+			{showDeleteConfirm && (
+				<ConfirmDeletion
+					handleDeleteBid={handleDeleteRequest}
+					setShowDeleteConfirm={setShowDeleteConfirm}
+				/>
+			)}
+			{/* Add supplier modal */}
+			{showAddModal && (
+				<AddSupplierModal
+					setShowAddModal={setShowAddModal}
+					setError={setError}
+					fetchSuppliers={fetchSuppliers}
+				/>
+			)}
+			{showEditModal && (
+				<EditSupplierModal
+					fetchSuppliers={fetchSuppliers}
+					setShowEditModal={setShowEditModal}
+					supplier={currentSupplier}
+					setError={setError}
+				/>
+			)}
 		</div>
 	);
 };

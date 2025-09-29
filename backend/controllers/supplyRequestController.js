@@ -11,7 +11,7 @@ const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 
 	const id = generateId("req");
 
-	const public = req.user.roles.some((role) => role.name === "supply_manager");
+	const public = req.user.position === "supply_manager";
 
 	const supplyRequest = await SupplyRequest.create({
 		title,
@@ -34,12 +34,15 @@ const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 	let query = {};
 
+	// filter category
 	if (req.query.category) {
 		query.category = req.query.category;
 	}
+	// filter status
 	if (req.query.status) {
 		query.status = req.query.status;
 	}
+	// for supplier get only bidden requests
 	if (req.query.bids) {
 		query.bids = { $elemMatch: { supplier: req.supplier._id } };
 	}
@@ -54,11 +57,15 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 		query.status = "Open";
 	}
 
-	const supplyRequests = await SupplyRequest.find(query)
-		.sort({
-			createdAt: -1,
-		})
-		.lean();
+	let supplyRequestsQuery = SupplyRequest.find(query).sort({
+		createdAt: -1,
+	});
+
+	if (req.user && req.user.position === "supply_manager") {
+		supplyRequestsQuery = supplyRequestsQuery.populate("bids.supplier");
+	}
+
+	const supplyRequests = await supplyRequestsQuery.lean();
 
 	if (req.supplier) {
 		supplyRequests.forEach((request) => {
@@ -87,14 +94,14 @@ const getSupplyRequestById = catchAsyncErrors(async (req, res, next) => {
 		public: true,
 	}).lean();
 
+	if (!supplyRequest) {
+		return next(new ErrorHandler("Supply Request Not Found! ", 404));
+	}
+
 	supplyRequest.bid = supplyRequest.bids.find(
 		(bid) => bid.supplier.toString() === req.supplier._id.toString()
 	);
 	delete supplyRequest.bids;
-
-	if (!supplyRequest) {
-		return next(new ErrorHandler("Supply Request Not Found! ", 404));
-	}
 
 	res.status(200).json({
 		success: true,
@@ -140,7 +147,7 @@ const updateSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 	}
 
 	if (
-		!req.user.roles.some((role) => role.name === "supply_manager") &&
+		!req.user.position === "supply_manager" &&
 		supplyRequest.createdBy.toString() !== req.user.id
 	) {
 		return next(new ErrorHandler("You don't own this Request", 403));
@@ -187,14 +194,14 @@ const deleteSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 	}
 
 	if (
-		!req.user.roles.some((role) => role.name === "supply_manager") &&
+		!req.user.position === "supply_manager" &&
 		!supplyRequest.createdBy === req.user.id
 	) {
 		return next(new ErrorHandler("You don't own this Request", 403));
 	}
 
 	if (
-		!req.user.roles.some((role) => role.name === "supply_manager") &&
+		!req.user.position === "supply_manager" &&
 		supplyRequest.public === true
 	) {
 		return next(

@@ -137,7 +137,7 @@ function ModifyBidForm({
 									value={deliveryDate}
 									onChange={(e) => setDeliveryDate(e.target.value)}
 									required
-									min={new Date().toISOString().split("T")[0]}
+									min={new Date().toLocaleDateString("en-CA")}
 								/>
 							</div>
 							<p className="mt-1 text-sm text-gray-500">

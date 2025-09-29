@@ -8,6 +8,7 @@ const {
 	GetAllSuppliers,
 	GetSupplierById,
 	logoutSupplier,
+	updateSupplier,
 } = require("../controllers/supplierController");
 
 const { isAuthenticatedUser, isNotLoggedIn } = require("../middlewares/auth");
@@ -19,6 +20,7 @@ const {
 	createSupplierValidationRules,
 	idValidationRules,
 	loginValidationRules,
+	updateSupplierValidationRules,
 } = require("../validators/supplyValidator");
 
 router.post(
@@ -33,7 +35,7 @@ router.get("/logout", isAuthenticatedUser, logoutSupplier);
 router.get("/profile", isAuthenticatedUser, getSupplierProfile);
 
 router.post(
-	"/register/",
+	"/register",
 	protect,
 	authorizePositions(["supply_manager"]),
 	createSupplierValidationRules(),
@@ -61,6 +63,13 @@ router
 		idValidationRules(),
 		validate,
 		deleteSupplier
+	)
+	.put(
+		protect,
+		authorizePositions(["supply_manager"]),
+		updateSupplierValidationRules(),
+		validate,
+		updateSupplier
 	);
 
 module.exports = router;

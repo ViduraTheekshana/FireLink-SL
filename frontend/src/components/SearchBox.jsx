@@ -28,7 +28,7 @@ const SearchBox = ({ searchQuery, setSearchQuery }) => {
 					/>
 					<input
 						type="text"
-						placeholder="Search suppliers, requests, inventory..."
+						placeholder="Search suppliers, requests"
 						className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
