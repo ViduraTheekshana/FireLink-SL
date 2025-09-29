@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Plus, Edit, Filter, Trash2 } from "lucide-react";
 import {
 	deleteSupplier,
 	getSuppliers,
 } from "../../services/supply/supplyService";
-import { useAuth } from "../../context/auth";
 import Loader from "../../components/Loader";
 import Sidebar from "../../components/SideBar";
 import SearchBox from "../../components/SearchBox";
@@ -16,9 +14,6 @@ import { EditSupplierModal } from "../../components/EditSupplierModal";
 import extractErrorMessage from "../../utils/errorMessageParser";
 
 const SupplierManagement = () => {
-	const { checkRole } = useAuth();
-	const navigate = useNavigate();
-
 	const [filterCategory, setFilterCategory] = useState("all");
 	const [loading, setLoading] = useState(true);
 	const [suppliers, setSuppliers] = useState([]);
@@ -44,11 +39,6 @@ const SupplierManagement = () => {
 	};
 
 	useEffect(() => {
-		if (!checkRole("supply_manager")) {
-			navigate("/dashboard");
-			setError("Role not found! supply manager");
-		}
-
 		fetchSuppliers();
 	}, []);
 
