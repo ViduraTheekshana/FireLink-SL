@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import HomePage from "./pages/Home/HomePage";
 import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
@@ -15,6 +16,12 @@ import ViewSessions from "./pages/TraningSessionManagement/AllSessionsDetails";
 import AttendanceForm from "./pages/TraningSessionManagement/AttendanceForm";
 import ShiftScheduler from "./pages/UserManagement/ShiftScheduler";
 import CivilianDashboard from "./pages/CivilianDashboard/CivilianDashboard";
+import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
+import Profile from "./pages/UserManagement/profile";
+import Settings from "./pages/UserManagement/setting";
+import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
+
+
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
@@ -40,149 +47,159 @@ import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
 import { Bounce, ToastContainer } from "react-toastify";
 
 const App = () => {
-	const user = JSON.parse(localStorage.getItem("user"));
-	const supplier = JSON.parse(localStorage.getItem("supplier")); // example for supplier login
 
-	return (
-		<BrowserRouter>
-			<Routes>
-				{/* Public routes */}
-				<Route path="/" element={<LoginFireStaff />} />
-				<Route path="/staff-login" element={<LoginFireStaff />} />
-				<Route path="/civilian-login" element={<CivilianLogin />} />
-				<Route path="/supplier-login" element={<SupplierLogin />} />
-				<Route path="/firstaff" element={<AddFireStaff />} />
-				<Route path="/officer/:id" element={<OfficerProfile />} />
-				<Route path="/firstaff" element={<AddFireStaff />} />
-				<Route path="/update-user/:id" element={<UpdateUser />} />
-				<Route path="/userdetails/:id" element={<UserDetails />} />
+  const user = JSON.parse(localStorage.getItem("user"));
+  const supplier = JSON.parse(localStorage.getItem("supplier")); // example for supplier login
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/staff-login" element={<LoginFireStaff />} />
+        <Route path="/civilian-login" element={<CivilianLogin />} />
+        <Route path="/supplier-login" element={<SupplierLogin />} />
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/officer/:id" element={<OfficerProfile />} />
+        <Route path="/firstaff" element={<AddFireStaff />} />
+        <Route path="/update-user/:id" element={<UpdateUser />} />
+        <Route path="/userdetails/:id" element={<UserDetails />} />
+        <Route path="/attendance/:token" element={<AttendanceForm />} />
 
 
 
-				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+        <Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 
-				<Route
-					path="/training-dashboard"
-					element={<TrainingSessionManager />}
-				/>
-				<Route path="/update-session/:id" element={<UpdateSession />} />
-				<Route path="/shiftschedule" element={<ShiftScheduler />} />
-				<Route path="/sessions" element={<ViewSessions />} />
-				<Route path="/attendance/:id" element={<AttendanceForm />} />
-				{/* Protected user routes */}
-				<Route path="/dashboard" element={<DynamicDashboard />} />
-				<Route path="/mission-records" element={<MissionRecords />} />
-				<Route path="/salary-management" element={<SalaryManagement />} />
+        <Route
+          path="/training-dashboard"
+          element={<TrainingSessionManager />}
+        />
+        <Route path="/update-session/:id" element={<UpdateSession />} />
+        <Route path="/shiftschedule" element={<ShiftScheduler />} />
+        <Route path="/sessions" element={<ViewSessions />} />
+        <Route path="/attendance/:id" element={<AttendanceForm />} />
+        {/* Protected user routes */}
+        <Route path="/dashboard" element={<DynamicDashboard />} />
+        <Route path="/mission-records" element={<MissionRecords />} />
+        <Route path="/salary-management" element={<SalaryManagement />} />
 
-				{/* Protected user routes */}
-				<Route path="/dashboard" element={<DynamicDashboard />} />
-				<Route
-					path="/mission-records"
-					element={
-						<ProtectedRoute user={user}>
-							<MissionRecords />
-						</ProtectedRoute>
-					}
-				/>
+        {/* Protected user routes */}
+        <Route path="/dashboard" element={<DynamicDashboard />} />
+        <Route
+          path="/mission-records"
+          element={
+            <ProtectedRoute user={user}>
+              <MissionRecords />
+            </ProtectedRoute>
+          }
+        />
 
-				{/* Inventory routes */}
-				<Route path="/inventory" element={<InventoryList />} />
-				<Route path="/inventory/add" element={<InventoryForm />} />
-				<Route path="/inventory/vehicles" element={<VehicleList />} />
-				<Route path="/inventory/vehicles/add" element={<VehicleForm />} />
-				<Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
-				<Route path="/inventory/edit/:id" element={<InventoryForm />} />
-				<Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
-				<Route path="/inventory/:id/reorder" element={<ReorderPage />} />
-				<Route path="/inventory/reorders" element={<ReordersList />} />
-				<Route path="/inventory/reorders/list" element={<ReordersList />} />
-				<Route path="/inventory/logs" element={<InventoryLogs />} />
-				<Route path="/inventory/:id" element={<InventoryDetail />} />
+        {/* Inventory routes */}
+        <Route path="/inventory" element={<InventoryList />} />
+        <Route path="/inventory/add" element={<InventoryForm />} />
+        <Route path="/inventory/vehicles" element={<VehicleList />} />
+        <Route path="/inventory/vehicles/add" element={<VehicleForm />} />
+        <Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
+        <Route path="/inventory/edit/:id" element={<InventoryForm />} />
+        <Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
+        <Route path="/inventory/:id/reorder" element={<ReorderPage />} />
+        <Route path="/inventory/reorders" element={<ReordersList />} />
+        <Route path="/inventory/reorders/list" element={<ReordersList />} />
+        <Route path="/inventory/logs" element={<InventoryLogs />} />
+        <Route path="/inventory/:id" element={<InventoryDetail />} />
 
-				{/* Shift Management routes */}
-				{/* <Route path="/shifts" element={<ShiftDashboard />} /> */}
-				{/* <Route path="/shifts/create" element={<CreateShift />} /> */}
-				{/* <Route path="/shifts/my-shifts" element={<MyShifts />} /> */}
-				{/* <Route path="/shifts/change-requests" element={<ChangeRequests />} /> */}
-				{/* <Route path="/shifts/messages" element={<Messages />} /> */}
+        {/* Shift Management routes */}
+        {/* <Route path="/shifts" element={<ShiftDashboard />} /> */}
+        {/* <Route path="/shifts/create" element={<CreateShift />} /> */}
+        {/* <Route path="/shifts/my-shifts" element={<MyShifts />} /> */}
+        {/* <Route path="/shifts/change-requests" element={<ChangeRequests />} /> */}
+        {/* <Route path="/shifts/messages" element={<Messages />} /> */}
 
-				{/* Supplier routes */}
-				<Route
-					path="/suppliers"
-					element={
-						<ProtectedRoute allowedRoles={["supply_manager"]}>
-							<SupplierManagement />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/supply-requests"
-					element={
-						<ProtectedRoute allowedRoles={["supply_manager"]}>
-							<SupplyRequests />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/supplier/supply-requests"
-					element={
-						<ProtectedSupplierRoute>
-							<SupplyRequestForSupplier />
-						</ProtectedSupplierRoute>
-					}
-				/>
-				<Route
-					path="/supplier/bids"
-					element={
-						<ProtectedSupplierRoute>
-							<Bids />
-						</ProtectedSupplierRoute>
-					}
-				/>
-				<Route
-					path="/supplier/bids/new/:requestId?"
-					element={
-						<ProtectedSupplierRoute>
-							<Bids />
-						</ProtectedSupplierRoute>
-					}
-				/>
-				<Route
-					path="/supplier/profile"
-					element={
-						<ProtectedSupplierRoute>
-							<SupplierProfile />
-						</ProtectedSupplierRoute>
-					}
-				/>
+        {/* Supplier routes  */}
+        <Route
+          path="/suppliers"
+          element={
+            <ProtectedRoute allowedRoles={["supply_manager"]}>
+              <SupplierManagement />
+            </ProtectedRoute>
+          }
+        />
 
-				{/* Catch all route */}
-				<Route
-					path="*"
-					element={
-						user ? (
-							<Navigate to="/dashboard" replace />
-						) : (
-							<Navigate to="/" replace />
-						)
-					}
-				/>
-			</Routes>
-			<ToastContainer
-				position="bottom-right"
-				autoClose={5000}
-				hideProgressBar={false}
-				newestOnTop={false}
-				closeOnClick={false}
-				rtl={false}
-				pauseOnFocusLoss
-				draggable
-				pauseOnHover
-				theme="dark"
-				transition={Bounce}
-			/>
-		</BrowserRouter>
-	);
+        <Route
+          path="/staff-management"
+          element={
+            <StaffManagementTable />
+          }
+        />
+
+        <Route
+          path="/supply-requests"
+          element={
+            <ProtectedRoute allowedRoles={["supply_manager"]}>
+              <SupplyRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/supplier/supply-requests"
+          element={
+            <ProtectedSupplierRoute>
+              <SupplyRequestForSupplier />
+            </ProtectedSupplierRoute>
+          }
+        />
+        <Route
+          path="/supplier/bids"
+          element={
+            <ProtectedSupplierRoute>
+              <Bids />
+            </ProtectedSupplierRoute>
+          }
+        />
+        <Route
+          path="/supplier/bids/new/:requestId?"
+          element={
+            <ProtectedSupplierRoute>
+              <Bids />
+            </ProtectedSupplierRoute>
+          }
+        />
+        <Route
+          path="/supplier/profile"
+          element={
+            <ProtectedSupplierRoute>
+              <SupplierProfile />
+            </ProtectedSupplierRoute>
+          }
+        />
+
+        {/* Catch all route */}
+        <Route
+          path="*"
+          element={
+            user ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+      </Routes>
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        transition={Bounce}
+      />
+    </BrowserRouter>
+  );
 };
 
 export default App;

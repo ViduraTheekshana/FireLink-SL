@@ -5,8 +5,7 @@ import Sidebar from "../../pages/UserManagement/Sidebar";
 import TrainingSession from "../TraningSessionManagement/TrainingSessionManager";
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
-
-import MissionRecords from "../MissionRecords/MissionRecords"
+import MissionRecords from "../MissionRecords/MissionRecords";
 
 const DynamicDashboard = () => {
   const location = useLocation();
@@ -24,13 +23,32 @@ const DynamicDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/staff-login");
   };
 
   const renderContent = () => {
-    switch (user.position.toLowerCase()) {
-      case "1stclass officer":
-    return <OfficerProfile officerId={user._id} />;
+    const position = (user.position || "").toLowerCase().trim().replace(/\s+/g, "");
+    console.log("Normalized position:", position);
+
+    switch (position) {
+      case "chiefofficer":
+        return (
+          <div className="p-6">
+            <h1 className="text-3xl font-bold mb-4">Chief Officer Dashboard</h1>
+            <p>Welcome {user.name}, you have full administrative access.</p>
+          </div>
+        );
+
+      case "1stclassofficer":
+        return (
+          <div className="p-6 space-y-6">
+            {/* Officer profile */}
+            <OfficerProfile officerId={user._id} />
+
+           
+          </div>
+        );
 
       case "fighter":
         return (
@@ -52,7 +70,7 @@ const DynamicDashboard = () => {
         return <InventoryManagerDashboard />;
 
       case "recordmanager":
-        return <MissionRecords/>;
+        return <MissionRecords />;
 
       case "preventionmanager":
         return (
@@ -85,9 +103,7 @@ const DynamicDashboard = () => {
         return (
           <div className="p-6">
             <h1 className="text-3xl font-bold mb-4">Staff Dashboard</h1>
-            <p>
-              Welcome {user.name || "Staff Member"}, here is your general dashboard.
-            </p>
+            <p>Welcome {user.name || "Staff Member"}, here is your general dashboard.</p>
           </div>
         );
     }
