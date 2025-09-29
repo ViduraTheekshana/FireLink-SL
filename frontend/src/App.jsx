@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import HomePage from "./pages/Home/HomePage";
 import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
@@ -54,7 +55,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<LoginFireStaff />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/staff-login" element={<LoginFireStaff />} />
         <Route path="/civilian-login" element={<CivilianLogin />} />
         <Route path="/supplier-login" element={<SupplierLogin />} />
