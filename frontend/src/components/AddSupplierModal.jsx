@@ -24,11 +24,53 @@ export function AddSupplierModal({
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
+
+		let processedValue = value;
+
+		if (name === "phone") {
+			const numericValue = value.replace(/\D/g, "");
+
+			if (numericValue.length > 0 && numericValue.charAt(0) !== "0") {
+				processedValue = "";
+			} else {
+				processedValue = numericValue.substring(0, 10);
+			}
+		}
+
+		if (name === "nic") {
+			const upperValue = value.toUpperCase();
+			let formattedNic = "";
+
+			// Rule 1: First 9 characters must be digits
+			const firstPart = upperValue.substring(0, 9).replace(/\D/g, "");
+			formattedNic += firstPart;
+
+			if (upperValue.length > 9) {
+				const tenthChar = upperValue.charAt(9);
+
+				// Rule 2: 10th char can be a digit, 'V', or 'X'
+				if (/[0-9VX]/.test(tenthChar)) {
+					formattedNic += tenthChar;
+
+					// Rule 3: If 10th char is 'V' or 'X', stop here
+					if (/[VX]/.test(tenthChar)) {
+						formattedNic = formattedNic.substring(0, 10);
+					}
+					// Rule 4: If 10th char is a number, allow up to 2 more digits
+					else if (/\d/.test(tenthChar) && upperValue.length > 10) {
+						const lastPart = upperValue.substring(10, 12).replace(/\D/g, "");
+						formattedNic += lastPart;
+					}
+				}
+			}
+			processedValue = formattedNic;
+		}
+
 		setFormData((prev) => ({
 			...prev,
-			[name]: value,
+			[name]: processedValue,
 		}));
-		// Clear password error when either password field changes
+
 		if (name === "password" || name === "confirmPassword") {
 			setPasswordError("");
 		}
