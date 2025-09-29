@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiArrowLeft, FiUser, FiCalendar, FiCheck } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
@@ -7,12 +7,31 @@ const AttendanceForm = () => {
   const [staffId, setStaffId] = useState("");
   const [name, setName] = useState("");
   const [sessionId, setSessionId] = useState("");
+  const [sessions, setSessions] = useState([]); // ✅ fixed: declare state
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Fetch all sessions for the dropdown
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/sessions");
+        if (res.data.sessions) setSessions(res.data.sessions);
+      } catch (err) {
+        console.error("Error fetching sessions:", err);
+      }
+    };
+    fetchSessions();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!sessionId) {
+      alert("Please select a session!");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axios.post("http://localhost:5000/attendance/mark", {
@@ -45,18 +64,25 @@ const AttendanceForm = () => {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Session Dropdown */}
           <div className="relative">
             <FiCalendar className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Session ID"
+            <select
               value={sessionId}
               onChange={(e) => setSessionId(e.target.value)}
               className="w-full p-3 pl-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff9800] focus:border-transparent"
               required
-            />
+            >
+              <option value="">Select Session</option>
+              {sessions.map((session) => (
+                <option key={session._id} value={session._id}>
+                  {session.title} ({new Date(session.date).toLocaleDateString()})
+                </option>
+              ))}
+            </select>
           </div>
 
+          {/* Staff ID */}
           <div className="relative">
             <FiUser className="absolute left-3 top-3 text-gray-400" />
             <input
@@ -69,6 +95,7 @@ const AttendanceForm = () => {
             />
           </div>
 
+          {/* Name */}
           <div className="relative">
             <FiUser className="absolute left-3 top-3 text-gray-400" />
             <input

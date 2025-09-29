@@ -1,7 +1,21 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // ✅ Added useNavigate
 
 const CivilianDashboard = () => {
+	const navigate = useNavigate();
+
+	const handleLogout = () => {
+		const confirmLogout = window.confirm("Are you sure you want to log out?");
+		if (confirmLogout) {
+			// ✅ Clear session/local storage
+			localStorage.removeItem("token");
+			sessionStorage.removeItem("token");
+
+			// ✅ Redirect to civilian login page
+			navigate("/staff-login");
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-50">
 			{/* Header */}
@@ -14,12 +28,15 @@ const CivilianDashboard = () => {
 						</div>
 						<div className="flex space-x-4">
 							<Link
-								to="/login"
+								to="/staff-login"
 								className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
 							>
 								Staff Login
 							</Link>
-							<button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+							<button
+								onClick={handleLogout} // ✅ added here
+								className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+							>
 								Logout
 							</button>
 						</div>
