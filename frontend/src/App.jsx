@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import LoginFireStaff from "./pages/UserManagement/StaffLogin";
+import LoginFireStaff from "./pages/UserManagement/stafflogin";
 import CivilianLogin from "./pages/CivilianDashboard/civilianLogin";
 import SupplierLogin from "./pages/SupplyManagement/Login/supplierLogin";
 import DynamicDashboard from "./pages/Dashboard/Dashboard";

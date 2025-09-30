@@ -19,14 +19,14 @@ const preventionCertificateSchema = new mongoose.Schema({
     required: true,
   },
   email: {
-    type: String, // new optional field
+    type: String, 
   },
   constructionType: {
     type: String,
     required: true,
     enum: ["Building", "Renovation", "Demolition", "Other"],
   },
-  serviceType: { // new dropdown
+  serviceType: { 
     type: String,
     enum: ["Fire Prevention", "Safety Audit", "Inspection", "Other"],
     required: true,
