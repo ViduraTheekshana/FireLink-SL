@@ -13,6 +13,8 @@ const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 const shiftScheduleRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
+const preventionOfficerRoutes = require("./routes/preventionOfficerRoutes");
 
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
@@ -46,7 +48,6 @@ app.use((req, res, next) => {
 const mission = require("./routes/missionRoutes");
 
 const salaryRoutes = require("./routes/salaryRoutes");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
 
 // mount routes
 app.use("/api/v1/missions", mission);
@@ -70,8 +71,10 @@ app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
 app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
 
+
 // Prevention certificate route
-app.use("/api/prevention/certificates", preventionCertificateRoutes);
+app.use("/api/prevention/certificates", preventionCertificateRoutes); 
+app.use("/api/prevention-officer", preventionOfficerRoutes);
 
 // Middleware to handle errors
 app.use(errorMiddleware);
