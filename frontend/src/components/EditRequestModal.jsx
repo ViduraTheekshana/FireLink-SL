@@ -22,11 +22,24 @@ export function EditRequestModal({
 	});
 	const handleChange = (e) => {
 		const { name, value } = e.target;
+		let processedValue = value;
+
+		if (name === "quantity") {
+			const num = parseInt(value, 10);
+			// Prevent non-numeric input or values less than 1
+			processedValue = isNaN(num) || num < 1 ? 1 : num;
+		}
+		if (name === "unit") {
+			// Use a regular expression to replace any digit [0-9] with an empty string
+			processedValue = value.replace(/[0-9]/g, "");
+		}
+
 		setFormData((prev) => ({
 			...prev,
-			[name]: name === "quantity" ? parseInt(value) : value,
+			[name]: processedValue,
 		}));
 	};
+
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		console.log("Updating request:", formData);
