@@ -15,11 +15,9 @@ function ModifyBidForm({
 }) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
-	const [offerPrice, setOfferPrice] = useState(0);
+	const [offerPrice, setOfferPrice] = useState("0");
 	const [notes, setNotes] = useState("");
 	const [deliveryDate, setDeliveryDate] = useState("");
-
-	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (currentRequest?.bid) {
@@ -36,12 +34,49 @@ function ModifyBidForm({
 		}
 	}, [error]);
 
+	const handleOfferPriceChange = (e) => {
+		let value = e.target.value;
+
+		// 1. Sanitize to allow only digits and one decimal point.
+		value = value.replace(/[^0-9.]/g, "");
+		let parts = value.split(".");
+		if (parts.length > 2) {
+			value = parts[0] + "." + parts.slice(1).join("");
+		}
+
+		// NEW: Enforce a maximum of two decimal places
+		parts = value.split("."); // Re-split in case the value was corrected
+		if (parts[1] && parts[1].length > 2) {
+			parts[1] = parts[1].substring(0, 2);
+			value = parts.join(".");
+		}
+
+		// 2. Immediately replace the leading '0' if a number is typed.
+		// e.g., if user types '5' when '0' is showing, the value becomes '5', not '05'.
+		if (value.length > 1 && value.startsWith("0") && value.charAt(1) !== ".") {
+			value = value.substring(1);
+		}
+
+		// 3. Handle the case where the user types '.' as the first character.
+		if (value === ".") {
+			value = "0.";
+		}
+
+		// 4. If the input is empty, reset it to '0'.
+		if (value === "") {
+			setOfferPrice("0");
+			return;
+		}
+
+		setOfferPrice(value);
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setLoading(true);
 		try {
 			const bidData = {
-				offerPrice,
+				offerPrice: parseFloat(offerPrice),
 				notes,
 				deliveryDate,
 			};
@@ -109,12 +144,11 @@ function ModifyBidForm({
 									Rs.
 								</span>
 								<input
-									type="number"
+									type="text"
+									inputMode="decimal"
 									className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 focus:ring-opacity-50"
 									value={offerPrice}
-									onChange={(e) => setOfferPrice(e.target.value)}
-									step="0.01"
-									min="0"
+									onChange={(e) => handleOfferPriceChange(e)}
 									required
 									placeholder="0.00"
 								/>
