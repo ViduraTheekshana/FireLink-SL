@@ -37,6 +37,8 @@ import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
 import SupplyRequestForSupplier from "./pages/SupplyManagement/supplyRequestForSupplier";
 import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
+import PreventionCertificateForm from "./pages/PreventionManagement/PreventionCertificateForm";
+import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionOfficerDashboardNew";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
@@ -62,6 +64,8 @@ const App = () => {
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
 
 				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
+				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 
 				<Route
 					path="/training-dashboard"
