@@ -1,3 +1,4 @@
+// models/Salary.js
 const mongoose = require("mongoose");
 
 const salarySchema = new mongoose.Schema(
@@ -11,7 +12,7 @@ const salarySchema = new mongoose.Schema(
 		perDaySalary: { type: Number, required: true, min: 0 },
 		otHours: { type: Number, required: true, min: 0 },
 		finalSalary: { type: Number, required: true, min: 0 },
-		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserReg" },
+		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserReg" }, // ✅ Link to UserReg
 	},
 	{ timestamps: true }
 );
@@ -19,5 +20,3 @@ const salarySchema = new mongoose.Schema(
 salarySchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Salary", salarySchema);
-
-
