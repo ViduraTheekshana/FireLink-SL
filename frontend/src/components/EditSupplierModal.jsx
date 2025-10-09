@@ -39,9 +39,17 @@ export function EditSupplierModal({
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
+
+		let processedValue = value;
+
+		if (name === "phone") {
+			const numericValue = value.replace(/\D/g, "");
+			processedValue = numericValue.substring(0, 10);
+		}
+
 		setFormData((prev) => ({
 			...prev,
-			[name]: value,
+			[name]: processedValue,
 		}));
 
 		if (name === "password" || name === "confirmPassword") {
@@ -163,6 +171,7 @@ export function EditSupplierModal({
 								onChange={handleChange}
 								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
 								required
+								inputMode="numeric"
 							/>
 						</div>
 						<div>

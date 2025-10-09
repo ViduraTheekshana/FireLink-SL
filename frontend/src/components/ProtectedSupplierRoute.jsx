@@ -6,6 +6,10 @@ import Loader from "./Loader";
 const ProtectedSupplierRoute = ({ children }) => {
 	const { user, loading } = useSupplierAuth();
 
+	localStorage.removeItem("user");
+	localStorage.removeItem("token");
+	localStorage.removeItem("staffId");
+
 	if (loading) return <Loader />;
 
 	if (!user) {
