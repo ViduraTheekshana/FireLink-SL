@@ -1,9 +1,8 @@
 const Mission = require("../models/Mission");
 const { validationResult } = require("express-validator");
 
-// @desc    Create a new mission record
-// @route   POST /api/missions
-// @access  Private
+// Create a new mission record
+
 const createMission = async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -23,7 +22,7 @@ const createMission = async (req, res) => {
 			inventoryItems,
 		} = req.body;
 
-		// Resolve current actor (user via Bearer token or supplier via cookie)
+		
 		const currentUserId =
 			(req.user && (req.user.userId || req.user.id)) ||
 			(req.supplier && req.supplier._id);
@@ -35,7 +34,7 @@ const createMission = async (req, res) => {
 			});
 		}
 
-		// Validate inventory items
+		
 		if (inventoryItems && inventoryItems.length > 0) {
 			for (const item of inventoryItems) {
 				if (item.usedQuantity > item.quantity) {
@@ -75,9 +74,7 @@ const createMission = async (req, res) => {
 	}
 };
 
-// @desc    Get all mission records with pagination and filtering
-// @route   GET /api/missions
-// @access  Private
+
 const getMissions = async (req, res) => {
 	try {
 		const {
@@ -93,7 +90,7 @@ const getMissions = async (req, res) => {
 
 		const query = {};
 
-		// Apply filters
+		// filters
 		if (missionType) {
 			query.missionType = missionType;
 		}
@@ -110,7 +107,7 @@ const getMissions = async (req, res) => {
 			}
 		}
 
-		// Build sort object
+		
 		const sort = {};
 		sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
@@ -141,9 +138,8 @@ const getMissions = async (req, res) => {
 	}
 };
 
-// @desc    Get a single mission record by ID
-// @route   GET /api/missions/:id
-// @access  Private
+// Get  mission record by ID
+
 const getMissionById = async (req, res) => {
 	try {
 		const mission = await Mission.findById(req.params.id).populate(
@@ -173,9 +169,8 @@ const getMissionById = async (req, res) => {
 	}
 };
 
-// @desc    Update a mission record
-// @route   PUT /api/missions/:id
-// @access  Private
+// Update a mission record
+
 const updateMission = async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -204,7 +199,7 @@ const updateMission = async (req, res) => {
 			});
 		}
 
-		// Validate inventory items
+		//  inventory items
 		if (inventoryItems && inventoryItems.length > 0) {
 			for (const item of inventoryItems) {
 				if (item.usedQuantity > item.quantity) {
@@ -216,7 +211,7 @@ const updateMission = async (req, res) => {
 			}
 		}
 
-		// Update fields
+		// Update 
 		if (missionType) mission.missionType = missionType;
 		if (missionDate) mission.missionDate = missionDate;
 		if (missionTime) mission.missionTime = missionTime;
@@ -242,9 +237,8 @@ const updateMission = async (req, res) => {
 	}
 };
 
-// @desc    Delete a mission record
-// @route   DELETE /api/missions/:id
-// @access  Private
+//   Delete a mission record
+
 const deleteMission = async (req, res) => {
 	try {
 		const mission = await Mission.findById(req.params.id);
@@ -272,9 +266,8 @@ const deleteMission = async (req, res) => {
 	}
 };
 
-// @desc    Get mission statistics
-// @route   GET /api/missions/stats
-// @access  Private
+//     Get mission 
+
 const getMissionStats = async (req, res) => {
 	try {
 		const { startDate, endDate } = req.query;

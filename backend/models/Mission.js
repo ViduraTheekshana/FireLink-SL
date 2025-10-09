@@ -34,7 +34,7 @@ const missionSchema = new mongoose.Schema({
   missionTime: {
     type: String,
     required: true,
-    match: /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/ // HH:MM format
+    match: /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/ 
   },
   description: {
     type: String,
@@ -60,21 +60,21 @@ const missionSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
+
 missionSchema.index({ missionDate: -1 });
 missionSchema.index({ missionType: 1 });
 missionSchema.index({ createdBy: 1 });
 
-// Virtual for formatted date
+
 missionSchema.virtual('formattedDate').get(function() {
   return this.missionDate.toLocaleDateString();
 });
 
-// Ensure virtuals are serialized
+
 missionSchema.set('toJSON', { virtuals: true });
 missionSchema.set('toObject', { virtuals: true });
 
-// Add pagination plugin
+
 missionSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('Mission', missionSchema);
