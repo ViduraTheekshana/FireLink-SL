@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getItemById } from '../../api/inventoryApi';
-import { createReorder, getReorders } from '../../api/inventoryReorderApi';
+import { createReorder, getReorders, sendReorderToManager } from '../../api/inventoryReorderApi';
 import firelinkLogo from '../../assets/images/firelink-logo.png';
 import Sidebar from '../UserManagement/Sidebar';
 
@@ -31,6 +31,8 @@ const ReorderPage = () => {
   });
   const [allReorders, setAllReorders] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [lastCreatedReorderId, setLastCreatedReorderId] = useState(null);
 
   const isLowStock = (item) => {
     // Only show low stock if quantity is BELOW threshold (not equal to)
@@ -258,14 +260,17 @@ const ReorderPage = () => {
       const response = await createReorder(reorderPayload);
       
       if (response.success) {
+        // Store the reorder ID for sending to manager
+        setLastCreatedReorderId(response.data._id);
+        
         // Refresh reorders list for PDF
         const reordersResponse = await getReorders({ limit: 100 });
         if (reordersResponse.success) {
           setAllReorders(reordersResponse.data);
         }
         
-        alert('Reorder submitted successfully! You can now generate a PDF report.');
-        // Don't navigate away - let user generate PDF first
+        alert('Reorder submitted successfully! You can now generate PDF and send to Supply Manager.');
+        // Don't navigate away - let user generate PDF and send to manager
       }
     } catch (err) {
       setError('Failed to submit reorder: ' + (err.message || 'Unknown error'));
@@ -405,6 +410,112 @@ const ReorderPage = () => {
     } catch (error) {
       console.error('PDF generation error:', error);
       alert('Error generating PDF. Please try again.');
+    }
+  };
+
+  // Send Report to Supply Manager
+  const handleSendToManager = async () => {
+    if (!lastCreatedReorderId) {
+      alert('Please submit a reorder first before sending to Supply Manager.');
+      return;
+    }
+
+    if (!item) {
+      alert('Item data not loaded. Please refresh the page.');
+      return;
+    }
+
+    try {
+      setSending(true);
+      console.log('Preparing to send reorder to Supply Manager...');
+
+      // Generate PDF data as base64
+      const printContent = printRef.current;
+      if (!printContent) {
+        alert('Report content not found. Please try again.');
+        setSending(false);
+        return;
+      }
+
+      // Create a temporary iframe for PDF conversion
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      let reportContent = printContent.innerHTML;
+      
+      // Clean up content
+      reportContent = reportContent.replace(/🔥|📄|📊|📈|📋|⚠️|🖨️|🚒/g, '');
+      reportContent = reportContent.replace(/✕/g, '');
+      reportContent = reportContent.replace(/<input[^>]*>/g, '');
+      reportContent = reportContent.replace(/<select[^>]*>.*?<\/select>/g, '');
+      reportContent = reportContent.replace(/<button[^>]*>.*?<\/button>/g, '');
+
+      // Write content to iframe
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Reorder Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { border: 1px solid black; padding: 8px; text-align: left; }
+            th { background: #f5f5f5; font-weight: bold; }
+          </style>
+        </head>
+        <body>${reportContent}</body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      // Convert to base64 (simplified - stores HTML as base64)
+      const htmlContent = iframeDoc.documentElement.outerHTML;
+      const base64PDF = btoa(unescape(encodeURIComponent(htmlContent)));
+
+      // Remove iframe
+      document.body.removeChild(iframe);
+
+      // Prepare report data
+      const reportData = {
+        itemName: item.item_name,
+        itemId: item.item_ID,
+        category: item.category,
+        currentQuantity: item.quantity,
+        threshold: item.threshold,
+        reorderQuantity: reorderData.quantity,
+        priority: reorderData.priority,
+        expectedDate: reorderData.expectedDate,
+        supplier: reorderData.supplier || 'To be determined',
+        notes: reorderData.notes,
+        location: item.location,
+        condition: item.condition,
+        status: item.status,
+        submittedAt: new Date().toISOString()
+      };
+
+      console.log('Sending to backend...', { reorderId: lastCreatedReorderId });
+
+      // Send to backend
+      const response = await sendReorderToManager(lastCreatedReorderId, base64PDF, reportData);
+
+      if (response.success) {
+        alert(`✅ Report sent to Supply Manager successfully!\n\nReorder ID: ${response.data.reorderId}\nItem: ${response.data.itemName}\nQuantity: ${response.data.quantity}\nPriority: ${response.data.priority}`);
+        console.log('Report sent successfully:', response.data);
+      } else {
+        alert('Failed to send report to Supply Manager. Please try again.');
+      }
+
+    } catch (error) {
+      console.error('Send to manager error:', error);
+      alert('Error sending report: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSending(false);
     }
   };
 
@@ -704,6 +815,14 @@ const ReorderPage = () => {
               className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
               📄 Download PDF Report
+            </button>
+            <button
+              type="button"
+              onClick={handleSendToManager}
+              disabled={!lastCreatedReorderId || sending}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              {sending ? '📤 Sending...' : '📤 Send to Supply Manager'}
             </button>
             <Link
               to="/inventory"
