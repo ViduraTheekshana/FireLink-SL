@@ -390,7 +390,7 @@ const MissionRecords = () => {
 
       
                                 if (!value.startsWith("IT")) {
-                                   value = "IT" + value.replace(/^IT/, "");
+                                   value = "ID" + value.replace(/^ID/, "");//ID auto 
                                     }
 
     
@@ -401,7 +401,7 @@ const MissionRecords = () => {
                                    handleInventoryItemChange(index, "itemCode", value);
                                    }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="e.g., IT001"
+                                    placeholder="e.g., ID001"
                                     required
                                 />
                             </div>
