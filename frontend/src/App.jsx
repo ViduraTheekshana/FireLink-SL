@@ -62,6 +62,8 @@ const App = () => {
 				<Route path="/update-user/:id" element={<UpdateUser />} />
 				<Route path="/userdetails/:id" element={<UserDetails />} />
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
+				<Route path="/profile" element={<Profile />} />
+				<Route path="/settings" element={<Settings />} />
 
 				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
