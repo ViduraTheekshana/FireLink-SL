@@ -34,12 +34,10 @@ exports.applyCertificate = async (req, res) => {
 // Officer views all applications
 exports.getAllCertificates = async (req, res) => {
   try {
-    const applications = await PreventionCertificate.find().populate(
-      "assignedOfficer",
-      "name email"
-    );
+    const applications = await PreventionCertificate.find();
     res.status(200).json(applications);
   } catch (error) {
+    console.error("Error in getAllCertificates:", error);
     res.status(500).json({ message: "Error fetching applications", error: error.message });
   }
 };
