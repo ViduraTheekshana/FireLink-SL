@@ -8,7 +8,10 @@ const {
   deleteReorder,
   getReorderStats,
   approveReorder,
-  markDelivered
+  markDelivered,
+  sendReorderToManager,
+  getSentReorders,
+  getSentReorderDetails
 } = require('../controllers/inventoryReorderController');
 
 // TODO: Add authentication middleware when ready
@@ -38,5 +41,14 @@ router.patch('/:id/approve', approveReorder);
 
 // Mark reorder as delivered
 router.patch('/:id/deliver', markDelivered);
+
+// Send reorder report to Supply Manager
+router.post('/:id/send-to-manager', sendReorderToManager);
+
+// Get all reorders sent to Supply Manager (for Supply Manager to view)
+router.get('/sent/to-manager', getSentReorders);
+
+// Get specific sent reorder details with PDF (for Supply Manager to view)
+router.get('/:id/sent-details', getSentReorderDetails);
 
 module.exports = router;

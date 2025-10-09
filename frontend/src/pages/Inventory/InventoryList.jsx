@@ -137,14 +137,19 @@ const InventoryList = () => {
   const loadInventoryData = async () => {
     try {
       setLoading(true);
+      
+      // Check if we need special client-side filtering
+      const needsClientFiltering = ['Expires Soon', 'Expired', 'Low Stock'].includes(selectedCondition);
+      
       const params = {
-        page: currentPage,
-        limit: itemsPerPage,
+        page: needsClientFiltering ? 1 : currentPage,
+        limit: needsClientFiltering ? 10000 : itemsPerPage, // Get all items if we need client-side filtering
         sortBy,
         sortOrder,
         search: debouncedSearchTerm || undefined, //debounced search term to prevent excessive API calls
         category: selectedCategory || undefined,
-        condition: selectedCondition || undefined,
+        // Exclude special conditions from backend filtering - handle them client-side
+        condition: needsClientFiltering ? undefined : (selectedCondition || undefined),
         status: selectedStatus || undefined,
         location: selectedLocation || undefined
       };
@@ -156,14 +161,37 @@ const InventoryList = () => {
         }
       });
 
-
       //  Calls inventoryApi.js getItems function which sends request to backend
       //wait for response and processes the response and updates state variables
       const response = await getItems(params);
       if (response.success) {
-        setInventory(response.data);
-        setTotalItems(response.pagination.totalItems);
-        setTotalPages(response.pagination.totalPages);
+        let finalData = response.data;
+        
+        // Apply client-side filtering for special conditions
+        if (needsClientFiltering) {
+          if (selectedCondition === 'Expires Soon') {
+            finalData = finalData.filter(item => isExpiringSoon(item));
+          } else if (selectedCondition === 'Expired') {
+            finalData = finalData.filter(item => isExpired(item));
+          } else if (selectedCondition === 'Low Stock') {
+            finalData = finalData.filter(item => isLowStock(item));
+          }
+          
+          // Apply pagination to filtered results
+          const totalFilteredItems = finalData.length;
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          finalData = finalData.slice(startIndex, endIndex);
+          
+          setInventory(finalData);
+          setTotalItems(totalFilteredItems);
+          setTotalPages(Math.ceil(totalFilteredItems / itemsPerPage));
+        } else {
+          // Normal backend pagination
+          setInventory(finalData);
+          setTotalItems(response.pagination.totalItems);
+          setTotalPages(response.pagination.totalPages);
+        }
       }
     } catch (err) {
       setError('Failed to load inventory data');
@@ -645,15 +673,7 @@ const InventoryList = () => {
             <tbody className="bg-white divide-y divide-gray-200">
 
               {/*UI renders the items */}
-              {inventory
-                .filter(item => {
-                  // Client-side filtering for "Expires Soon" condition
-                  if (selectedCondition === 'Expires Soon') {
-                    return isExpiringSoon(item);
-                  }
-                  return true; // Show all items for other conditions (handled by backend)
-                })
-                .map((item) => (
+              {inventory.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input

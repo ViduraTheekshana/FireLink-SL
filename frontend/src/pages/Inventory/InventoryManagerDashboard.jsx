@@ -237,40 +237,49 @@ const InventoryManagerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await getInventoryDashboardStats();
-        
-        if (response.success) {
-          setStats(response.data);
-        } else {
-          setError(response.error || 'Failed to load dashboard data');
-          // Still set safe default data to prevent UI crashes
-          setStats(response.data);
-        }
-      } catch (err) {
-        console.error('Dashboard loading error:', err);
-        setError('Unable to load dashboard data');
-        // Set minimal safe data
-        setStats({
-          inventory: { totalItems: 0, lowStockCount: 0, expiredCount: 0, expiringSoonCount: 0 },
-          vehicles: { totalVehicles: 0, availableVehicles: 0, inUseVehicles: 0, maintenanceVehicles: 0 },
-          reorders: {},
-          assignments: { totalAssignments: 0, totalAssignedQuantity: 0, vehiclesWithAssignments: 0 },
-          recentLogs: [],
-          trends: { itemsAddedLast7Days: [] },
-          categories: []
-        });
-      } finally {
-        setLoading(false);
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await getInventoryDashboardStats();
+      
+      if (response.success) {
+        setStats(response.data);
+      } else {
+        setError(response.error || 'Failed to load dashboard data');
+        // Still set safe default data to prevent UI crashes
+        setStats(response.data);
       }
-    };
+    } catch (err) {
+      console.error('Dashboard loading error:', err);
+      setError('Unable to load dashboard data');
+      // Set minimal safe data
+      setStats({
+        inventory: { totalItems: 0, lowStockCount: 0, expiredCount: 0, expiringSoonCount: 0 },
+        vehicles: { totalVehicles: 0, availableVehicles: 0, inUseVehicles: 0, maintenanceVehicles: 0 },
+        reorders: {},
+        assignments: { totalAssignments: 0, totalAssignedQuantity: 0, vehiclesWithAssignments: 0 },
+        recentLogs: [],
+        trends: { itemsAddedLast7Days: [] },
+        categories: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadDashboardData();
+  }, []);
+
+  // Auto-refresh every 30 seconds to catch new activity
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadDashboardData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -313,7 +322,64 @@ const InventoryManagerDashboard = () => {
   const reorders = stats?.reorders || {};
   const assignments = stats?.assignments || {};
   const recentLogs = Array.isArray(stats?.recentLogs) ? stats.recentLogs : [];
-  const trends = stats?.trends || {};
+  // Use backend data directly since it now generates correct dates
+  const generateCorrect7DayData = (backendData) => {
+    console.log('Frontend received backend data:', backendData);
+    
+    // If backend data exists and has the right structure, use it directly
+    if (Array.isArray(backendData) && backendData.length > 0) {
+      return backendData.map(item => ({
+        date: item.date,
+        count: item.count || 0,
+        quantity: item.quantity || 0,
+        dayName: item.dayName || new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })
+      }));
+    }
+    
+    // Fallback: generate empty 7-day data if backend data is missing
+    const result = [];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      result.push({
+        date: dateStr,
+        count: 0,
+        quantity: 0,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+      });
+    }
+    
+    return result;
+  };
+
+  const rawTrends = stats?.trends || {};
+  
+  // Get today's date properly in local timezone
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  
+  // Debug logging
+  console.log('Backend trend data:', rawTrends);
+  console.log('Today is:', todayStr);
+  console.log('Browser timezone offset:', now.getTimezoneOffset());
+  
+  const trends = {
+    ...rawTrends,
+    itemsAddedLast7Days: generateCorrect7DayData(rawTrends.itemsAddedLast7Days || []),
+    itemsRemovedLast7Days: generateCorrect7DayData(rawTrends.itemsRemovedLast7Days || [])
+  };
+  
+  // Debug the corrected data
+  console.log('Corrected trends with dates:', trends.itemsAddedLast7Days?.map(d => `${d.date} (${d.dayName})`));
   const categories = Array.isArray(stats?.categories) ? stats.categories : [];
 
   const kpis = [

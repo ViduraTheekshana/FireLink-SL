@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { addItem, updateItem, getItemById, getCategories, getLocations, checkItemIdExists } from '../../api/inventoryApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 // This form is used for both adding new items and editing existing items
 const InventoryForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id); // update 2 : True if editing an existing item
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
 
   // Form state
   //Read 1.1 : User enters this data in the form
@@ -19,6 +29,7 @@ const InventoryForm = () => {
     location: '',
     status: 'Available',
     threshold: '30',
+    unit_price: '',
     expire_date: '',
     notes: ''
   });
@@ -27,6 +38,7 @@ const InventoryForm = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [itemIdExists, setItemIdExists] = useState(false);
@@ -76,6 +88,7 @@ const InventoryForm = () => {
           location: item.location || '',
           status: item.status || 'Available',
           threshold: item.threshold || '30',
+          unit_price: item.unit_price || '',
           expire_date: item.expire_date ? new Date(item.expire_date).toISOString().split('T')[0] : '',
           notes: item.notes || ''
         });
@@ -95,11 +108,110 @@ const InventoryForm = () => {
       [name]: value
     }));
 
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+
+    // Real-time validation for specific fields
+    validateField(name, value);
+
     // Check if item ID exists when user types in item_ID field
     if (name === 'item_ID' && !isEditing && value && value.length > 0) {
       debouncedCheckItemId(value);
     } else if (name === 'item_ID') {
       setItemIdExists(false);
+    }
+  };
+
+  // Real-time field validation
+  const validateField = (fieldName, value) => {
+    let errorMessage = '';
+
+    switch (fieldName) {
+      case 'item_ID':
+        if (value && value.length > 0) {
+          if (value.length < 3) {
+            errorMessage = 'Item ID must be at least 3 characters long';
+          } else if (value.length > 20) {
+            errorMessage = 'Item ID must not exceed 20 characters';
+          } else if (!/^[A-Za-z0-9_-]+$/.test(value)) {
+            errorMessage = 'Item ID can only contain letters, numbers, hyphens, and underscores';
+          }
+        }
+        break;
+
+      case 'item_name':
+        if (value && value.length > 0) {
+          if (value.trim().length < 2) {
+            errorMessage = 'Item name must be at least 2 characters long';
+          } else if (value.length > 100) {
+            errorMessage = 'Item name must not exceed 100 characters';
+          } else if (!/^[A-Za-z0-9\s\-_().,&]+$/.test(value.trim())) {
+            errorMessage = 'Item name contains invalid characters';
+          }
+        }
+        break;
+
+      case 'quantity':
+        if (value !== '') {
+          if (isNaN(value) || value < 0) {
+            errorMessage = 'Quantity must be a non-negative number';
+          } else if (value > 999999) {
+            errorMessage = 'Quantity cannot exceed 999,999';
+          }
+        }
+        break;
+
+      case 'threshold':
+        if (value !== '' && value !== null && value !== undefined) {
+          if (isNaN(value) || value < 0) {
+            errorMessage = 'Threshold must be a non-negative number';
+          } else if (value > 9999) {
+            errorMessage = 'Threshold cannot exceed 9,999';
+          }
+        }
+        break;
+
+      case 'unit_price':
+        if (value !== '' && value !== null && value !== undefined) {
+          if (isNaN(value) || value < 0) {
+            errorMessage = 'Unit price must be a non-negative number';
+          } else if (value > 999999.99) {
+            errorMessage = 'Unit price cannot exceed 999,999.99';
+          }
+        }
+        break;
+
+      case 'expire_date':
+        if (value) {
+          const expiryDate = new Date(value);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          if (isNaN(expiryDate.getTime())) {
+            errorMessage = 'Please enter a valid expiry date';
+          } else if (expiryDate < today) {
+            errorMessage = 'Expiry date cannot be in the past';
+          }
+        }
+        break;
+
+      case 'notes':
+        if (value && value.length > 500) {
+          errorMessage = 'Notes must not exceed 500 characters';
+        }
+        break;
+    }
+
+    if (errorMessage) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [fieldName]: errorMessage
+      }));
     }
   };
 
@@ -138,18 +250,121 @@ const InventoryForm = () => {
   }, [validateItemId]);
 
   const validateForm = () => {
-    if (!formData.item_ID || !formData.item_name || !formData.category) {
-      setError('Item ID, Item Name, and Category are required');
+    // Clear previous error
+    setError('');
+
+    // Item ID validation
+    const itemIdStr = String(formData.item_ID || '');
+    if (!formData.item_ID || !itemIdStr.trim()) {
+      setError('Item ID is required');
       return false;
     }
-    
-    if (formData.quantity < 0) {
-      setError('Quantity cannot be negative');
+    // For editing, allow existing IDs (they might be numeric and shorter)
+    if (!isEditing) {
+      if (itemIdStr.length < 3) {
+        setError('Item ID must be at least 3 characters long');
+        return false;
+      }
+    }
+    if (itemIdStr.length > 20) {
+      setError('Item ID must not exceed 20 characters');
       return false;
     }
-    
-    if (formData.threshold < 0) {
-      setError('Threshold cannot be negative');
+    if (!/^[A-Za-z0-9_-]+$/.test(itemIdStr)) {
+      setError('Item ID can only contain letters, numbers, hyphens, and underscores');
+      return false;
+    }
+
+    // Item name validation
+    const itemNameStr = String(formData.item_name || '');
+    if (!formData.item_name || !itemNameStr.trim()) {
+      setError('Item name is required');
+      return false;
+    }
+    if (itemNameStr.trim().length < 2) {
+      setError('Item name must be at least 2 characters long');
+      return false;
+    }
+    if (itemNameStr.length > 100) {
+      setError('Item name must not exceed 100 characters');
+      return false;
+    }
+    if (!/^[A-Za-z0-9\s\-_().,&]+$/.test(itemNameStr.trim())) {
+      setError('Item name contains invalid characters');
+      return false;
+    }
+
+    // Category validation
+    const categoryStr = String(formData.category || '');
+    if (!formData.category || !categoryStr.trim()) {
+      setError('Category is required');
+      return false;
+    }
+
+    // Quantity validation
+    if (formData.quantity === '' || formData.quantity === null || formData.quantity === undefined) {
+      setError('Quantity is required');
+      return false;
+    }
+    if (isNaN(formData.quantity) || formData.quantity < 0) {
+      setError('Quantity must be a non-negative number');
+      return false;
+    }
+    if (formData.quantity > 999999) {
+      setError('Quantity cannot exceed 999,999');
+      return false;
+    }
+
+    // Threshold validation (optional field)
+    if (formData.threshold !== '' && formData.threshold !== null && formData.threshold !== undefined) {
+      if (isNaN(formData.threshold) || formData.threshold < 0) {
+        setError('Threshold must be a non-negative number');
+        return false;
+      }
+      if (formData.threshold > 9999) {
+        setError('Threshold cannot exceed 9,999');
+        return false;
+      }
+    }
+
+    // Unit price validation (optional field)
+    if (formData.unit_price !== '' && formData.unit_price !== null && formData.unit_price !== undefined) {
+      if (isNaN(formData.unit_price) || formData.unit_price < 0) {
+        setError('Unit price must be a non-negative number');
+        return false;
+      }
+      if (formData.unit_price > 999999.99) {
+        setError('Unit price cannot exceed 999,999.99');
+        return false;
+      }
+    }
+
+    // Location validation
+    const locationStr = String(formData.location || '');
+    if (!formData.location || !locationStr.trim()) {
+      setError('Location is required');
+      return false;
+    }
+
+    // Expiry date validation (optional field)
+    if (formData.expire_date) {
+      const expiryDate = new Date(formData.expire_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+      
+      if (isNaN(expiryDate.getTime())) {
+        setError('Please enter a valid expiry date');
+        return false;
+      }
+      if (expiryDate < today) {
+        setError('Expiry date cannot be in the past');
+        return false;
+      }
+    }
+
+    // Notes validation (optional field)
+    if (formData.notes && formData.notes.length > 500) {
+      setError('Notes must not exceed 500 characters');
       return false;
     }
 
@@ -165,10 +380,18 @@ const InventoryForm = () => {
   //2. When user clicks "Save", this function runs
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('HandleSubmit called!', { isEditing, id, formData });
     
-    if (!validateForm()) { // Validate form before submitting
+    console.log('Form submission started');
+    console.log('Current form data:', formData);
+    console.log('Is editing:', isEditing);
+    
+    if (!validateForm()) {
+      console.log('Validation failed - stopping submission');
       return;
     }
+    
+    console.log('Validation passed, proceeding with API call...');
 
     try {
       setSubmitting(true);
@@ -178,24 +401,35 @@ const InventoryForm = () => {
       const submitData = {
         ...formData,
         quantity: parseInt(formData.quantity),
-        threshold: parseInt(formData.threshold),
+        threshold: formData.threshold ? parseInt(formData.threshold) : null,
+        unit_price: formData.unit_price ? parseFloat(formData.unit_price) : null,
         expire_date: formData.expire_date || null
       };
 
-      if (isEditing) { //update 12 : If editing, call update API and wait for response
-        await updateItem(id, submitData); 
+      if (isEditing) {
+        console.log('Calling updateItem API with ID:', id);
+        console.log('Calling updateItem API with data:', submitData);
+        const result = await updateItem(id, submitData);
+        console.log('Update API successful, result:', result);
+        alert('✅ Item updated successfully!'); // Temporary success indicator
       } else {
-        //4. Call the API to add a new item AND WAIT FOR RESPONSE //23. THIS LINE ALSO WAIT FOR BACKEND RESPONSE AND CATCHES IT BUT DOESN'T STORE IT
-        await addItem(submitData);//5. Redirect to inventory list --> look inventoryApi.js
+        console.log('Calling addItem API with:', submitData);
+        const result = await addItem(submitData);
+        console.log('Add API successful, result:', result);
+        alert('✅ Item added successfully!'); // Temporary success indicator
       }
-      navigate('/inventory');//24. nOW FETCHES FRESH DATA FROM DATABASE
+      console.log('API call completed successfully, navigating to inventory list...');
+      navigate('/inventory');
 
     } catch (err) {
-      // Handle specific error messages for better user experience
+      console.error('API call failed:', err);
+      console.error('Error response:', err.response);
+      console.error('Error data:', err.response?.data);
+      
       let errorMessage = 'Failed to save item';
       
-      if (err.response?.data?.message) {        //CATCHES ERRORS FROM BACKEND
-        const backendMessage = err.response.data.message; // Extract error message
+      if (err.response?.data?.message) {
+        const backendMessage = err.response.data.message;
         
         if (backendMessage.includes('Item ID already exists')) {
           errorMessage = '❌ Item ID already exists! Please choose a different Item ID.';
@@ -209,7 +443,7 @@ const InventoryForm = () => {
       }
       
       setError(errorMessage);
-      console.error('Form submission error:', err);
+      alert('❌ Error: ' + errorMessage); // Temporary error alert
     } finally {
       setSubmitting(false);
     }
@@ -231,8 +465,16 @@ const InventoryForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="min-h-screen bg-gray-50 pt-0 pb-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -269,19 +511,30 @@ const InventoryForm = () => {
                 Item ID <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
+                type="text"
                 id="item_ID"
                 name="item_ID"
                 value={formData.item_ID}
                 onChange={handleInputChange}
                 required
-                min="1"
                 readOnly={isEditing}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                  isEditing ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`}
-                placeholder="Enter unique item ID (1 or greater)"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.item_ID || itemIdExists
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.item_ID === '' && formData.item_ID && !itemIdExists && !checkingItemId
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                } ${isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                placeholder="Enter unique item ID (3-20 characters, letters, numbers, hyphens, underscores only)"
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.item_ID && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.item_ID}
+                </p>
+              )}
+              
               {isEditing && (
                 <p className="mt-1 text-xs text-gray-500">
                   Item ID cannot be changed once created (Primary Key)
@@ -289,8 +542,8 @@ const InventoryForm = () => {
               )}
               
               {/* Real-time Item ID validation */}
-              {!isEditing && formData.item_ID && (
-                <div className="mt-2">
+              {!isEditing && formData.item_ID && !fieldErrors.item_ID && (
+                <div className="mt-1">
                   {checkingItemId ? (
                     <p className="text-xs text-blue-600">
                       🔍 Checking if Item ID is available...
@@ -320,9 +573,22 @@ const InventoryForm = () => {
                 value={formData.item_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter item name"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.item_name
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.item_name === '' && formData.item_name
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="Enter item name (2-100 characters, letters, numbers, and common symbols only)"
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.item_name && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.item_name}
+                </p>
+              )}
             </div>
 
             {/* Category */}
@@ -336,19 +602,32 @@ const InventoryForm = () => {
                 value={formData.category}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.category || (!formData.category && formData.category !== '')
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : formData.category
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
               >
                 <option value="">Select category</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+              
+              {/* Field-specific error message */}
+              {fieldErrors.category && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.category}
+                </p>
+              )}
             </div>
 
             {/* Quantity */}
             <div>
               <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
-                Quantity
+                Quantity <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -357,9 +636,54 @@ const InventoryForm = () => {
                 value={formData.quantity}
                 onChange={handleInputChange}
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter quantity"
+                required
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.quantity
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.quantity === '' && formData.quantity
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="Enter quantity (0-999,999)"
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.quantity && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.quantity}
+                </p>
+              )}
+            </div>
+
+            {/* Unit Price */}
+            <div>
+              <label htmlFor="unit_price" className="block text-sm font-medium text-gray-700 mb-2">
+                Unit Price
+              </label>
+              <input
+                type="number"
+                id="unit_price"
+                name="unit_price"
+                value={formData.unit_price}
+                onChange={handleInputChange}
+                min="0"
+                step="0.01"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.unit_price
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.unit_price === '' && formData.unit_price
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="Enter unit price (optional, max 999,999.99)"
+              />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.unit_price && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.unit_price}
+                </p>
+              )}
             </div>
 
             {/* Condition */}
@@ -383,20 +707,34 @@ const InventoryForm = () => {
             {/* Location */}
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-                Location
+                Location <span className="text-red-500">*</span>
               </label>
               <select
                 id="location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.location || (!formData.location && formData.location !== '')
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : formData.location
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
               >
                 <option value="">Select location</option>
                 {locations.map((loc) => (
                   <option key={loc} value={loc}>{loc}</option>
                 ))}
               </select>
+              
+              {/* Field-specific error message */}
+              {fieldErrors.location && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.location}
+                </p>
+              )}
             </div>
 
             {/* Status */}
@@ -429,9 +767,22 @@ const InventoryForm = () => {
                 value={formData.threshold}
                 onChange={handleInputChange}
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter threshold (default: 30)"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.threshold
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.threshold === '' && formData.threshold
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="Enter threshold (0-9,999, default: 30)"
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.threshold && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.threshold}
+                </p>
+              )}
             </div>
 
             {/* Expire Date */}
@@ -445,14 +796,32 @@ const InventoryForm = () => {
                 name="expire_date"
                 value={formData.expire_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.expire_date
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : fieldErrors.expire_date === '' && formData.expire_date
+                    ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.expire_date && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.expire_date}
+                </p>
+              )}
             </div>
 
             {/* Notes - Full Width */}
             <div className="md:col-span-2">
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
                 Notes
+                {formData.notes && (
+                  <span className="text-xs text-gray-500 ml-2">
+                    ({formData.notes.length}/500 characters)
+                  </span>
+                )}
               </label>
               <textarea
                 id="notes"
@@ -460,9 +829,21 @@ const InventoryForm = () => {
                 value={formData.notes}
                 onChange={handleInputChange}
                 rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter any additional notes about this item"
+                maxLength="500"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                  fieldErrors.notes
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                }`}
+                placeholder="Enter any additional notes about this item (max 500 characters)"
               />
+              
+              {/* Field-specific error message */}
+              {fieldErrors.notes && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.notes}
+                </p>
+              )}
             </div>
           </div>
 
@@ -477,6 +858,10 @@ const InventoryForm = () => {
             </button>
             <button
               type="submit"
+              onClick={(e) => {
+                console.log('Button clicked!');
+                // Don't prevent default here, let the form handle submission
+              }}
               disabled={submitting}
               className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
             >
@@ -484,6 +869,8 @@ const InventoryForm = () => {
             </button>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
   );
