@@ -144,12 +144,27 @@ const generateTrendData = async () => {
     const itemsAdded = [];
     const itemsRemoved = [];
     
+    // Generate data for the last 7 days including today - matching frontend logic
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    console.log(`Server time: ${now.toISOString()} | Today normalized: ${today.toISOString().split('T')[0]}`);
+    
     for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const dayStart = new Date(dateStr);
-      const dayEnd = new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000);
+      // Calculate the target date (today - i days) - same logic as frontend
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - i);
+      
+      // Create day boundaries - start and end of the target date
+      const dayStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
+      const dayEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+      
+      // Format date as YYYY-MM-DD in local timezone - same logic as frontend
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      console.log(`Checking date ${dateStr} (${targetDate.toLocaleDateString()}) - Day range: ${dayStart.toISOString()} to ${dayEnd.toISOString()}`);
       
       // Get items added (from Inventory collection - new items created)
       const [itemsAddedToday, quantityAddedToday] = await Promise.all([
@@ -208,20 +223,26 @@ const generateTrendData = async () => {
       const dayQuantityAdded = quantityAddedToday[0]?.totalQuantity || 0;
       const dayQuantityRemoved = quantityRemovedToday[0]?.totalItems || 0;
       
+      console.log(`${dateStr}: Added ${itemsAddedToday} items (${dayQuantityAdded} qty), Removed ${itemsRemovedToday} items (${dayQuantityRemoved} qty)`);
+      
       itemsAdded.push({
         date: dateStr,
         count: itemsAddedToday,
         quantity: dayQuantityAdded,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+        dayName: targetDate.toLocaleDateString('en-US', { weekday: 'short' })
       });
       
       itemsRemoved.push({
         date: dateStr,
         count: itemsRemovedToday,
         quantity: dayQuantityRemoved,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+        dayName: targetDate.toLocaleDateString('en-US', { weekday: 'short' })
       });
     }
+    
+    console.log('Final trend data being returned:');
+    console.log('Items Added:', itemsAdded.map(d => `${d.date}: ${d.count} items`));
+    console.log('Items Removed:', itemsRemoved.map(d => `${d.date}: ${d.count} items`));
     
     return {
       itemsAdded,
@@ -229,10 +250,10 @@ const generateTrendData = async () => {
     };
   } catch (error) {
     console.error('Trend data error:', error);
-    // Return safe default data
+    // Return safe default data for the last 7 days including today
     const defaultData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
+      date.setDate(date.getDate() - (6 - i)); // i=0 gives 6 days ago, i=6 gives today
       return {
         date: date.toISOString().split('T')[0],
         count: 0,
