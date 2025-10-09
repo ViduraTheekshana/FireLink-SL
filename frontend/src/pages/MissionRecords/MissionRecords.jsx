@@ -363,7 +363,7 @@ const MissionRecords = () => {
 
       
                                 if (!value.startsWith("IT")) {
-                                   value = "ID" + value.replace(/^ID/, "");//edit this
+                                   value = "ID" + value.replace(/^ID/, "");//edit this line
                                     }
 
     
