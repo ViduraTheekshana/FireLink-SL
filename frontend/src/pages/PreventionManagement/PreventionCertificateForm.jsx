@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { toast, Toaster } from 'sonner';
 
 // CSS for dropdown options
 const dropdownCSS = `
@@ -120,36 +121,95 @@ const PreventionCertificateForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    let hasErrors = false;
     
-    // Phone number validation (exactly 10 digits)
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(formData.contactNumber)) {
-      newErrors.contactNumber = "Contact number must be exactly 10 digits";
+    // Full Name Validation
+    if (!formData.fullName || formData.fullName.trim() === "") {
+      newErrors.fullName = "Please enter your full name";
+      toast.error("Full name is required");
+      hasErrors = true;
     }
-    
-    // Date validation (no past dates)
-    if (formData.preferredDate && formData.preferredDate < getTodayDate()) {
-      newErrors.preferredDate = "Please select today's date or a future date";
+
+    // Sri Lankan NIC validation with both old and new formats
+    const nicRegexOld = /^\d{9}[vVxX]$/;  // Old format: 9 digits + V/X
+    const nicRegexNew = /^\d{12}$/;       // New format: 12 digits
+    if (!formData.nic || formData.nic.trim() === "") {
+      newErrors.nic = "Please enter your NIC number";
+      toast.error("NIC number is required");
+      hasErrors = true;
+    } else if (!nicRegexOld.test(formData.nic) && !nicRegexNew.test(formData.nic)) {
+      newErrors.nic = "Please enter a valid NIC number";
+      toast.error("Invalid NIC format");
+      hasErrors = true;
+    }
+
+    // Address validation
+    if (!formData.address || formData.address.trim() === "") {
+      newErrors.address = "Please enter your address";
+      toast.error("Address is required");
+      hasErrors = true;
+    }
+
+    // 10-digit phone number validation
+    const phoneRegex = /^\d{10}$/;
+    if (!formData.contactNumber || formData.contactNumber.trim() === "") {
+      newErrors.contactNumber = "Please enter your contact number";
+      toast.error("Contact number is required");
+      hasErrors = true;
+    } else if (!phoneRegex.test(formData.contactNumber)) {
+      newErrors.contactNumber = "Please enter a valid 10-digit contact number";
+      toast.error("Invalid contact number format");
+      hasErrors = true;
+    }
+
+    // Email format validation with custom regex
+    if (!formData.email || formData.email.trim() === "") {
+      newErrors.email = "Please enter your email address";
+      toast.error("Email address is required");
+      hasErrors = true;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = "Please enter a valid email address";
+        toast.error("Invalid email format");
+        hasErrors = true;
+      }
+    }
+
+    // Date validation with future date check
+    if (!formData.preferredDate || formData.preferredDate.trim() === "") {
+      newErrors.preferredDate = "Please select your preferred inspection date";
+      toast.error("Inspection date is required");
+      hasErrors = true;
+    } else if (formData.preferredDate < getTodayDate()) {
+      newErrors.preferredDate = "Please select a future date for inspection";
+      toast.error("Invalid inspection date");
+      hasErrors = true;
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (hasErrors) {
+      toast.error("Please fill all required fields correctly", {
+        duration: 4000
+      });
+    }
+    return !hasErrors;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
+    // Real-time input filtering for contact number
+    let processedValue = value;
+    if (name === "contactNumber") {
+      processedValue = value.replace(/\D/g, '').slice(0, 10);
     }
     
-    // For phone number, only allow digits and limit to 10
-    if (name === "contactNumber") {
-      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
-      setFormData({ ...formData, [name]: digitsOnly });
-    } else {
-      setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: processedValue }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -160,9 +220,34 @@ const PreventionCertificateForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form before submission
+    // Check for empty required fields first
+    const requiredFields = {
+      fullName: "Full name",
+      nic: "NIC number",
+      address: "Address",
+      contactNumber: "Contact number",
+      email: "Email",
+      preferredDate: "Preferred inspection date"
+    };
+
+    let hasEmptyFields = false;
+    for (const [field, label] of Object.entries(requiredFields)) {
+      if (!formData[field] || formData[field].trim() === "") {
+        toast.error(`${label} is required`);
+        setErrors(prev => ({
+          ...prev,
+          [field]: `Please enter your ${label.toLowerCase()}`
+        }));
+        hasEmptyFields = true;
+      }
+    }
+
+    if (hasEmptyFields) {
+      return;
+    }
+    
+    // Validate all fields
     if (!validateForm()) {
-      setMessage("Please fix the errors below before submitting.");
       return;
     }
 
@@ -184,7 +269,8 @@ const PreventionCertificateForm = () => {
       await axios.post("http://localhost:5000/api/prevention/certificates/apply", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setMessage("Application submitted successfully!");
+      toast.success("Application submitted successfully!");
+  setMessage(""); // Clear message, only use toast
       setFormData({
         fullName: "",
         nic: "",
@@ -198,10 +284,12 @@ const PreventionCertificateForm = () => {
         additionalNotes: "",
         photo: null,
       });
+      // Clear any remaining errors
+      setErrors({});
     } catch (error) {
-      setMessage(
-        "Error submitting application: " + (error.response?.data?.message || error.message)
-      );
+      const errorMessage = "Error submitting application: " + (error.response?.data?.message || error.message);
+      toast.error(errorMessage);
+      setMessage(errorMessage);
     }
   };
 
@@ -404,10 +492,11 @@ const PreventionCertificateForm = () => {
     <div style={pageStyle}>
       {/* Inject CSS for dropdown styling */}
       <style>{dropdownCSS}</style>
+      <Toaster position="top-center" expand={false} richColors />
       <div style={containerStyle}>
         <h2 style={headingStyle}>Prevention Certificate Application</h2>
-        {message && <p style={messageStyle}>{message}</p>}
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
+  {/* Removed message display, using toast instead */}
+      <form onSubmit={handleSubmit} noValidate encType="multipart/form-data">
         {/* Personal Info */}
         <div style={inputContainer}>
           <label style={labelStyle}>Full Name:</label>
@@ -416,9 +505,11 @@ const PreventionCertificateForm = () => {
             name="fullName"
             value={formData.fullName}
             onChange={handleChange}
+            placeholder="Enter your full legal name as per official records"
             required
-            style={inputStyle}
+            style={errors.fullName ? errorInputStyle : inputStyle}
           />
+          {errors.fullName && <div style={errorTextStyle}>{errors.fullName}</div>}
         </div>
         <div style={inputContainer}>
           <label style={labelStyle}>NIC:</label>
@@ -427,9 +518,11 @@ const PreventionCertificateForm = () => {
             name="nic"
             value={formData.nic}
             onChange={handleChange}
+            placeholder="Enter your NIC (9 digits with V/X or 12 digits)"
             required
-            style={inputStyle}
+            style={errors.nic ? errorInputStyle : inputStyle}
           />
+          {errors.nic && <div style={errorTextStyle}>{errors.nic}</div>}
         </div>
         <div style={inputContainer}>
           <label style={labelStyle}>Address:</label>
@@ -438,9 +531,11 @@ const PreventionCertificateForm = () => {
             name="address"
             value={formData.address}
             onChange={handleChange}
+            placeholder="Enter your official residential or business address"
             required
-            style={inputStyle}
+            style={errors.address ? errorInputStyle : inputStyle}
           />
+          {errors.address && <div style={errorTextStyle}>{errors.address}</div>}
         </div>
         <div style={inputContainer}>
           <label style={labelStyle}>Contact Number:</label>
@@ -463,8 +558,11 @@ const PreventionCertificateForm = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            style={inputStyle}
+            placeholder="Enter your official email address"
+            required
+            style={errors.email ? errorInputStyle : inputStyle}
           />
+          {errors.email && <div style={errorTextStyle}>{errors.email}</div>}
         </div>
         {/* Service Details */}
         <div style={inputContainer}>
