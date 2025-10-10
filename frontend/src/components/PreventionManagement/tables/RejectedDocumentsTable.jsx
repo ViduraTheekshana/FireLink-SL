@@ -11,6 +11,8 @@ const RejectedDocumentsTable = ({
   const [sortField, setSortField] = useState('fullName');
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedApplications, setSelectedApplications] = useState([]);
+  const [showReactivationModal, setShowReactivationModal] = useState(false);
+  const [selectedAppForReactivation, setSelectedAppForReactivation] = useState(null);
 
   // Filter rejected applications
   const rejectedApplications = useMemo(() => {
@@ -96,6 +98,13 @@ const RejectedDocumentsTable = ({
       await Promise.all(promises);
       setSelectedApplications([]);
     }
+  };
+
+  // Handle reactivation from modal
+  const handleReactivateFromModal = async () => {
+    await onReactivate(selectedAppForReactivation._id);
+    setShowReactivationModal(false);
+    setSelectedAppForReactivation(null);
   };
 
   // Table styles
@@ -329,9 +338,8 @@ const RejectedDocumentsTable = ({
                     </button>
                     <button
                       onClick={() => {
-                        if (window.confirm(`Are you sure you want to reactivate ${app.fullName}'s application? It will be moved back to pending status.`)) {
-                          onReactivate(app._id);
-                        }
+                        setSelectedAppForReactivation(app);
+                        setShowReactivationModal(true);
                       }}
                       style={{ ...actionButtonStyle, backgroundColor: '#f59e0b', color: 'white' }}
                     >
@@ -366,6 +374,165 @@ const RejectedDocumentsTable = ({
         <strong>Note:</strong> Reactivated applications will be moved back to pending status for review. 
         Deleted applications will be permanently removed from the database.
       </div>
+
+      {/* Reactivation Modal */}
+      {showReactivationModal && selectedAppForReactivation && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: 0,
+              }}>
+                Reactivate Application - {selectedAppForReactivation.fullName}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowReactivationModal(false);
+                  setSelectedAppForReactivation(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+                marginBottom: '20px',
+                padding: '16px',
+                backgroundColor: '#fff7ed',
+                borderRadius: '8px',
+                border: '1px solid #fed7aa',
+              }}>
+                <div>
+                  <strong>Service Type:</strong>
+                  <div>{selectedAppForReactivation.serviceType || 'Fire Prevention Certificate'}</div>
+                </div>
+                <div>
+                  <strong>NIC:</strong>
+                  <div>{selectedAppForReactivation.nic}</div>
+                </div>
+                <div>
+                  <strong>Rejected Date:</strong>
+                  <div>{selectedAppForReactivation.rejectedAt ? new Date(selectedAppForReactivation.rejectedAt).toLocaleDateString() : 'N/A'}</div>
+                </div>
+                <div>
+                  <strong>Current Status:</strong>
+                  <div style={{ color: '#dc2626', fontWeight: '500' }}>
+                    {selectedAppForReactivation.status}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                backgroundColor: '#f0fdf4',
+                borderRadius: '8px',
+                border: '1px solid #bbf7d0',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  color: '#166534',
+                  marginBottom: '12px',
+                }}>
+                  Are you sure you want to reactivate this application?
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  color: '#166534',
+                }}>
+                  This application will be moved back to pending status for review.
+                </div>
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '16px',
+              marginTop: '24px',
+            }}>
+              <button
+                onClick={() => {
+                  setShowReactivationModal(false);
+                  setSelectedAppForReactivation(null);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minWidth: '80px',
+                }}
+              >
+                No
+              </button>
+              <button
+                onClick={handleReactivateFromModal}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#16a34a',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minWidth: '80px',
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

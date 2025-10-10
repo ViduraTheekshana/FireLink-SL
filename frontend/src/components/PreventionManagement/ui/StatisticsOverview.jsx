@@ -46,10 +46,10 @@ const StatisticsOverview = ({ applications }) => {
   };
 
   const sectionTitleStyle = {
-    fontSize: '24px',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '20px',
+  fontSize: '24px',
+  fontWeight: '600',
+  color: '#fff',
+  marginBottom: '20px',
   };
 
   const chartContainerStyle = {

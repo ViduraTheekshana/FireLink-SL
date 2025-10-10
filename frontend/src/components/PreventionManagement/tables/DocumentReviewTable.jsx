@@ -12,15 +12,18 @@ const DocumentReviewTable = ({
   const [sortField, setSortField] = useState('fullName');
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedApplications, setSelectedApplications] = useState([]);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [selectedAppForRejection, setSelectedAppForRejection] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Filter pending applications
   const pendingApplications = useMemo(() => {
     return applications.filter(app => app.status === 'Pending');
   }, [applications]);
 
-  // Filter and sort applications
-  const filteredAndSortedApplications = useMemo(() => {
-    let filtered = pendingApplications.filter(app => {
+  // Filter applications
+  const filteredApplications = useMemo(() => {
+    return pendingApplications.filter(app => {
       const searchLower = searchTerm.toLowerCase();
       return (
         app.fullName?.toLowerCase().includes(searchLower) ||
@@ -30,39 +33,12 @@ const DocumentReviewTable = ({
         app.serviceType?.toLowerCase().includes(searchLower)
       );
     });
-
-    // Sort applications
-    filtered.sort((a, b) => {
-      let aValue = a[sortField] || '';
-      let bValue = b[sortField] || '';
-      
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [pendingApplications, searchTerm, sortField, sortDirection]);
-
-  // Handle sorting
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+  }, [pendingApplications, searchTerm]);
 
   // Handle select all
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedApplications(filteredAndSortedApplications.map(app => app._id));
+      setSelectedApplications(filteredApplications.map(app => app._id));
     } else {
       setSelectedApplications([]);
     }
@@ -96,6 +72,19 @@ const DocumentReviewTable = ({
     const promises = selectedApplications.map(id => onReject(id, reason));
     await Promise.all(promises);
     setSelectedApplications([]);
+  };
+
+  // Handle rejection from modal
+  const handleRejectFromModal = async () => {
+    if (!rejectionReason.trim()) {
+      alert('Please enter a rejection reason');
+      return;
+    }
+
+    await onReject(selectedAppForRejection._id, rejectionReason);
+    setShowRejectionModal(false);
+    setSelectedAppForRejection(null);
+    setRejectionReason('');
   };
 
   // Table styles
@@ -222,7 +211,7 @@ const DocumentReviewTable = ({
   return (
     <div style={tableContainerStyle}>
       <h3 style={tableTitleStyle}>
-        Document Review - Pending Applications ({filteredAndSortedApplications.length})
+        Document Review - Pending Applications ({filteredApplications.length})
       </h3>
       
       {/* Search and Batch Actions */}
@@ -264,38 +253,38 @@ const DocumentReviewTable = ({
               <th style={thStyle}>
                 <input
                   type="checkbox"
-                  checked={selectedApplications.length === filteredAndSortedApplications.length && filteredAndSortedApplications.length > 0}
+                  checked={selectedApplications.length === filteredApplications.length && filteredApplications.length > 0}
                   onChange={handleSelectAll}
                 />
               </th>
-              <th style={thStyle} onClick={() => handleSort('fullName')}>
-                Full Name {sortField === 'fullName' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Full Name
               </th>
-              <th style={thStyle} onClick={() => handleSort('nic')}>
-                NIC {sortField === 'nic' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                NIC
               </th>
-              <th style={thStyle} onClick={() => handleSort('serviceType')}>
-                Service Type {sortField === 'serviceType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Service Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('constructionType')}>
-                Construction Type {sortField === 'constructionType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Construction Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('urgencyLevel')}>
-                Urgency {sortField === 'urgencyLevel' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Urgency
               </th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedApplications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ ...tdStyle, textAlign: 'center', color: '#6b7280', padding: '40px' }}>
                   {searchTerm ? 'No applications match your search.' : 'No pending applications found.'}
                 </td>
               </tr>
             ) : (
-              filteredAndSortedApplications.map((app) => (
+              filteredApplications.map((app) => (
                 <tr key={app._id} style={{ backgroundColor: selectedApplications.includes(app._id) ? '#f0f9ff' : 'transparent' }}>
                   <td style={tdStyle}>
                     <input
@@ -333,7 +322,11 @@ const DocumentReviewTable = ({
                       Approve
                     </button>
                     <button
-                      onClick={() => onReject(app._id, prompt('Enter rejection reason:'))}
+                      onClick={() => {
+                        setSelectedAppForRejection(app);
+                        setRejectionReason('');
+                        setShowRejectionModal(true);
+                      }}
                       style={{ ...actionButtonStyle, backgroundColor: '#ef4444', color: 'white' }}
                     >
                       Reject
@@ -355,6 +348,180 @@ const DocumentReviewTable = ({
           </tbody>
         </table>
       </div>
+
+      {/* Rejection Modal */}
+      {showRejectionModal && selectedAppForRejection && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: 0,
+              }}>
+                Reject Application - {selectedAppForRejection.fullName}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowRejectionModal(false);
+                  setSelectedAppForRejection(null);
+                  setRejectionReason('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+                marginBottom: '20px',
+                padding: '16px',
+                backgroundColor: '#fef2f2',
+                borderRadius: '8px',
+                border: '1px solid #fecaca',
+              }}>
+                <div>
+                  <strong>Service Type:</strong>
+                  <div>{selectedAppForRejection.serviceType || 'Fire Prevention Certificate'}</div>
+                </div>
+                <div>
+                  <strong>Construction Type:</strong>
+                  <div>{selectedAppForRejection.constructionType || 'Building'}</div>
+                </div>
+                <div>
+                  <strong>NIC:</strong>
+                  <div>{selectedAppForRejection.nic}</div>
+                </div>
+                <div>
+                  <strong>Urgency Level:</strong>
+                  <div style={{ 
+                    color: selectedAppForRejection.urgencyLevel === 'Critical' ? '#dc2626' : 
+                           selectedAppForRejection.urgencyLevel === 'High' ? '#ea580c' : '#059669'
+                  }}>
+                    {selectedAppForRejection.urgencyLevel || 'Normal'}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
+                  Rejection Reason <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Please provide a detailed reason for rejecting this application..."
+                  rows="6"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    resize: 'vertical',
+                    minHeight: '120px',
+                    fontFamily: 'inherit',
+                  }}
+                />
+                <div style={{
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  marginTop: '4px',
+                }}>
+                  This reason will be communicated to the applicant
+                </div>
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+              marginTop: '24px',
+            }}>
+              <button
+                onClick={() => {
+                  setShowRejectionModal(false);
+                  setSelectedAppForRejection(null);
+                  setRejectionReason('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectFromModal}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Reject Application
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -12,15 +12,17 @@ const PaymentAssignmentTable = ({
   const [sortDirection, setSortDirection] = useState('asc');
   const [editingPayment, setEditingPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedAppForPayment, setSelectedAppForPayment] = useState(null);
 
   // Filter approved applications
   const approvedApplications = useMemo(() => {
     return applications.filter(app => app.status === 'Approved');
   }, [applications]);
 
-  // Filter and sort applications
-  const filteredAndSortedApplications = useMemo(() => {
-    let filtered = approvedApplications.filter(app => {
+  // Filter applications
+  const filteredApplications = useMemo(() => {
+    return approvedApplications.filter(app => {
       const searchLower = searchTerm.toLowerCase();
       return (
         app.fullName?.toLowerCase().includes(searchLower) ||
@@ -29,34 +31,7 @@ const PaymentAssignmentTable = ({
         app.serviceType?.toLowerCase().includes(searchLower)
       );
     });
-
-    // Sort applications
-    filtered.sort((a, b) => {
-      let aValue = a[sortField] || '';
-      let bValue = b[sortField] || '';
-      
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [approvedApplications, searchTerm, sortField, sortDirection]);
-
-  // Handle sorting
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+  }, [approvedApplications, searchTerm]);
 
   // Handle assign payment
   const handleAssignPayment = async (id) => {
@@ -67,6 +42,19 @@ const PaymentAssignmentTable = ({
 
     await onAssignPayment(id, parseFloat(paymentAmount));
     setEditingPayment(null);
+    setPaymentAmount('');
+  };
+
+  // Handle assign payment from modal
+  const handleAssignPaymentFromModal = async () => {
+    if (!paymentAmount || paymentAmount <= 0) {
+      alert('Please enter a valid payment amount');
+      return;
+    }
+
+    await onAssignPayment(selectedAppForPayment._id, parseFloat(paymentAmount));
+    setShowPaymentModal(false);
+    setSelectedAppForPayment(null);
     setPaymentAmount('');
   };
 
@@ -192,7 +180,7 @@ const PaymentAssignmentTable = ({
   return (
     <div style={tableContainerStyle}>
       <h3 style={tableTitleStyle}>
-        Payment Assignment - Approved Applications ({filteredAndSortedApplications.length})
+        Payment Assignment - Approved Applications ({filteredApplications.length})
       </h3>
       
       {/* Search */}
@@ -211,20 +199,20 @@ const PaymentAssignmentTable = ({
         <table style={tableStyle}>
           <thead>
             <tr>
-              <th style={thStyle} onClick={() => handleSort('fullName')}>
-                Full Name {sortField === 'fullName' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Full Name
               </th>
-              <th style={thStyle} onClick={() => handleSort('nic')}>
-                NIC {sortField === 'nic' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                NIC
               </th>
-              <th style={thStyle} onClick={() => handleSort('serviceType')}>
-                Service Type {sortField === 'serviceType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Service Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('constructionType')}>
-                Construction Type {sortField === 'constructionType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Construction Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('approvedAt')}>
-                Approved Date {sortField === 'approvedAt' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Approved Date
               </th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Payment</th>
@@ -232,14 +220,14 @@ const PaymentAssignmentTable = ({
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedApplications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ ...tdStyle, textAlign: 'center', color: '#6b7280', padding: '40px' }}>
                   {searchTerm ? 'No applications match your search.' : 'No approved applications found.'}
                 </td>
               </tr>
             ) : (
-              filteredAndSortedApplications.map((app) => (
+              filteredApplications.map((app) => (
                 <tr key={app._id}>
                   <td style={tdStyle}>{app.fullName}</td>
                   <td style={tdStyle}>{app.nic}</td>
@@ -252,43 +240,15 @@ const PaymentAssignmentTable = ({
                     <span style={statusBadgeStyle}>{app.status}</span>
                   </td>
                   <td style={tdStyle}>
-                    {editingPayment === app._id ? (
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <span style={{ marginRight: '4px', fontSize: '14px' }}>Rs.</span>
-                        <input
-                          type="number"
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          placeholder={getSuggestedPayment(app.serviceType, app.constructionType).toString()}
-                          style={paymentInputStyle}
-                        />
-                        <button
-                          onClick={() => handleAssignPayment(app._id)}
-                          style={{ ...buttonStyle, backgroundColor: '#10b981', color: 'white' }}
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingPayment(null);
-                            setPaymentAmount('');
-                          }}
-                          style={{ ...buttonStyle, backgroundColor: '#6b7280', color: 'white' }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {app.payment ? (
-                          <span style={{ color: '#059669', fontWeight: '500' }}>
-                            Rs. {app.payment}
-                          </span>
-                        ) : (
-                          <span style={{ color: '#6b7280' }}>Not assigned</span>
-                        )}
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {app.payment ? (
+                        <span style={{ color: '#059669', fontWeight: '500' }}>
+                          Rs. {app.payment}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#6b7280' }}>Not assigned</span>
+                      )}
+                    </div>
                   </td>
                   <td style={tdStyle}>
                     <button
@@ -300,8 +260,9 @@ const PaymentAssignmentTable = ({
                     {!app.payment && (
                       <button
                         onClick={() => {
-                          setEditingPayment(app._id);
+                          setSelectedAppForPayment(app);
                           setPaymentAmount(getSuggestedPayment(app.serviceType, app.constructionType).toString());
+                          setShowPaymentModal(true);
                         }}
                         style={{ ...buttonStyle, backgroundColor: '#8b5cf6', color: 'white' }}
                       >
@@ -311,8 +272,9 @@ const PaymentAssignmentTable = ({
                     {app.payment && (
                       <button
                         onClick={() => {
-                          setEditingPayment(app._id);
+                          setSelectedAppForPayment(app);
                           setPaymentAmount(app.payment.toString());
+                          setShowPaymentModal(true);
                         }}
                         style={{ ...buttonStyle, backgroundColor: '#f59e0b', color: 'white' }}
                       >
@@ -348,6 +310,177 @@ const PaymentAssignmentTable = ({
         <strong>Payment Guidelines:</strong> Fire Prevention: Rs. 1,500 | Safety Audit: Rs. 2,000 | Inspection: Rs. 1,200 
         | Commercial +50% | Industrial +100%
       </div>
+      {/* Payment Modal */}
+      {showPaymentModal && selectedAppForPayment && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: 0,
+              }}>
+                {selectedAppForPayment.payment ? 'Edit Payment' : 'Assign Payment'} - {selectedAppForPayment.fullName}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedAppForPayment(null);
+                  setPaymentAmount('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+                marginBottom: '20px',
+                padding: '16px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+              }}>
+                <div>
+                  <strong>Service Type:</strong>
+                  <div>{selectedAppForPayment.serviceType || 'Fire Prevention Certificate'}</div>
+                </div>
+                <div>
+                  <strong>Construction Type:</strong>
+                  <div>{selectedAppForPayment.constructionType || 'Building'}</div>
+                </div>
+                <div>
+                  <strong>Suggested Amount:</strong>
+                  <div style={{ color: '#059669', fontWeight: '500' }}>
+                    Rs. {getSuggestedPayment(selectedAppForPayment.serviceType, selectedAppForPayment.constructionType)}
+                  </div>
+                </div>
+                <div>
+                  <strong>Current Payment:</strong>
+                  <div style={{ color: selectedAppForPayment.payment ? '#059669' : '#6b7280' }}>
+                    {selectedAppForPayment.payment ? `Rs. ${selectedAppForPayment.payment}` : 'Not assigned'}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '8px',
+                }}>
+                  Payment Amount (Rs.)
+                </label>
+                <input
+                  type="number"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  placeholder={getSuggestedPayment(selectedAppForPayment.serviceType, selectedAppForPayment.constructionType).toString()}
+                  min="0"
+                  step="500"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                  }}
+                />
+                <div style={{
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  marginTop: '4px',
+                }}>
+                  Suggested amount: Rs. {getSuggestedPayment(selectedAppForPayment.serviceType, selectedAppForPayment.constructionType)}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+              marginTop: '24px',
+            }}>
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedAppForPayment(null);
+                  setPaymentAmount('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignPaymentFromModal}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: selectedAppForPayment.payment ? '#f59e0b' : '#8b5cf6',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {selectedAppForPayment.payment ? 'Update Payment' : 'Assign Payment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

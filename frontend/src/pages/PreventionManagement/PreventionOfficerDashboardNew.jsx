@@ -51,6 +51,11 @@ const PreventionOfficerDashboard = () => {
   // Local state
   const [activeTab, setActiveTab] = useState('review');
   const [selectedApplication, setSelectedApplication] = useState(null);
+  
+  // Table state for search and sorting
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('fullName');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   // Handle view application details
   const handleViewDetails = (application) => {
@@ -258,11 +263,17 @@ const PreventionOfficerDashboard = () => {
             {/* Inspection Tracking Table */}
             <InspectionTrackingTable
               applications={applications}
+              loading={loading}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortField={sortField}
+              setSortField={setSortField}
+              sortDirection={sortDirection}
+              setSortDirection={setSortDirection}
               onAddInspectionNotes={addInspectionNotes}
               onMarkAsInspected={markAsInspected}
-              onDelete={deleteApplication}
+              onDeleteApplication={deleteApplication}
               onViewDetails={handleViewDetails}
-              loading={loading}
             />
           </>
         )}

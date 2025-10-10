@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast, Toaster } from 'sonner';
 
+// Add Public Sans font from Google Fonts
+if (typeof document !== 'undefined') {
+  const link = document.createElement('link');
+  link.href = 'https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&display=swap';
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+}
+
 // CSS for dropdown options
 const dropdownCSS = `
   .modern-select {
@@ -295,15 +303,15 @@ const PreventionCertificateForm = () => {
 
   // Inline styles
   const pageStyle = {
-    minHeight: "100vh",
-    backgroundColor: "#1E2A38",
-    backgroundImage: `url('/images/fire-truck-bg.jpg')`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundAttachment: "fixed",
-    backgroundRepeat: "no-repeat",
-    padding: "20px 0",
-    fontFamily: "Arial, sans-serif",
+  minHeight: "100vh",
+  backgroundColor: "#1E2A38",
+  backgroundImage: `url('/images/fire-truck-bg.jpg')`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundAttachment: "fixed",
+  backgroundRepeat: "no-repeat",
+  padding: "20px 0",
+  fontFamily: "Public Sans, Arial, sans-serif",
   };
 
   const containerStyle = {
