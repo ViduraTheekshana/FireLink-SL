@@ -75,7 +75,10 @@ exports.updatePayment = async (req, res) => {
     const { payment } = req.body;
     const updatedApplication = await PreventionCertificate.findByIdAndUpdate(
       req.params.id,
-      { payment },
+      { 
+        payment,
+        paymentAssignedAt: new Date()
+      },
       { new: true }
     );
     if (!updatedApplication)
