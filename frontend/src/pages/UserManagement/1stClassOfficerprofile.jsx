@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, Link } from "react-router-dom";
-import StaffManagementTable from "./StaffManagementTable";
 
 const OfficerProfile = ({ officerId }) => {
   const { id: paramId } = useParams();
   const id = officerId || paramId;
+
   const [officer, setOfficer] = useState(null);
+  const [shiftRequests, setShiftRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [requestsLoading, setRequestsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch Officer Data
   useEffect(() => {
     if (!id) {
       setError("No officer ID provided");
@@ -21,29 +24,59 @@ const OfficerProfile = ({ officerId }) => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        const headers = token
-          ? { Authorization: `Bearer ${token}` }
-          : {};
-
-        // If your backend runs on port 5000
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const response = await axios.get(`http://localhost:5000/users/${id}`, {
           headers,
-          withCredentials: true, // if backend uses cookies
+          withCredentials: true,
         });
-
         setOfficer(response.data.user);
         setLoading(false);
       } catch (err) {
-        console.error("Officer nmmmfetch error:", err.response || err);
-        // Show backend message if available
-        const message = err.response?.data?.message || "Failed to fetch officer data";
-        setError(message);
+        console.error("Officer fetch error:", err.response || err);
+        setError(err.response?.data?.message || "Failed to fetch officer data");
         setLoading(false);
       }
     };
 
     fetchOfficerData();
   }, [id]);
+
+
+const [loadingRequests, setLoadingRequests] = useState(true);
+useEffect(() => {
+  const fetchRequests = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/shiftChange");
+      setShiftRequests(res.data.requests || []);
+      setLoadingRequests(false);
+    } catch (err) {
+      console.error("Error fetching shift change requests:", err);
+      setLoadingRequests(false);
+    }
+  };
+  fetchRequests();
+}, []);
+
+
+// State for ready vehicles
+const [readyVehicles, setReadyVehicles] = useState([]);
+const [vehiclesLoading, setVehiclesLoading] = useState(true);
+
+useEffect(() => {
+  const fetchReadyVehicles = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/shifts/ready"); // create this endpoint
+      setReadyVehicles(res.data.shifts || []);
+      setVehiclesLoading(false);
+    } catch (err) {
+      console.error("Error fetching ready vehicles:", err);
+      setVehiclesLoading(false);
+    }
+  };
+  fetchReadyVehicles();
+}, []);
+
+  // Fetch Shift Change Requests
 
 
   if (loading) {
@@ -72,8 +105,8 @@ const OfficerProfile = ({ officerId }) => {
 
   return (
     <div className="min-h-screen bg-[#1e2a38] py-8 px-4">
-      
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+      {/* Officer Profile Card */}
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-8">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 relative">
           <div className="absolute top-4 right-4">
@@ -158,27 +191,112 @@ const OfficerProfile = ({ officerId }) => {
               <p>{officer.address || "N/A"}</p>
             </div>
           </div>
-
-          
-          <div className="mt-8 flex flex-wrap gap-4 justify-center">
-            <Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
-              Back to Login
-            </Link>
-            <Link to="/shiftschedule" className="px-6 py-3 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition">
-              Make Shift
-            </Link>
-            <Link to={`/update-user/${officer._id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-              Edit Profile
-            </Link>
-            <Link to="/firstaff" className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
-              Add Staff Members
-            </Link>
-          </div>
         </div>
       </div>
 
-      {/* Staff Management Table */}
-     
+      {/* Shift Change Requests Table */}
+      {/* Shift Change Requests Table */}
+      <div className="mt-10 max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white p-4">
+          <h2 className="text-2xl font-semibold">Shift Change Requests</h2>
+        </div>
+
+        <div className="overflow-x-auto p-4">
+          {loading ? (
+            <div className="text-center text-gray-500">Loading shift change requests...</div>
+          ) : error ? (
+            <div className="text-center text-red-500">{error}</div>
+          ) : (
+            <table className="min-w-full border border-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 border">Fighter Name</th>
+                  <th className="px-4 py-2 border">Shift Type</th>
+                  <th className="px-4 py-2 border">Date</th>
+                  <th className="px-4 py-2 border">Note</th>
+                  <th className="px-4 py-2 border">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shiftRequests.length > 0 ? (
+                  shiftRequests.map((req) => (
+                    <tr key={req._id} className="text-center hover:bg-gray-50">
+                      <td className="px-4 py-2 border">{req.fighterId?.name || "Unknown"}</td>
+                      <td className="px-4 py-2 border">{req.shiftId?.shiftType || "N/A"}</td>
+                      <td className="px-4 py-2 border">
+                        {req.shiftId?.date
+                          ? new Date(req.shiftId.date).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="px-4 py-2 border">{req.note}</td>
+                      <td
+                        className={`px-4 py-2 border font-semibold ${req.status === "Approved"
+                            ? "text-green-600"
+                            : req.status === "Rejected"
+                              ? "text-red-600"
+                              : "text-yellow-600"
+                          }`}
+                      >
+                        {req.status}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-4 py-2 border text-center" colSpan="5">
+                      No shift change requests found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+{/* Ready Vehicles Table */}
+<div className="mt-10 max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+  <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4">
+    <h2 className="text-2xl font-semibold">Ready Vehicles</h2>
+  </div>
+
+  <div className="overflow-x-auto p-4">
+    {vehiclesLoading ? (
+      <div className="text-center text-gray-500">Loading ready vehicles...</div>
+    ) : (
+      <table className="min-w-full border border-gray-200">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-4 py-2 border">Vehicle</th>
+            <th className="px-4 py-2 border">Team Captain</th>
+            <th className="px-4 py-2 border">Upcoming Date</th>
+            <th className="px-4 py-2 border">Shift Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {readyVehicles.length > 0 ? (
+            readyVehicles.map((shift) => (
+              <tr key={shift._id} className="text-center hover:bg-gray-50">
+                <td className="px-4 py-2 border">{shift.vehicle || "N/A"}</td>
+                <td className="px-4 py-2 border">{shift.teamCaptain?.name || "N/A"}</td>
+                <td className="px-4 py-2 border">
+                  {shift.date ? new Date(shift.date).toLocaleDateString() : "N/A"}
+                </td>
+                <td className="px-4 py-2 border">{shift.shiftType || "N/A"}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td className="px-4 py-2 border text-center" colSpan="4">
+                No ready vehicles found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    )}
+  </div>
+</div>
+
     </div>
   );
 };

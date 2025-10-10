@@ -20,7 +20,7 @@ import Profile from "./pages/UserManagement/profile";
 import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
 import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
-
+import FighterDashboard from "./pages/UserManagement/FighterDashboard";
 
 
 
@@ -70,6 +70,14 @@ const App = () => {
 				<Route path="/profile" element={<Profile />} />
 				<Route path="/settings" element={<Settings />} />
 				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
+
+
+				<Route
+					path="/fighter-dashboard"
+					element={
+						<FighterDashboard />
+					}
+				/>
 
 				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
