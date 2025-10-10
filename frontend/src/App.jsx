@@ -19,6 +19,11 @@ import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
 import Profile from "./pages/UserManagement/profile";
 import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
+import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
+
+
+
+
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -64,6 +69,7 @@ const App = () => {
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
 				<Route path="/profile" element={<Profile />} />
 				<Route path="/settings" element={<Settings />} />
+				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
 
 				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
