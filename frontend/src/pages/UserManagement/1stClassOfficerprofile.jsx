@@ -146,15 +146,15 @@ useEffect(() => {
             </div>
           </div>
         </div>
-
+<div className="mt-8 flex flex-wrap gap-4 justify-center">
+         
+        </div>
         {/* Profile Content */}
         <div className="p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Staff ID */}
             <div className="col-span-2">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-                Identification
-              </h2>
+             
               <div className="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <span className="font-medium text-gray-700 mr-3">Staff ID:</span>
                 <span className="text-blue-800 font-mono bg-blue-100 px-3 py-1 rounded">
@@ -165,9 +165,7 @@ useEffect(() => {
 
             {/* Personal Info */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-                Personal Information
-              </h2>
+             
               <p><b>Full Name:</b> {officer.name || "N/A"}</p>
               <p><b>Age:</b> {officer.age || "N/A"}</p>
               <p><b>Phone:</b> {officer.phone || "N/A"}</p>
@@ -175,25 +173,38 @@ useEffect(() => {
 
             {/* Professional Info */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-                Professional Information
-              </h2>
+             
               <p><b>Email:</b> {officer.gmail || "N/A"}</p>
               <p><b>Position:</b> {officer.position || "N/A"}</p>
               <p><b>Status:</b> {officer.status || "N/A"}</p>
             </div>
 
             {/* Address */}
-            <div className="col-span-2">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
                 Address
               </h2>
               <p>{officer.address || "N/A"}</p>
-            </div>
+          </div>
+          <div className="flex flex-wrap gap-4 justify-center">  
+ 
+ {/*<Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
+            Back to Login
+          </Link>*/}
+          <Link to="/shiftschedule" className="px-6 py-3 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition">
+            Make Shift
+          </Link>
+          <Link to={`/update-user/${officer._id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+            Edit Profile
+          </Link>
+          <Link to="/firstaff" className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+            Add Staff Members
+          </Link>
+
           </div>
         </div>
       </div>
-
+<div className="mt-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+ 
       {/* Shift Change Requests Table */}
       {/* Shift Change Requests Table */}
       <div className="mt-10 max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
@@ -253,48 +264,46 @@ useEffect(() => {
           )}
         </div>
       </div>
+
 {/* Ready Vehicles Table */}
 <div className="mt-10 max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
   <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4">
-    <h2 className="text-2xl font-semibold">Ready Vehicles</h2>
+    <h2 className="text-2xl font-semibold">Ready Vehicles & Shift Schedules</h2>
   </div>
 
   <div className="overflow-x-auto p-4">
     {vehiclesLoading ? (
-      <div className="text-center text-gray-500">Loading ready vehicles...</div>
-    ) : (
+      <div className="text-center text-gray-500">Loading ready vehicle data...</div>
+    ) : readyVehicles.length > 0 ? (
       <table className="min-w-full border border-gray-200">
         <thead className="bg-gray-100">
           <tr>
-            <th className="px-4 py-2 border">Vehicle</th>
-            <th className="px-4 py-2 border">Team Captain</th>
-            <th className="px-4 py-2 border">Upcoming Date</th>
+            <th className="px-4 py-2 border">Vehicle ID</th>
+            <th className="px-4 py-2 border">Vehicle Name</th>
+            <th className="px-4 py-2 border">Shift Date</th>
             <th className="px-4 py-2 border">Shift Type</th>
           </tr>
         </thead>
         <tbody>
-          {readyVehicles.length > 0 ? (
-            readyVehicles.map((shift) => (
-              <tr key={shift._id} className="text-center hover:bg-gray-50">
-                <td className="px-4 py-2 border">{shift.vehicle || "N/A"}</td>
-                <td className="px-4 py-2 border">{shift.teamCaptain?.name || "N/A"}</td>
-                <td className="px-4 py-2 border">
-                  {shift.date ? new Date(shift.date).toLocaleDateString() : "N/A"}
-                </td>
-                <td className="px-4 py-2 border">{shift.shiftType || "N/A"}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td className="px-4 py-2 border text-center" colSpan="4">
-                No ready vehicles found.
+          {readyVehicles.map((vehicle) => (
+            <tr key={vehicle._id} className="text-center hover:bg-gray-50">
+              <td className="px-4 py-2 border">{vehicle.vehicleId || "N/A"}</td>
+              <td className="px-4 py-2 border">{vehicle.vehicleName || "N/A"}</td>
+              <td className="px-4 py-2 border">
+                {vehicle.date ? new Date(vehicle.date).toLocaleDateString() : "N/A"}
               </td>
+              <td className="px-4 py-2 border">{vehicle.shiftType || "N/A"}</td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
+    ) : (
+      <div className="text-center text-gray-500">
+        No ready vehicle or shift schedule data available.
+      </div>
     )}
   </div>
+</div>
 </div>
 
     </div>

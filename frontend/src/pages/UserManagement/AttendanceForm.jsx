@@ -139,20 +139,7 @@ const AttendanceForm = () => {
             {loading ? "Submitting..." : <><FiCheck /> Submit</>}
           </button>
         </form>
-        <div className="mt-8 flex flex-wrap gap-4 justify-center">
-          <Link to="/stafflogin" className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
-            Back to Login
-          </Link>
-          <Link to="/shiftschedule" className="px-6 py-3 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition">
-            Make Shift
-          </Link>
-          <Link to={`/update-user/${officer._id}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-            Edit Profile
-          </Link>
-          <Link to="/firstaff" className="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
-            Add Staff Members
-          </Link>
-        </div>
+        
         {message && (
           <p className="mt-4 text-center text-gray-700 font-medium">{message}</p>
         )}

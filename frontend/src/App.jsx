@@ -79,7 +79,16 @@ const App = () => {
 					}
 				/>
 
-				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+<Route
+  path="/civilian-dashboard"
+  element={
+    localStorage.getItem("accessToken") ? (
+      <CivilianDashboard />
+    ) : (
+      <Navigate to="/civilian-login" replace />
+    )
+  }
+/>
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 
