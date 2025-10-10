@@ -95,7 +95,7 @@ const PaymentAssignmentTable = ({
 
   // Table styles
   const tableContainerStyle = {
-    backgroundColor: 'white',
+    backgroundColor: '#CED6DF',
     borderRadius: '12px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     overflow: 'hidden',

@@ -56,20 +56,17 @@ const StatisticsOverview = ({ applications }) => {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '24px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr',
-    },
   };
 
   const statsBoxStyle = {
-    backgroundColor: 'white',
+    backgroundColor: '#CED6DF',
     borderRadius: '12px',
     padding: '24px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
   };
 
   const chartBoxStyle = {
-    backgroundColor: 'white',
+    backgroundColor: '#CED6DF',
     borderRadius: '12px',
     padding: '24px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -125,68 +122,10 @@ const StatisticsOverview = ({ applications }) => {
   return (
     <div style={containerStyle}>
       <h2 style={sectionTitleStyle}>Workflow Statistics</h2>
-      
       <div style={chartContainerStyle}>
-        {/* Statistics Box */}
-        <div style={statsBoxStyle}>
-          <h3 style={statsHeaderStyle}>Workflow Overview</h3>
-          
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Total Applications</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('total') }}>
-              {stats.total}
-            </span>
-          </div>
-          
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Pending Review</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('pending') }}>
-              {stats.pending}
-            </span>
-          </div>
-          
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Approved (Awaiting Payment)</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('approved') }}>
-              {stats.approved}
-            </span>
-          </div>
-          
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Payment Assigned</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('paymentAssigned') }}>
-              {stats.paymentAssigned}
-            </span>
-          </div>
-          
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Inspected</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('inspected') }}>
-              {stats.inspected}
-            </span>
-          </div>
-          
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Rejected</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('rejected') }}>
-              {stats.rejected}
-            </span>
-          </div>
-          
-          <div style={{ ...statItemStyle, borderBottom: 'none', marginTop: '8px', paddingTop: '16px', borderTop: '2px solid #e5e7eb' }}>
-            <span style={{ ...statLabelStyle, fontWeight: '600' }}>Completion Rate</span>
-            <span style={{ ...statValueStyle, color: getStatValueColor('inspected'), fontSize: '18px' }}>
-              {completionRate}%
-            </span>
-          </div>
-        </div>
-
-        {/* Chart Box */}
+        {/* Chart Box - Now on the left */}
         <div style={chartBoxStyle}>
-          <h3 style={{ ...statsHeaderStyle, textAlign: 'center' }}>
-            Application Status Distribution
-          </h3>
-          
+          <div style={statsHeaderStyle}>Application Status Distribution</div>
           <div style={chartContainerInnerStyle}>
             {stats.total > 0 ? (
               <Pie data={chartData} options={chartOptions} />
@@ -198,36 +137,52 @@ const StatisticsOverview = ({ applications }) => {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Quick Insights */}
-      {stats.total > 0 && (
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '8px',
-          padding: '16px',
-          marginTop: '20px',
-        }}>
-          <h4 style={{ margin: '0 0 8px 0', color: '#0c4a6e', fontSize: '16px' }}>
-            📈 Quick Insights
-          </h4>
-          <div style={{ fontSize: '14px', color: '#0c4a6e' }}>
-            {stats.pending > 0 && (
-              <div>• {stats.pending} applications waiting for review</div>
-            )}
-            {stats.approved > 0 && (
-              <div>• {stats.approved} applications ready for payment assignment</div>
-            )}
-            {stats.paymentAssigned > 0 && (
-              <div>• {stats.paymentAssigned} applications ready for inspection</div>
-            )}
-            {completionRate < 50 && stats.total > 5 && (
-              <div>• Consider prioritizing inspections to improve completion rate</div>
-            )}
+        
+        {/* Statistics Box - Now on the right */}
+        <div style={statsBoxStyle}>
+          <div style={statsHeaderStyle}>Workflow Overview</div>
+          <div style={statItemStyle}>
+            <span style={statLabelStyle}>Total Applications</span>
+            <span style={statValueStyle}>{stats.total}</span>
+          </div>
+          <div style={statItemStyle}>
+            <span style={statLabelStyle}>Pending Review</span>
+            <span style={{ ...statValueStyle, color: getStatValueColor('pending') }}>
+              {stats.pending}
+            </span>
+          </div>
+          <div style={statItemStyle}>
+            <span style={statLabelStyle}>Approved (Awaiting Payment)</span>
+            <span style={{ ...statValueStyle, color: getStatValueColor('approved') }}>
+              {stats.approved}
+            </span>
+          </div>
+          <div style={statItemStyle}>
+            <span style={statLabelStyle}>Payment Assigned</span>
+            <span style={{ ...statValueStyle, color: getStatValueColor('paymentAssigned') }}>
+              {stats.paymentAssigned}
+            </span>
+          </div>
+          <div style={statItemStyle}>
+            <span style={statLabelStyle}>Inspected</span>
+            <span style={{ ...statValueStyle, color: getStatValueColor('inspected') }}>
+              {stats.inspected}
+            </span>
+          </div>
+          <div style={statItemStyle}>
+            <span style={statLabelStyle}>Rejected</span>
+            <span style={{ ...statValueStyle, color: getStatValueColor('rejected') }}>
+              {stats.rejected}
+            </span>
+          </div>
+          <div style={{ ...statItemStyle, borderBottom: 'none', marginTop: '12px' }}>
+            <span style={{ ...statLabelStyle, fontWeight: '600' }}>Completion Rate</span>
+            <span style={{ ...statValueStyle, color: '#059669' }}>
+              {completionRate}%
+            </span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
