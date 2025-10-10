@@ -1,8 +1,7 @@
-// controllers/salaryController.js
 const Salary = require("../models/Salary");
 const { validationResult } = require("express-validator");
 
-// ✅ CREATE salary record
+//  CREATE salary 
 exports.createSalary = async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -12,29 +11,29 @@ exports.createSalary = async (req, res) => {
 
 		const currentUserId = (req.user && (req.user.userId || req.user.id)) || (req.supplier && req.supplier._id);
 		const data = { ...req.body, createdBy: currentUserId };
+
 		const doc = await Salary.create(data);
 
 		return res.status(201).json({ success: true, message: "Salary created", data: doc });
 	} catch (err) {
+		console.error(err);
 		return res.status(500).json({ success: false, message: "Error creating salary", error: err.message });
 	}
 };
 
-// ✅ GET salaries with pagination
+// GET salaries 
 exports.getSalaries = async (req, res) => {
 	try {
 		const { page = 1, limit = 20, q } = req.query;
 		const query = {};
 
-		if (q) {
-			query.employeeName = { $regex: q, $options: "i" };
-		}
+		if (q) query.employeeName = { $regex: q, $options: "i" };
 
 		const skip = (Number(page) - 1) * Number(limit);
 
 		const [items, total] = await Promise.all([
 			Salary.find(query)
-				.populate("createdBy", "name email") // ✅ Optional: get user details
+				.populate("createdBy", "name email")
 				.sort({ createdAt: -1 })
 				.skip(skip)
 				.limit(Number(limit)),
@@ -55,11 +54,11 @@ exports.getSalaries = async (req, res) => {
 	}
 };
 
-// ✅ NEW: Get all salaries (no pagination)
+// GET all salaries
 exports.getAllSalaries = async (req, res) => {
 	try {
 		const allSalaries = await Salary.find()
-			.populate("createdBy", "name email") // ✅ include user info
+			.populate("createdBy", "name email")
 			.sort({ createdAt: -1 });
 
 		if (!allSalaries || allSalaries.length === 0) {
@@ -73,15 +72,11 @@ exports.getAllSalaries = async (req, res) => {
 			data: allSalaries,
 		});
 	} catch (err) {
-		return res.status(500).json({
-			success: false,
-			message: "Error retrieving all salaries",
-			error: err.message,
-		});
+		return res.status(500).json({ success: false, message: "Error retrieving all salaries", error: err.message });
 	}
 };
 
-// ✅ UPDATE salary
+// UPDATE 
 exports.updateSalary = async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -98,7 +93,7 @@ exports.updateSalary = async (req, res) => {
 	}
 };
 
-// ✅ DELETE salary
+// DELETE 
 exports.deleteSalary = async (req, res) => {
 	try {
 		const doc = await Salary.findByIdAndDelete(req.params.id);
