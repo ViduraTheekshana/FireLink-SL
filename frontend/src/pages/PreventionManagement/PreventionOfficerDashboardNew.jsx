@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast, Toaster } from 'sonner';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -10,7 +11,6 @@ import {
 import usePreventionApplications from '../../hooks/usePreventionApplications';
 
 // Import components
-import NotificationSystem from '../../components/PreventionManagement/ui/NotificationSystem';
 import TabNavigation from '../../components/PreventionManagement/ui/TabNavigation';
 import StatisticsOverview from '../../components/PreventionManagement/ui/StatisticsOverview';
 import DocumentReviewTable from '../../components/PreventionManagement/tables/DocumentReviewTable';
@@ -24,11 +24,17 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const PreventionOfficerDashboard = () => {
   // Custom hook for managing applications and API calls
+    React.useEffect(() => {
+      const link = document.createElement('link');
+      link.href = 'https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&display=swap';
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+      return () => { document.head.removeChild(link); };
+    }, []);
   const {
     applications,
     loading,
     error,
-    notifications,
     pendingApplications,
     approvedApplications,
     rejectedApplications,
@@ -40,12 +46,16 @@ const PreventionOfficerDashboard = () => {
     addInspectionNotes,
     markAsInspected,
     reactivateApplication,
-    removeNotification,
   } = usePreventionApplications();
 
   // Local state
   const [activeTab, setActiveTab] = useState('review');
   const [selectedApplication, setSelectedApplication] = useState(null);
+  
+  // Table state for search and sorting
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('fullName');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   // Handle view application details
   const handleViewDetails = (application) => {
@@ -69,16 +79,18 @@ const PreventionOfficerDashboard = () => {
 
   // Styles
   const containerStyle = {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#1E2A38',
     minHeight: '100vh',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
+      minHeight: '100vh',
+      fontFamily: 'Public Sans, Arial, sans-serif',
   };
 
   const headerStyle = {
-    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+  background: 'linear-gradient(135deg, #C90000 0%, #C90000 100%)',
     color: 'white',
     padding: '24px',
     marginBottom: '24px',
+      fontFamily: 'Public Sans, Arial, sans-serif',
   };
 
   const headerContentStyle = {
@@ -89,18 +101,21 @@ const PreventionOfficerDashboard = () => {
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '16px',
+      fontFamily: 'Public Sans, Arial, sans-serif',
   };
 
   const titleStyle = {
     fontSize: '28px',
     fontWeight: '700',
     margin: 0,
+      fontFamily: 'Public Sans, Arial, sans-serif',
   };
 
   const subtitleStyle = {
     fontSize: '16px',
     opacity: 0.9,
     margin: '4px 0 0 0',
+      fontFamily: 'Public Sans, Arial, sans-serif',
   };
 
   const headerButtonsStyle = {
@@ -174,11 +189,8 @@ const PreventionOfficerDashboard = () => {
 
   return (
     <div style={containerStyle}>
-      {/* Notifications */}
-      <NotificationSystem 
-        notifications={notifications}
-        onRemoveNotification={removeNotification}
-      />
+      {/* Sonner Toast Messages */}
+      <Toaster position="top-center" expand={false} richColors />
 
       {/* Header */}
       <div style={headerStyle}>
@@ -251,11 +263,17 @@ const PreventionOfficerDashboard = () => {
             {/* Inspection Tracking Table */}
             <InspectionTrackingTable
               applications={applications}
+              loading={loading}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortField={sortField}
+              setSortField={setSortField}
+              sortDirection={sortDirection}
+              setSortDirection={setSortDirection}
               onAddInspectionNotes={addInspectionNotes}
               onMarkAsInspected={markAsInspected}
-              onDelete={deleteApplication}
+              onDeleteApplication={deleteApplication}
               onViewDetails={handleViewDetails}
-              loading={loading}
             />
           </>
         )}

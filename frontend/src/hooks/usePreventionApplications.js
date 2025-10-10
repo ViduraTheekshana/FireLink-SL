@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import preventionCertificateAPI from '../services/preventionCertificateAPI';
 
 // Custom hook for managing prevention applications
@@ -58,14 +59,14 @@ export const usePreventionApplications = () => {
         setApplications(prev => prev.map(app => 
           app._id === id ? result.data : app
         ));
-        showNotification(result.message || 'Application approved successfully!', 'success');
+        toast.success(result.message || 'Application approved successfully!');
         return { success: true };
       } else {
-        showNotification(`Error approving application: ${result.error}`, 'error');
+        toast.error(`Error approving application: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to approve application: ${error.message}`, 'error');
+      toast.error(`Failed to approve application: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);
@@ -78,14 +79,14 @@ export const usePreventionApplications = () => {
         setApplications(prev => prev.map(app => 
           app._id === id ? result.data : app
         ));
-        showNotification(result.message || 'Application rejected successfully!', 'success');
+        toast.success(result.message || 'Application rejected successfully!');
         return { success: true };
       } else {
-        showNotification(`Error rejecting application: ${result.error}`, 'error');
+        toast.error(`Error rejecting application: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to reject application: ${error.message}`, 'error');
+      toast.error(`Failed to reject application: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);
@@ -97,14 +98,14 @@ export const usePreventionApplications = () => {
       if (result.success) {
         // Remove from local state
         setApplications(prev => prev.filter(app => app._id !== id));
-        showNotification(result.message || 'Application deleted successfully!', 'success');
+        toast.success(result.message || 'Application deleted successfully!');
         return { success: true };
       } else {
-        showNotification(`Error deleting application: ${result.error}`, 'error');
+        toast.error(`Error deleting application: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to delete application: ${error.message}`, 'error');
+      toast.error(`Failed to delete application: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);
@@ -117,14 +118,14 @@ export const usePreventionApplications = () => {
         setApplications(prev => prev.map(app => 
           app._id === id ? result.data : app
         ));
-        showNotification(result.message || 'Payment assigned successfully!', 'success');
+        toast.success(result.message || 'Payment assigned successfully!');
         return { success: true };
       } else {
-        showNotification(`Error assigning payment: ${result.error}`, 'error');
+        toast.error(`Error assigning payment: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to assign payment: ${error.message}`, 'error');
+      toast.error(`Failed to assign payment: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);
@@ -137,14 +138,14 @@ export const usePreventionApplications = () => {
         setApplications(prev => prev.map(app => 
           app._id === id ? result.data : app
         ));
-        showNotification(result.message || 'Inspection notes added successfully!', 'success');
+        toast.success(result.message || 'Inspection notes added successfully!');
         return { success: true };
       } else {
-        showNotification(`Error adding inspection notes: ${result.error}`, 'error');
+        toast.error(`Error adding inspection notes: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to add inspection notes: ${error.message}`, 'error');
+      toast.error(`Failed to add inspection notes: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);
@@ -157,14 +158,14 @@ export const usePreventionApplications = () => {
         setApplications(prev => prev.map(app => 
           app._id === id ? result.data : app
         ));
-        showNotification(result.message || 'Application marked as inspected!', 'success');
+        toast.success(result.message || 'Application marked as inspected!');
         return { success: true };
       } else {
-        showNotification(`Error marking as inspected: ${result.error}`, 'error');
+        toast.error(`Error marking as inspected: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to mark as inspected: ${error.message}`, 'error');
+      toast.error(`Failed to mark as inspected: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);
@@ -177,14 +178,14 @@ export const usePreventionApplications = () => {
         setApplications(prev => prev.map(app => 
           app._id === id ? result.data : app
         ));
-        showNotification(result.message || 'Application reactivated successfully!', 'success');
+        toast.success(result.message || 'Application reactivated successfully!');
         return { success: true };
       } else {
-        showNotification(`Error reactivating application: ${result.error}`, 'error');
+        toast.error(`Error reactivating application: ${result.error}`);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      showNotification(`Failed to reactivate application: ${error.message}`, 'error');
+      toast.error(`Failed to reactivate application: ${error.message}`);
       return { success: false, error: error.message };
     }
   }, [showNotification]);

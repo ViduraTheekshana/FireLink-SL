@@ -36,10 +36,10 @@ const TabNavigation = ({
     const isActive = activeTab === tabName;
 
     return {
-      ...baseStyle,
-      backgroundColor: isActive ? '#1e40af' : 'white',
+  ...baseStyle,
+  backgroundColor: isActive ? '#C90000' : 'white',
       color: isActive ? 'white' : '#6b7280',
-      borderBottom: isActive ? '3px solid #3b82f6' : '3px solid transparent',
+  borderBottom: isActive ? '3px solid #C90000' : '3px solid transparent',
     };
   };
 

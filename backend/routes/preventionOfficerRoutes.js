@@ -14,4 +14,7 @@ router.put("/applications/:id/reactivate", preventionOfficerController.reactivat
 // PUT assign payment
 router.put("/applications/:id/payment", preventionOfficerController.assignPayment);
 
+// GET assigned payments for financial officer
+router.get("/assigned-payments", preventionOfficerController.getAssignedPayments);
+
 module.exports = router;
