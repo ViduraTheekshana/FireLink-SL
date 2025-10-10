@@ -6,6 +6,8 @@ import axios from "axios";
 
 const initialForm = {
 	employeeName: "",
+	email: "",
+	role: "",
 	totalWorkingDays: 30,
 	daysPresent: 0,
 	daysAbsent: 0,
@@ -17,9 +19,9 @@ const initialForm = {
 	transportAllowance: 0,
 	medicalAllowance: 0,
 	noPayLeaves: 0,
-	taxRate: 6, 
-	epfRate: 8, 
-	epfAmount: 0, 
+	taxRate: 6,
+	epfRate: 8,
+	epfAmount: 0,
 	finalSalary: 0,
 };
 
@@ -38,7 +40,7 @@ const SalaryManagement = () => {
 		return perDay / 8;
 	}, [form.perDaySalary]);
 
-	// cal
+	// Salary calculation logic
 	useEffect(() => {
 		const totalDays = Math.max(0, Number(form.totalWorkingDays) || 0);
 		const present = Math.max(0, Math.min(Number(form.daysPresent) || 0, totalDays));
@@ -46,16 +48,13 @@ const SalaryManagement = () => {
 		const basic = Math.max(0, Number(form.basicSalary) || 0);
 		const perDay = totalDays > 0 ? basic / totalDays : 0;
 
-		// OT
 		const otHours = Math.max(0, Number(form.otHours) || 0);
 		const otPay = perHourRate * otHours;
 
-		// Allowances
 		const meal = Number(form.mealAllowance) || 0;
 		const transport = Number(form.transportAllowance) || 0;
 		const medical = Number(form.medicalAllowance) || 0;
 
-		// Deductions
 		const noPayDays = Math.max(0, Number(form.noPayLeaves) || 0);
 		const noPay = noPayDays * perDay;
 		const taxRate = Number(form.taxRate) || 0;
@@ -74,7 +73,6 @@ const SalaryManagement = () => {
 			epfAmount: Number(epfAmount.toFixed(2)),
 			finalSalary: Number(finalSal.toFixed(2)),
 		}));
-		
 	}, [
 		form.totalWorkingDays,
 		form.daysPresent,
@@ -88,7 +86,7 @@ const SalaryManagement = () => {
 		form.epfRate,
 	]);
 
-	
+	// Fetch users from backend
 	useEffect(() => {
 		const fetchUsers = async () => {
 			try {
@@ -107,31 +105,39 @@ const SalaryManagement = () => {
 		fetchUsers();
 	}, []);
 
+	// Handle form input change
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		setForm((prev) => ({
 			...prev,
-			[name]: name === "employeeName" ? value : value === "" ? "" : Number(value),
+			[name]: name === "employeeName" || name === "email" || name === "role" ? value : value === "" ? "" : Number(value),
 		}));
 	};
 
+	// When user selected from dropdown
 	const onSelectUser = (e) => {
 		const id = e.target.value;
 		setUserId(id);
 		const user = users.find((u) => (u._id || u.id) === id) || null;
 		setSelectedUser(user);
-		if (user?.name) {
-			setForm((prev) => ({ ...prev, employeeName: user.name }));
-		} else if (user?.gmail) {
-			setForm((prev) => ({ ...prev, employeeName: user.gmail }));
-		}
+
+		setForm((prev) => ({
+			...prev,
+			employeeName: user?.name || "",
+			email: user?.gmail || user?.email || "",
+			role: user?.role || "",
+		}));
 	};
 
+	// Reset form
 	const resetForm = () => {
 		setError("");
 		setForm(initialForm);
+		setSelectedUser(null);
+		setUserId("");
 	};
 
+	// Submit salary record
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
@@ -139,11 +145,13 @@ const SalaryManagement = () => {
 			setError("");
 
 			if (!form.employeeName.trim()) throw new Error("Employee name is required");
-			if (!form.totalWorkingDays || form.totalWorkingDays <= 0)
-				throw new Error("Total working days must be greater than 0");
+			if (!form.email.trim()) throw new Error("Email is required");
+			if (!form.role.trim()) throw new Error("Role is required");
 
 			const payload = {
 				employeeName: form.employeeName,
+				email: form.email,
+				role: form.role,
 				totalWorkingDays: form.totalWorkingDays,
 				daysPresent: form.daysPresent,
 				daysAbsent: form.daysAbsent,
@@ -191,7 +199,7 @@ const SalaryManagement = () => {
 					{error && <div className="alert alert-error">{error}</div>}
 
 					<form onSubmit={handleSubmit} className="form-grid">
-						{/* User Selection */}
+						{/* Select user */}
 						<div className="form-group" style={{ gridColumn: "span 2 / span 2" }}>
 							<label>Select User</label>
 							<select value={userId} onChange={onSelectUser}>
@@ -204,10 +212,20 @@ const SalaryManagement = () => {
 							</select>
 						</div>
 
-						{/* Employee Info */}
+						{/* Basic info */}
 						<div className="form-group">
 							<label>Employee Name</label>
 							<input name="employeeName" value={form.employeeName} onChange={handleChange} placeholder="Enter name" />
+						</div>
+
+						<div className="form-group">
+							<label>Email</label>
+							<input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Enter email" />
+						</div>
+
+						<div className="form-group">
+							<label>Role</label>
+							<input name="role" value={form.role} onChange={handleChange} placeholder="Enter role (e.g. Firefighter, Clerk)" />
 						</div>
 
 						<div className="form-group">
@@ -226,7 +244,6 @@ const SalaryManagement = () => {
 						</div>
 
 						<div className="section-title">Salary Calculation</div>
-
 						<div className="form-group">
 							<label>Basic Salary</label>
 							<input type="number" name="basicSalary" value={form.basicSalary} onChange={handleChange} />
@@ -252,10 +269,12 @@ const SalaryManagement = () => {
 							<label>Meal Allowance</label>
 							<input type="number" name="mealAllowance" value={form.mealAllowance} onChange={handleChange} />
 						</div>
+
 						<div className="form-group">
 							<label>Transport Allowance</label>
 							<input type="number" name="transportAllowance" value={form.transportAllowance} onChange={handleChange} />
 						</div>
+
 						<div className="form-group">
 							<label>Medical Allowance</label>
 							<input type="number" name="medicalAllowance" value={form.medicalAllowance} onChange={handleChange} />
@@ -263,7 +282,7 @@ const SalaryManagement = () => {
 
 						<div className="section-title">Deductions</div>
 						<div className="form-group">
-							<label>No Pay Leaves (Manual)</label>
+							<label>No Pay Leaves</label>
 							<input type="number" name="noPayLeaves" value={form.noPayLeaves} onChange={handleChange} />
 						</div>
 
@@ -294,8 +313,6 @@ const SalaryManagement = () => {
 					</form>
 				</div>
 			</div>
-
-		
 		</div>
 	);
 };

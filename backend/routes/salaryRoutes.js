@@ -12,9 +12,10 @@ const {
 
 const { userOrSupplier } = require("../middlewares/auth");
 
-// Salary validation 
 const validateSalary = [
 	body("employeeName").trim().isLength({ min: 2 }).withMessage("Employee name required"),
+	body("email").isEmail().withMessage("Valid email is required"),
+	body("role").trim().isLength({ min: 2 }).withMessage("Role is required"),
 	body("totalWorkingDays").isInt({ min: 1 }).withMessage("Total working days must be >= 1"),
 	body("daysPresent").isInt({ min: 0 }),
 	body("daysAbsent").isInt({ min: 0 }),
@@ -32,22 +33,10 @@ const validateSalary = [
 	body("otPay").optional().isFloat({ min: 0 }),
 ];
 
-
 router.post("/", userOrSupplier, validateSalary, createSalary);
-
-
-router.get("/", userOrSupplier, [
-	query("page").optional().isInt({ min: 1 }),
-	query("limit").optional().isInt({ min: 1, max: 100 }),
-], getSalaries);
-
-
+router.get("/", userOrSupplier, getSalaries);
 router.get("/all", userOrSupplier, getAllSalaries);
-
-
 router.put("/:id", userOrSupplier, [param("id").isMongoId(), ...validateSalary], updateSalary);
-
-
 router.delete("/:id", userOrSupplier, [param("id").isMongoId()], deleteSalary);
 
 module.exports = router;
