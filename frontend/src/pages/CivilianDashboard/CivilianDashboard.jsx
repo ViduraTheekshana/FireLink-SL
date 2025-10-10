@@ -125,7 +125,10 @@ const CivilianDashboard = () => {
 						<p className="text-gray-600 mb-4">
 							Apply for fire permits, check permit status, and access permit-related information.
 						</p>
-						<button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+						<button
+							className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+							onClick={() => navigate('/prevention-certificate-form')}
+						>
 							Apply for Permit
 						</button>
 					</div>

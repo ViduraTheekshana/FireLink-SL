@@ -100,3 +100,41 @@ exports.reactivateApplication = async (req, res) => {
     res.status(500).json({ message: "Error reactivating application", error: err.message });
   }
 };
+
+// Get all applications with assigned payments for financial officer
+exports.getAssignedPayments = async (req, res) => {
+  try {
+    // Fetch applications that have payment assignments
+    const assignedPayments = await PreventionCertificate.find({
+      payment: { $exists: true, $ne: null, $ne: 0 }
+    }).select(
+      '_id applicationId applicantName contactNumber payment paymentAssignedAt status createdAt updatedAt'
+    );
+
+    // Format the response for financial officer
+    const formattedData = assignedPayments.map(app => ({
+      id: app._id,
+      applicationId: app.applicationId,
+      applicantName: app.applicantName,
+      contactNumber: app.contactNumber,
+      assignedPayment: app.payment,
+      paymentAssignedDate: app.paymentAssignedAt || app.updatedAt,
+      status: app.status,
+      applicationDate: app.createdAt
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Assigned payments fetched successfully",
+      count: formattedData.length,
+      data: formattedData
+    });
+  } catch (err) {
+    console.error("Error fetching assigned payments:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Error fetching assigned payments", 
+      error: err.message 
+    });
+  }
+};

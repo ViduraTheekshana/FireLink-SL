@@ -6,6 +6,7 @@ import TrainingSession from "../TraningSessionManagement/TrainingSessionManager"
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
 import MissionRecords from "../MissionRecords/MissionRecords";
+import PreventionOfficerDashboard from "../PreventionManagement/PreventionOfficerDashboardNew";
 
 const DynamicDashboard = () => {
 	const location = useLocation();
@@ -79,14 +80,7 @@ const DynamicDashboard = () => {
 				return <MissionRecords />;
 
 			case "preventionmanager":
-				return (
-					<div className="p-6">
-						<h1 className="text-3xl font-bold mb-4">
-							Prevention Manager Dashboard
-						</h1>
-						<p>Oversee fire safety and prevention measures.</p>
-					</div>
-				);
+				return <PreventionOfficerDashboard />;
 
 			case "trainingsessionmanager":
 				return <TrainingSession user={user} />;
