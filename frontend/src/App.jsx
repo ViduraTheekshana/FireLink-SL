@@ -80,16 +80,16 @@ const App = () => {
 					}
 				/>
 
-<Route
-  path="/civilian-dashboard"
-  element={
-    localStorage.getItem("accessToken") ? (
-      <CivilianDashboard />
-    ) : (
-      <Navigate to="/civilian-login" replace />
-    )
-  }
-/>
+				<Route
+					path="/civilian-dashboard"
+					element={
+						localStorage.getItem("accessToken") || localStorage.getItem("civilianLoggedIn") ? (
+							<CivilianDashboard />
+						) : (
+							<Navigate to="/civilian-login" replace />
+						)
+					}
+				/>
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 
