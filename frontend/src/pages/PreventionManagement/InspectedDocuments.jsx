@@ -1,10 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { getInspectedDocuments } from "../../services/preventionCertificateAPI";
+import Sidebar from "../UserManagement/Sidebar";
 
 const InspectedDocuments = () => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+
+  // Get user from localStorage
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    } else {
+      // For testing purposes, set a mock prevention manager user
+      const mockUser = {
+        name: "arindu",
+        staffId: "PRE61949",
+        position: "preventionmanager"
+      };
+      setUser(mockUser);
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -35,37 +57,38 @@ const InspectedDocuments = () => {
 
   // Styling to match Prevention Officer Dashboard tables
   const containerStyle = {
+    flex: 1,
     padding: '20px',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#354759',
     minHeight: '100vh',
     fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
   };
 
   const cardStyle = {
-    backgroundColor: 'white',
+    backgroundColor: '#CED6DF',
     borderRadius: '12px',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     overflow: 'hidden',
     marginBottom: '20px',
   };
 
   const headerStyle = {
-    padding: '20px',
-    borderBottom: '1px solid #e2e8f0',
-    backgroundColor: '#f8fafc',
+    padding: '20px 24px 16px',
+    borderBottom: '1px solid #e5e7eb',
+    backgroundColor: '#CED6DF',
   };
 
   const titleStyle = {
-    fontSize: '18px',
+    fontSize: '20px',
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#1f2937',
     margin: 0,
   };
 
   const searchContainerStyle = {
-    padding: '16px 20px',
-    borderBottom: '1px solid #e2e8f0',
-    backgroundColor: 'white',
+    padding: '16px 24px',
+    borderBottom: '1px solid #e5e7eb',
+    backgroundColor: '#CED6DF',
   };
 
   const searchInputStyle = {
@@ -88,20 +111,17 @@ const InspectedDocuments = () => {
   const tableStyle = {
     width: '100%',
     minWidth: '1200px',
-    borderCollapse: 'separate',
-    borderSpacing: 0,
+    borderCollapse: 'collapse',
   };
 
   const thStyle = {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f9fafb',
     padding: '12px 16px',
     textAlign: 'left',
-    fontSize: '12px',
+    fontSize: '14px',
     fontWeight: '600',
-    color: '#475569',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    borderBottom: '1px solid #e2e8f0',
+    color: '#374151',
+    borderBottom: '1px solid #e5e7eb',
     position: 'sticky',
     top: 0,
     zIndex: 10,
@@ -111,22 +131,22 @@ const InspectedDocuments = () => {
     padding: '12px 16px',
     fontSize: '14px',
     color: '#374151',
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid #f3f4f6',
     backgroundColor: 'white',
   };
 
   const noDataStyle = {
     textAlign: 'center',
-    padding: '60px 20px',
-    color: '#64748b',
+    padding: '40px 20px',
+    color: '#6b7280',
     fontSize: '16px',
     fontWeight: '500',
   };
 
   const loadingStyle = {
     textAlign: 'center',
-    padding: '60px 20px',
-    color: '#64748b',
+    padding: '40px 20px',
+    color: '#6b7280',
     fontSize: '16px',
   };
 
@@ -140,14 +160,19 @@ const InspectedDocuments = () => {
   };
 
   return (
-    <div style={containerStyle}>
-      {/* Header Card */}
-      <div style={cardStyle}>
-        <div style={headerStyle}>
-          <h2 style={titleStyle}>Inspected Documents</h2>
-        </div>
-        
-        {/* Search Section */}
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Sidebar */}
+      {user && <Sidebar user={user} />}
+      
+      {/* Main Content */}
+      <div style={containerStyle}>
+        {/* Header Card */}
+        <div style={cardStyle}>
+          <div style={headerStyle}>
+            <h2 style={titleStyle}>Inspected Documents</h2>
+          </div>
+          
+          {/* Search Section */}
         <div style={searchContainerStyle}>
           <input
             type="text"
@@ -194,7 +219,7 @@ const InspectedDocuments = () => {
                       {doc.applicationId || 'N/A'}
                     </td>
                     <td style={{ ...tdStyle, fontWeight: '500' }}>
-                      {doc.applicantName || 'N/A'}
+                      {doc.fullName || 'N/A'}
                     </td>
                     <td style={tdStyle}>
                       {doc.contactNumber || 'N/A'}
@@ -211,8 +236,8 @@ const InspectedDocuments = () => {
                       {doc.inspectionNotes || 'No notes provided'}
                     </td>
                     <td style={tdStyle}>
-                      {doc.inspectedAt 
-                        ? new Date(doc.inspectedAt).toLocaleDateString('en-US', {
+                      {doc.inspectionDate 
+                        ? new Date(doc.inspectionDate).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
@@ -244,9 +269,13 @@ const InspectedDocuments = () => {
             </table>
           )}
         </div>
+        {/* End Table Container */}
       </div>
+      {/* End Card */}
     </div>
-  );
+    {/* End Main Content */}
+  </div>
+);
 };
 
 export default InspectedDocuments;

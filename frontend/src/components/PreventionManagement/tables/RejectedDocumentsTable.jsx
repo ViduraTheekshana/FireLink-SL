@@ -8,8 +8,6 @@ const RejectedDocumentsTable = ({
   loading = false 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('fullName');
-  const [sortDirection, setSortDirection] = useState('asc');
   const [selectedApplications, setSelectedApplications] = useState([]);
   const [showReactivationModal, setShowReactivationModal] = useState(false);
   const [selectedAppForReactivation, setSelectedAppForReactivation] = useState(null);
@@ -19,9 +17,9 @@ const RejectedDocumentsTable = ({
     return applications.filter(app => app.status === 'Rejected');
   }, [applications]);
 
-  // Filter and sort applications
-  const filteredAndSortedApplications = useMemo(() => {
-    let filtered = rejectedApplications.filter(app => {
+  // Filter applications
+  const filteredApplications = useMemo(() => {
+    return rejectedApplications.filter(app => {
       const searchLower = searchTerm.toLowerCase();
       return (
         app.fullName?.toLowerCase().includes(searchLower) ||
@@ -31,39 +29,14 @@ const RejectedDocumentsTable = ({
         app.serviceType?.toLowerCase().includes(searchLower)
       );
     });
+  }, [rejectedApplications, searchTerm]);
 
-    // Sort applications
-    filtered.sort((a, b) => {
-      let aValue = a[sortField] || '';
-      let bValue = b[sortField] || '';
-      
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
 
-    return filtered;
-  }, [rejectedApplications, searchTerm, sortField, sortDirection]);
-
-  // Handle sorting
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
 
   // Handle select all
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedApplications(filteredAndSortedApplications.map(app => app._id));
+      setSelectedApplications(filteredApplications.map(app => app._id));
     } else {
       setSelectedApplications([]);
     }
@@ -235,7 +208,7 @@ const RejectedDocumentsTable = ({
   return (
     <div style={tableContainerStyle}>
       <h3 style={tableTitleStyle}>
-        Rejected Documents ({filteredAndSortedApplications.length})
+        Rejected Documents ({filteredApplications.length})
       </h3>
       
       {/* Search and Batch Actions */}
@@ -277,21 +250,21 @@ const RejectedDocumentsTable = ({
               <th style={thStyle}>
                 <input
                   type="checkbox"
-                  checked={selectedApplications.length === filteredAndSortedApplications.length && filteredAndSortedApplications.length > 0}
+                  checked={selectedApplications.length === filteredApplications.length && filteredApplications.length > 0}
                   onChange={handleSelectAll}
                 />
               </th>
-              <th style={thStyle} onClick={() => handleSort('fullName')}>
-                Full Name {sortField === 'fullName' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Full Name
               </th>
-              <th style={thStyle} onClick={() => handleSort('nic')}>
-                NIC {sortField === 'nic' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                NIC
               </th>
-              <th style={thStyle} onClick={() => handleSort('serviceType')}>
-                Service Type {sortField === 'serviceType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Service Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('rejectedAt')}>
-                Rejected Date {sortField === 'rejectedAt' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Rejected Date
               </th>
               <th style={thStyle}>Rejection Reason</th>
               <th style={thStyle}>Status</th>
@@ -299,14 +272,14 @@ const RejectedDocumentsTable = ({
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedApplications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ ...tdStyle, textAlign: 'center', color: '#6b7280', padding: '40px' }}>
                   {searchTerm ? 'No applications match your search.' : 'No rejected applications found.'}
                 </td>
               </tr>
             ) : (
-              filteredAndSortedApplications.map((app) => (
+              filteredApplications.map((app) => (
                 <tr key={app._id} style={{ backgroundColor: selectedApplications.includes(app._id) ? '#fef2f2' : 'transparent' }}>
                   <td style={tdStyle}>
                     <input

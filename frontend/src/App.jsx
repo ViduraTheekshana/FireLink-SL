@@ -40,7 +40,6 @@ import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 import PreventionCertificateForm from "./pages/PreventionManagement/PreventionCertificateForm";
 import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionOfficerDashboardNew";
 import InspectedDocuments from "./pages/PreventionManagement/InspectedDocuments";
-import TestPage from "./pages/TestPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
@@ -70,7 +69,6 @@ const App = () => {
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 				<Route path="/inspected-documents" element={<InspectedDocuments />} />
 				<Route path="/profile" element={<DynamicDashboard />} />
-				<Route path="/test" element={<TestPage />} />
 
 				<Route
 					path="/training-dashboard"

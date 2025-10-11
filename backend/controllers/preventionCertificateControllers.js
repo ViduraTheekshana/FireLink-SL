@@ -112,7 +112,7 @@ exports.markAsInspected = async (req, res) => {
     const { inspectionNotes, inspectedBy } = req.body;
     const updateData = {
       status: "Inspected",
-      inspectedAt: new Date(), // Changed from inspectionDate to inspectedAt
+      inspectionDate: new Date(), // Date when marked as inspected
       inspectedBy: inspectedBy || req.user?.id, // Use authenticated user if available
     };
     
@@ -158,7 +158,7 @@ exports.deleteCertificate = async (req, res) => {
 exports.getInspectedApplications = async (req, res) => {
   try {
     const inspectedApps = await PreventionCertificate.find({ status: "Inspected" })
-      .select('_id applicationId applicantName contactNumber inspectionNotes inspectedAt createdAt');
+      .select('_id fullName contactNumber serviceType inspectionNotes inspectionDate createdAt status');
     res.status(200).json({
       success: true,
       message: "Inspected applications fetched successfully",

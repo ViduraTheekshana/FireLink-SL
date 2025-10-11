@@ -168,7 +168,7 @@ const InspectionTrackingTable = ({
     borderBottom: '1px solid #f3f4f6',
     fontSize: '14px',
     color: '#374151',
-    verticalAlign: 'top',
+    verticalAlign: 'middle',
   };
 
   const statusBadgeStyle = {
@@ -197,7 +197,6 @@ const InspectionTrackingTable = ({
     border: 'none',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    marginRight: '4px',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -276,7 +275,7 @@ const InspectionTrackingTable = ({
               </th>
               <th style={thStyle}>Days Since Payment</th>
               <th style={thStyle}>Status</th>
-              <th style={thStyle}>Actions</th>
+              <th style={{ ...thStyle, minWidth: '200px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -312,51 +311,69 @@ const InspectionTrackingTable = ({
                       </span>
                     </td>
                     <td style={tdStyle}>
-                      <span style={statusBadgeStyle}>{app.status}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                        <span style={statusBadgeStyle}>{app.status}</span>
+                      </div>
                     </td>
-                    <td style={tdStyle}>
-                      {/* View Icon Button */}
-                      <button
-                        onClick={() => onViewDetails && onViewDetails(app)}
-                        style={{ ...iconButtonStyle, backgroundColor: '#3b82f6', color: 'white' }}
-                        title="View Details"
-                      >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>visibility</span>
-                      </button>
-                      
-                      {/* Add Notes Icon Button */}
-                      <button
-                        onClick={() => {
-                          setSelectedAppForNotes(app);
-                          setInspectionNotes(app.inspectionNotes || '');
-                          setShowNotesModal(true);
-                        }}
-                        style={{ ...iconButtonStyle, backgroundColor: '#f59e0b', color: 'white' }}
-                        title="Add Notes"
-                      >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>edit_note</span>
-                      </button>
-                      
-                      {/* Delete Icon Button */}
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete ${app.fullName}'s application? This will permanently remove it from the database.`)) {
-                            onDeleteApplication(app._id);
-                          }
-                        }}
-                        style={{ ...iconButtonStyle, backgroundColor: '#ef4444', color: 'white' }}
-                        title="Delete"
-                      >
-                        <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
-                      </button>
-                      
-                      {/* Mark Inspected Button (Keep as text button) */}
-                      <button
-                        onClick={() => openInspectionModal(app)}
-                        style={{ ...buttonStyle, backgroundColor: '#10b981', color: 'white' }}
-                      >
-                        Mark Inspected
-                      </button>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '4px',
+                        flexWrap: 'nowrap'
+                      }}>
+                        {/* View Icon Button */}
+                        <button
+                          onClick={() => onViewDetails && onViewDetails(app)}
+                          style={{ ...iconButtonStyle, backgroundColor: '#3b82f6', color: 'white' }}
+                          title="View Details"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>visibility</span>
+                        </button>
+                        
+                        {/* Add Notes Icon Button */}
+                        <button
+                          onClick={() => {
+                            setSelectedAppForNotes(app);
+                            setInspectionNotes(app.inspectionNotes || '');
+                            setShowNotesModal(true);
+                          }}
+                          style={{ ...iconButtonStyle, backgroundColor: '#f59e0b', color: 'white' }}
+                          title="Add Notes"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>edit_note</span>
+                        </button>
+                        
+                        {/* Delete Icon Button */}
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete ${app.fullName}'s application? This will permanently remove it from the database.`)) {
+                              onDeleteApplication(app._id);
+                            }
+                          }}
+                          style={{ ...iconButtonStyle, backgroundColor: '#ef4444', color: 'white' }}
+                          title="Delete"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
+                        </button>
+                        
+                        {/* Mark Inspected Button */}
+                        <button
+                          onClick={() => openInspectionModal(app)}
+                          style={{ 
+                            ...buttonStyle, 
+                            backgroundColor: '#10b981', 
+                            color: 'white',
+                            marginRight: '0',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          Mark Inspected
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

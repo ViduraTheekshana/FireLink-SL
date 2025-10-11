@@ -76,8 +76,7 @@ const Sidebar = ({ user, onLogout }) => {
       case "prevention manager":
       case "prevention_manager":
         links.push(
-          { name: "Inspected Documents", path: "/inspected-documents", icon: <FaRegClipboard /> },
-          { name: "Test Page", path: "/test", icon: <FaRegClipboard /> }
+          { name: "Inspected Documents", path: "/inspected-documents", icon: <FaRegClipboard /> }
         );
         break;
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 const PaymentAssignmentTable = ({ 
   applications, 
@@ -14,6 +14,21 @@ const PaymentAssignmentTable = ({
   const [paymentAmount, setPaymentAmount] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAppForPayment, setSelectedAppForPayment] = useState(null);
+
+  // Load Google Material Icons
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    return () => {
+      try {
+        document.head.removeChild(link);
+      } catch (e) {
+        // Ignore if already removed
+      }
+    };
+  }, []);
 
   // Filter approved applications
   const approvedApplications = useMemo(() => {
@@ -157,6 +172,20 @@ const PaymentAssignmentTable = ({
     marginRight: '4px',
   };
 
+  const iconButtonStyle = {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    marginRight: '4px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '32px',
+    minHeight: '32px',
+  };
+
   const paymentInputStyle = {
     width: '100px',
     padding: '4px 8px',
@@ -251,12 +280,29 @@ const PaymentAssignmentTable = ({
                     </div>
                   </td>
                   <td style={tdStyle}>
+                    {/* View Icon Button */}
                     <button
                       onClick={() => onViewDetails && onViewDetails(app)}
-                      style={{ ...buttonStyle, backgroundColor: '#3b82f6', color: 'white' }}
+                      style={{ ...iconButtonStyle, backgroundColor: '#3b82f6', color: 'white' }}
+                      title="View Details"
                     >
-                      View
+                      <span className="material-icons" style={{ fontSize: '16px' }}>visibility</span>
                     </button>
+                    
+                    {/* Delete Icon Button */}
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to delete ${app.fullName}'s application? This will permanently remove it from the database.`)) {
+                          onDelete(app._id);
+                        }
+                      }}
+                      style={{ ...iconButtonStyle, backgroundColor: '#ef4444', color: 'white' }}
+                      title="Delete"
+                    >
+                      <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
+                    </button>
+                    
+                    {/* Assign Payment Icon Button (for unassigned payments) */}
                     {!app.payment && (
                       <button
                         onClick={() => {
@@ -264,11 +310,14 @@ const PaymentAssignmentTable = ({
                           setPaymentAmount(getSuggestedPayment(app.serviceType, app.constructionType).toString());
                           setShowPaymentModal(true);
                         }}
-                        style={{ ...buttonStyle, backgroundColor: '#8b5cf6', color: 'white' }}
+                        style={{ ...iconButtonStyle, backgroundColor: '#8b5cf6', color: 'white' }}
+                        title="Assign Payment"
                       >
-                        Assign Payment
+                        <span className="material-icons" style={{ fontSize: '16px' }}>payments</span>
                       </button>
                     )}
+                    
+                    {/* Edit Payment Icon Button (for assigned payments) */}
                     {app.payment && (
                       <button
                         onClick={() => {
@@ -276,21 +325,12 @@ const PaymentAssignmentTable = ({
                           setPaymentAmount(app.payment.toString());
                           setShowPaymentModal(true);
                         }}
-                        style={{ ...buttonStyle, backgroundColor: '#f59e0b', color: 'white' }}
+                        style={{ ...iconButtonStyle, backgroundColor: '#f59e0b', color: 'white' }}
+                        title="Edit Payment"
                       >
-                        Edit Payment
+                        <span className="material-icons" style={{ fontSize: '16px' }}>edit</span>
                       </button>
                     )}
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to delete ${app.fullName}'s application? This will permanently remove it from the database.`)) {
-                          onDelete(app._id);
-                        }
-                      }}
-                      style={{ ...buttonStyle, backgroundColor: '#ef4444', color: 'white' }}
-                    >
-                      Delete
-                    </button>
                   </td>
                 </tr>
               ))

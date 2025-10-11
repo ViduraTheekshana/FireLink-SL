@@ -79,10 +79,9 @@ const PreventionOfficerDashboard = () => {
 
   // Styles
   const containerStyle = {
-    backgroundColor: '#1E2A38',
+    backgroundColor: '#354759',
     minHeight: '100vh',
-      minHeight: '100vh',
-      fontFamily: 'Public Sans, Arial, sans-serif',
+    fontFamily: 'Public Sans, Arial, sans-serif',
   };
 
   const headerStyle = {
