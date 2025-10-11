@@ -4,6 +4,7 @@ import { getItemById } from '../../api/inventoryApi';
 import { createReorder, getReorders, sendReorderToManager } from '../../api/inventoryReorderApi';
 import firelinkLogo from '../../assets/images/firelink-logo.png';
 import Sidebar from '../UserManagement/Sidebar';
+import { FaUser } from 'react-icons/fa';
 
 const ReorderPage = () => {
   const { id } = useParams();
@@ -560,7 +561,14 @@ const ReorderPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Reorder Item</h1>
             <p className="text-gray-600">Create reorder for low stock item</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-3 items-center">
+            <Link
+              to="/inventory-manager/profile"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+            >
+              <FaUser className="text-sm" />
+              Profile
+            </Link>
             <Link
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
@@ -822,7 +830,7 @@ const ReorderPage = () => {
               disabled={!lastCreatedReorderId || sending}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              {sending ? '📤 Sending...' : '📤 Send to Supply Manager'}
+              {sending ? 'Sending...' : 'Send to Supply Manager'}
             </button>
             <Link
               to="/inventory"
@@ -853,7 +861,7 @@ const ReorderPage = () => {
                     }}
                   />
                   <div className="w-full h-full bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm print:text-xs hidden">
-                    🚒
+                    
                   </div>
                 </div>
                 <div>

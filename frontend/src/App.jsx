@@ -31,6 +31,7 @@ import VehicleItemsPage from "./pages/Inventory/VehicleItemsPage";
 import ReorderPage from "./pages/Inventory/ReorderPage";
 import ReordersList from "./pages/Inventory/ReordersList";
 import InventoryLogs from "./pages/Inventory/InventoryLogs";
+import InventoryManagerProfile from "./pages/Inventory/InventoryManagerProfile";
 
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
@@ -104,6 +105,7 @@ const App = () => {
 				<Route path="/inventory/reorders" element={<ReordersList />} />
 				<Route path="/inventory/reorders/list" element={<ReordersList />} />
 				<Route path="/inventory/logs" element={<InventoryLogs />} />
+				<Route path="/inventory-manager/profile" element={<InventoryManagerProfile />} />
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
 				{/* Shift Management routes */}
