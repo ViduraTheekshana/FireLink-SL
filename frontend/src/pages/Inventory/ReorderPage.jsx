@@ -506,7 +506,7 @@ const ReorderPage = () => {
       const response = await sendReorderToManager(lastCreatedReorderId, base64PDF, reportData);
 
       if (response.success) {
-        alert(`✅ Report sent to Supply Manager successfully!\n\nReorder ID: ${response.data.reorderId}\nItem: ${response.data.itemName}\nQuantity: ${response.data.quantity}\nPriority: ${response.data.priority}`);
+        alert(`Report sent to Supply Manager successfully!\n\nReorder ID: ${response.data.reorderId}\nItem: ${response.data.itemName}\nQuantity: ${response.data.quantity}\nPriority: ${response.data.priority}`);
         console.log('Report sent successfully:', response.data);
       } else {
         alert('Failed to send report to Supply Manager. Please try again.');
@@ -814,7 +814,7 @@ const ReorderPage = () => {
               disabled={submitting}
               className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              {submitting ? 'Submitting...' : '📋 Submit Reorder'}
+              {submitting ? 'Submitting...' : 'Submit Reorder'}
             </button>
             <button
               type="button"
@@ -822,7 +822,7 @@ const ReorderPage = () => {
               disabled={!item || !reorderData.quantity}
               className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              📄 Download PDF Report
+              Download PDF Report
             </button>
             <button
               type="button"
@@ -1040,7 +1040,7 @@ const ReorderPage = () => {
           {(item.threshold > 0 && item.quantity < item.threshold) && (
             <div className="border border-red-300 p-4 mt-4 bg-red-50">
               <h3 className="text-lg font-semibold mb-3 text-red-600">
-                <span className="print:hidden">⚠️ </span>URGENT REORDER REQUIRED
+                URGENT REORDER REQUIRED
               </h3>
               <div className="bg-white p-3 rounded border border-red-200">
                 <div className="flex justify-between items-center">

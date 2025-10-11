@@ -386,7 +386,7 @@ const InventoryManagerDashboard = () => {
 
   const kpis = [
     { 
-      label: 'Total Items', 
+      label: 'Total Item Types', 
       value: inventory.totalItems || 0, 
       color: 'bg-blue-50 text-blue-700 hover:bg-blue-100', 
       link: '/inventory',
@@ -489,7 +489,7 @@ const InventoryManagerDashboard = () => {
               <div className="text-right">
                 <div className="grid grid-cols-2 gap-6 text-sm">
                   <div>
-                    <div className="text-green-600 font-medium">✅ Added</div>
+                    <div className="text-green-600 font-medium">Added</div>
                     <div className="text-lg font-bold text-green-700">
                       {(trends.itemsAddedLast7Days || []).reduce((sum, d) => sum + (d?.count || 0), 0)} items
                     </div>
@@ -498,7 +498,7 @@ const InventoryManagerDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-red-600 font-medium">❌ Removed</div>
+                    <div className="text-red-600 font-medium">Removed</div>
                     <div className="text-lg font-bold text-red-700">
                       {(trends.itemsRemovedLast7Days || []).reduce((sum, d) => sum + (d?.count || 0), 0)} items
                     </div>
@@ -525,7 +525,7 @@ const InventoryManagerDashboard = () => {
                   />
                 </div>
                 <div className="mt-2 space-y-1">
-                  <div className="text-xs font-semibold text-gray-700 text-center">📦 New Items Added</div>
+                  <div className="text-xs font-semibold text-gray-700 text-center">New Items Added</div>
                   <div className="text-xs text-gray-500 text-center">Count of new inventory records created</div>
                 </div>
               </div>
@@ -542,7 +542,7 @@ const InventoryManagerDashboard = () => {
                   />
                 </div>
                 <div className="mt-2 space-y-1">
-                  <div className="text-xs font-semibold text-gray-700 text-center">📈 Quantity Added</div>
+                  <div className="text-xs font-semibold text-gray-700 text-center">Quantity Added</div>
                   <div className="text-xs text-gray-500 text-center">Total units added to stock</div>
                 </div>
               </div>
@@ -560,7 +560,7 @@ const InventoryManagerDashboard = () => {
                   />
                 </div>
                 <div className="mt-2 space-y-1">
-                  <div className="text-xs font-semibold text-gray-700 text-center">🗑️ Items Removed</div>
+                  <div className="text-xs font-semibold text-gray-700 text-center">Items Removed</div>
                   <div className="text-xs text-gray-500 text-center">Count of inventory records deleted</div>
                 </div>
               </div>
@@ -577,7 +577,7 @@ const InventoryManagerDashboard = () => {
                   />
                 </div>
                 <div className="mt-2 space-y-1">
-                  <div className="text-xs font-semibold text-gray-700 text-center">📉 Quantity Removed</div>
+                  <div className="text-xs font-semibold text-gray-700 text-center">Quantity Removed</div>
                   <div className="text-xs text-gray-500 text-center">Total units removed from stock</div>
                 </div>
               </div>
@@ -589,7 +589,7 @@ const InventoryManagerDashboard = () => {
               
               {/* Added Items & Quantity */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-green-700 mb-2">📈 Items Added (Count)</h4>
+                <h4 className="text-xs font-medium text-green-700 mb-2">Items Added (Count)</h4>
                 <div className="grid grid-cols-7 gap-2 text-xs">
                   {(trends.itemsAddedLast7Days || []).map((d, index) => {
                     const date = new Date(d?.date);
@@ -616,7 +616,7 @@ const InventoryManagerDashboard = () => {
               
               {/* Added Quantity */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-blue-700 mb-2">📈 Quantity Added (Units)</h4>
+                <h4 className="text-xs font-medium text-blue-700 mb-2">Quantity Added (Units)</h4>
                 <div className="grid grid-cols-7 gap-2 text-xs">
                   {(trends.itemsAddedLast7Days || []).map((d, index) => {
                     const date = new Date(d?.date);
@@ -643,7 +643,7 @@ const InventoryManagerDashboard = () => {
               
               {/* Removed Items (Count) */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-orange-700 mb-2">📉 Items Removed (Count)</h4>
+                <h4 className="text-xs font-medium text-orange-700 mb-2">Items Removed (Count)</h4>
                 <div className="grid grid-cols-7 gap-2 text-xs">
                   {(trends.itemsRemovedLast7Days || []).map((d, index) => {
                     const date = new Date(d?.date);
@@ -670,7 +670,7 @@ const InventoryManagerDashboard = () => {
               
               {/* Removed Quantity */}
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-red-700 mb-2">📉 Quantity Removed (Units)</h4>
+                <h4 className="text-xs font-medium text-red-700 mb-2">Quantity Removed (Units)</h4>
                 <div className="grid grid-cols-7 gap-2 text-xs">
                   {(trends.itemsRemovedLast7Days || []).map((d, index) => {
                     const date = new Date(d?.date);

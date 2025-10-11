@@ -239,19 +239,19 @@ const InventoryList = () => {
     // Frontend validation: maximum add amount per operation
     const MAX_ADD_AMOUNT = 10000;
     if (amount > MAX_ADD_AMOUNT) {
-      alert(`❌ Cannot add more than ${MAX_ADD_AMOUNT} units in a single operation`);
+      alert(`Cannot add more than ${MAX_ADD_AMOUNT} units in a single operation`);
       return;
     }
 
     try {
       const response = await addItemQuantity(itemId, amount);
       if (response.success) {
-        alert(`✅ Successfully added ${amount} units to ${itemName}`);
+        alert(`Successfully added ${amount} units to ${itemName}`);
         setAdjustQuantities(prev => ({ ...prev, [itemId]: '' })); // Clear input
         loadInventoryData(); // Refresh the list
       }
     } catch (err) {
-      alert(`❌ Failed to add quantity: ${err.response?.data?.message || err.message}`);
+      alert(`Failed to add quantity: ${err.response?.data?.message || err.message}`);
       console.error(err);
     }
   };
@@ -264,7 +264,7 @@ const InventoryList = () => {
     }
 
     if (amount > currentQuantity) {
-      alert(`❌ Cannot remove ${amount} units. Only ${currentQuantity} units available.`);
+      alert(`Cannot remove ${amount} units. Only ${currentQuantity} units available.`);
       return;
     }
 
@@ -275,12 +275,12 @@ const InventoryList = () => {
     try {
       const response = await removeItemQuantity(itemId, amount);
       if (response.success) {
-        alert(`✅ Successfully removed ${amount} units from ${itemName}`);
+        alert(`Successfully removed ${amount} units from ${itemName}`);
         setAdjustQuantities(prev => ({ ...prev, [itemId]: '' })); // Clear input
         loadInventoryData(); // Refresh the list
       }
     } catch (err) {
-      alert(`❌ Failed to remove quantity: ${err.response?.data?.message || err.message}`);
+      alert(`Failed to remove quantity: ${err.response?.data?.message || err.message}`);
       console.error(err);
     }
   };
@@ -468,25 +468,25 @@ const InventoryList = () => {
               to="/inventory/vehicles"
               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              🚛 Vehicles
+              Vehicles
             </Link>
             <Link
               to="/inventory/vehicle-items"
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              🚗 Vehicle Items
+              Vehicle Items
             </Link>
             <Link
               to="/inventory/logs"
               className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              📋 Logs
+              Logs
             </Link>
             <Link
               to="/inventory/reorders"
               className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              📦 Reorders
+              Reorders
             </Link>
             <button
               onClick={async () => {
@@ -499,7 +499,7 @@ const InventoryList = () => {
               disabled={loadingReport}
               className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200"
             >
-              {loadingReport ? '⏳ Loading...' : '📄 Report'}
+              {loadingReport ? 'Loading...' : 'Report'}
             </button>
             <Link
               to="/inventory/add"
@@ -513,7 +513,7 @@ const InventoryList = () => {
 
       {/* Compact Dashboard Overview */}
       <div className="bg-white rounded-lg shadow-md p-3 mb-3">
-        <h2 className="text-sm font-semibold text-gray-900 mb-2">📊Overview</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-2">Overview</h2>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
           {/* Total Items */}
@@ -696,9 +696,9 @@ const InventoryList = () => {
                 className="px-2 py-1 text-xs font-medium text-white bg-yellow-600 rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <>⏳ Creating...</>
+                  <>Creating...</>
                 ) : (
-                  <>📋 Reorder ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length})</>
+                  <>Reorder ({inventory.filter(item => selectedItems.includes(item._id) && isLowStock(item)).length})</>
                 )}
               </button>
               <button
@@ -761,7 +761,7 @@ const InventoryList = () => {
                         {isLowStock(item) && (
                           <div className="flex flex-col gap-1">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              ⚠️ Low Stock Alert
+                              Low Stock Alert
                             </span>
                             <div className="text-xs text-yellow-700 bg-yellow-50 p-3 rounded border border-yellow-200">
                               <div className="flex items-center justify-between mb-2">
@@ -779,13 +779,13 @@ const InventoryList = () => {
                                   to={`/inventory/${item._id}/reorder`}
                                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors shadow-sm"
                                 >
-                                  📋 Create Reorder
+                                  Create Reorder
                                 </Link>
                                 <Link
                                   to="/inventory/reorders"
                                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                 >
-                                  📋 View All Reorders
+                                  View All Reorders
                                 </Link>
                               </div>
                             </div>
@@ -794,7 +794,7 @@ const InventoryList = () => {
                         {isExpired(item) && (
                           <div className="flex flex-col gap-1">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              ⏰ Expired - Replace Immediately
+                              Expired - Replace Immediately
                             </span>
                             <div className="text-xs text-red-700 bg-red-50 p-3 rounded border border-red-200">
                               <div className="flex items-center justify-between mb-2">
@@ -812,13 +812,13 @@ const InventoryList = () => {
                                   to={`/inventory/${item._id}/reorder`}
                                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-sm"
                                 >
-                                  📋 Replace Item
+                                  Replace Item
                                 </Link>
                                 <Link
                                   to="/inventory/reorders"
                                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                 >
-                                  📋 View All Reorders
+                                  View All Reorders
                                 </Link>
                               </div>
                             </div>
@@ -827,7 +827,7 @@ const InventoryList = () => {
                         {isExpiringSoon(item) && (
                           <div className="flex flex-col gap-1">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                              ⏰ Expires Soon
+                              Expires Soon
                             </span>
                             <div className="text-xs text-orange-700 bg-orange-50 p-3 rounded border border-orange-200">
                               <div className="flex items-center justify-between mb-2">
@@ -845,13 +845,13 @@ const InventoryList = () => {
                                   to={`/inventory/${item._id}/reorder`}
                                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors shadow-sm"
                                 >
-                                  📋 Create Reorder
+                                  Create Reorder
                                 </Link>
                                 <Link
                                   to="/inventory/reorders"
                                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                 >
-                                  📋 View All Reorders
+                                  View All Reorders
                                 </Link>
                               </div>
                             </div>
@@ -912,17 +912,17 @@ const InventoryList = () => {
                       />
                       <button
                         onClick={() => handleAddQuantity(item._id, item.item_name)}
-                        className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                        className="px-2 py-1 text-xs font-medium text-white bg-gray-600 rounded hover:bg-gray-700"
                         title="Add quantity"
                       >
-                        ➕
+                        +
                       </button>
                       <button
                         onClick={() => handleRemoveQuantity(item._id, item.item_name, item.quantity)}
                         className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700"
                         title="Remove quantity"
                       >
-                        ➖
+                        -
                       </button>
                     </div>
                   </td>
@@ -932,19 +932,19 @@ const InventoryList = () => {
                         to={`/inventory/${item._id}`} 
                         className="text-blue-600 hover:text-blue-900 font-medium"
                       >
-                        👁️ View
+                        View
                       </Link>
                       <Link 
                         to={`/inventory/edit/${item._id}`} //update 1: Navigate to edit form
                         className="text-green-600 hover:text-green-900 font-medium"
                       >
-                        ✏️ Edit
+                        Edit
                       </Link>
                       <button 
                         onClick={() => handleDelete(item._id)} 
                         className="text-red-600 hover:text-red-900 font-medium"
                       >
-                        🗑️ Delete
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -988,7 +988,7 @@ const InventoryList = () => {
                 onClick={() => setShowReportModal(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
               >
-                ✕
+                ×
               </button>
             </div>
 
@@ -1009,7 +1009,7 @@ const InventoryList = () => {
                       }}
                     />
                     <div className="w-full h-full bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm print:text-xs hidden">
-                      🔥
+                      FL
                     </div>
                   </div>
                   <div className="text-left">
@@ -1118,7 +1118,7 @@ const InventoryList = () => {
             {allInventoryData.filter(item => item.quantity <= item.threshold).length > 0 && (
               <div className="border border-red-300 p-4 mt-4 bg-red-50">
                 <h3 className="text-lg font-semibold mb-3 text-red-600">
-                  <span className="print:hidden">⚠️ </span>ITEMS REQUIRING IMMEDIATE ATTENTION
+                  ITEMS REQUIRING IMMEDIATE ATTENTION
                 </h3>
                 <div className="grid gap-2">
                   {allInventoryData
@@ -1309,7 +1309,7 @@ const InventoryList = () => {
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
-                🖨️ Print Report
+                Print Report
               </button>
               <button
                 onClick={() => {
@@ -1438,7 +1438,7 @@ const InventoryList = () => {
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
               >
-                📄 Export PDF
+                Export PDF
               </button>
               <button
                 onClick={() => setShowReportModal(false)}

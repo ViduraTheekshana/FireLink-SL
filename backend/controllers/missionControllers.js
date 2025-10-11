@@ -92,9 +92,9 @@ const createMission = async (req, res) => {
 									performedByName: req.user?.name || req.user?.email || 'System'
 								});
 
-								console.log(`✅ Reduced ${item.damagedQuantity} damaged units from ${inventoryItem.item_name} (ID: ${inventoryItem.item_ID})`);
+								console.log(`Reduced ${item.damagedQuantity} damaged units from ${inventoryItem.item_name} (ID: ${inventoryItem.item_ID})`);
 							} else {
-								console.error(`❌ Cannot reduce inventory below 0 for item ${inventoryItem.item_ID}`);
+								console.error(`Cannot reduce inventory below 0 for item ${inventoryItem.item_ID}`);
 							}
 						}
 					} catch (invError) {
@@ -275,14 +275,14 @@ const updateMission = async (req, res) => {
 		if (inventoryItems && inventoryItems.length > 0) {
 			const currentUserId = (req.user && (req.user.userId || req.user.id)) || (req.supplier && req.supplier._id);
 			
-			console.log(`\n🔍 Processing damaged items for mission update ${updatedMission._id}`);
-			console.log(`📋 Old inventory items:`, JSON.stringify(oldInventoryItems.map(i => ({ 
+			console.log(`\nProcessing damaged items for mission update ${updatedMission._id}`);
+			console.log(`Old inventory items:`, JSON.stringify(oldInventoryItems.map(i => ({ 
 				itemCode: i.itemCode, 
 				inventoryItemId: i.inventoryItemId, 
 				isDamaged: i.isDamaged, 
 				damagedQty: i.damagedQuantity 
 			})), null, 2));
-			console.log(`📋 New inventory items:`, JSON.stringify(inventoryItems.map(i => ({ 
+			console.log(`New inventory items:`, JSON.stringify(inventoryItems.map(i => ({ 
 				itemCode: i.itemCode, 
 				inventoryItemId: i.inventoryItemId, 
 				isDamaged: i.isDamaged, 
@@ -290,7 +290,7 @@ const updateMission = async (req, res) => {
 			})), null, 2));
 			
 			for (const newItem of inventoryItems) {
-				console.log(`\n🔎 Checking item: ${newItem.itemCode}, isDamaged: ${newItem.isDamaged}, damagedQty: ${newItem.damagedQuantity}`);
+				console.log(`\nChecking item: ${newItem.itemCode}, isDamaged: ${newItem.isDamaged}, damagedQty: ${newItem.damagedQuantity}`);
 				
 				if (newItem.isDamaged && newItem.damagedQuantity > 0 && newItem.inventoryItemId) {
 					try {
@@ -305,25 +305,25 @@ const updateMission = async (req, res) => {
 							oldItem = oldInventoryItems.find(
 								(old) => old.itemCode === newItem.itemCode
 							);
-							console.log(`⚠️ Matched by itemCode (fallback) for ${newItem.itemCode}`);
+							console.log(`Matched by itemCode (fallback) for ${newItem.itemCode}`);
 						}
 						
 						const oldDamagedQty = (oldItem && oldItem.isDamaged) ? (oldItem.damagedQuantity || 0) : 0;
 						const newDamagedQty = newItem.damagedQuantity || 0;
 						
-						console.log(`📊 Old damaged qty: ${oldDamagedQty}, New damaged qty: ${newDamagedQty}`);
+						console.log(`Old damaged qty: ${oldDamagedQty}, New damaged qty: ${newDamagedQty}`);
 						
 						// Calculate delta (only reduce additional damage)
 						const damageDelta = newDamagedQty - oldDamagedQty;
 						
-						console.log(`📈 Damage delta: ${damageDelta}`);
+						console.log(`Damage delta: ${damageDelta}`);
 						
 						if (damageDelta > 0) {
 							// Only reduce if there's NEW damage
 							const inventoryItem = await Inventory.findById(newItem.inventoryItemId);
 							
 							if (inventoryItem) {
-								console.log(`📦 Found inventory item: ${inventoryItem.item_name}, current qty: ${inventoryItem.quantity}`);
+								console.log(`Found inventory item: ${inventoryItem.item_name}, current qty: ${inventoryItem.quantity}`);
 								
 								const newQuantity = inventoryItem.quantity - damageDelta;
 								
@@ -346,29 +346,29 @@ const updateMission = async (req, res) => {
 										performedByName: req.user?.name || req.user?.email || 'System'
 									});
 
-									console.log(`✅ Reduced ${damageDelta} additional damaged units from ${inventoryItem.item_name} (ID: ${inventoryItem.item_ID})`);
-									console.log(`✅ New inventory quantity: ${newQuantity}`);
+									console.log(`Reduced ${damageDelta} additional damaged units from ${inventoryItem.item_name} (ID: ${inventoryItem.item_ID})`);
+									console.log(`New inventory quantity: ${newQuantity}`);
 								} else {
-									console.error(`❌ Cannot reduce inventory below 0 for item ${inventoryItem.item_ID}. Would be: ${newQuantity}`);
+									console.error(`Cannot reduce inventory below 0 for item ${inventoryItem.item_ID}. Would be: ${newQuantity}`);
 								}
 							} else {
-								console.error(`❌ Inventory item not found with ID: ${newItem.inventoryItemId}`);
+								console.error(`Inventory item not found with ID: ${newItem.inventoryItemId}`);
 							}
 						} else if (damageDelta < 0) {
-							console.log(`ℹ️ Damaged quantity decreased by ${Math.abs(damageDelta)} for item ${newItem.itemCode}. Not restoring inventory (damage is permanent).`);
+							console.log(`Damaged quantity decreased by ${Math.abs(damageDelta)} for item ${newItem.itemCode}. Not restoring inventory (damage is permanent).`);
 						} else {
-							console.log(`ℹ️ No change in damaged quantity for item ${newItem.itemCode}`);
+							console.log(`No change in damaged quantity for item ${newItem.itemCode}`);
 						}
 					} catch (invError) {
-						console.error(`❌ Error processing damaged inventory for item ${newItem.itemCode}:`, invError);
+						console.error(`Error processing damaged inventory for item ${newItem.itemCode}:`, invError);
 						// Don't fail the mission update if inventory update fails
 					}
 				} else {
-					console.log(`⏭️ Skipping item ${newItem.itemCode} - not damaged or missing data`);
+					console.log(`Skipping item ${newItem.itemCode} - not damaged or missing data`);
 				}
 			}
 			
-			console.log(`\n✅ Finished processing damaged items\n`);
+			console.log(`\nFinished processing damaged items\n`);
 		}
 
 		res.json({

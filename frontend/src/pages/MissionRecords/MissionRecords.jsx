@@ -818,12 +818,11 @@ const MissionRecords = () => {
 			>
 				{loadingReport ? (
 					<>
-						<span className="animate-spin">⏳</span>
 						Loading...
 					</>
 				) : (
 					<>
-						🖨️ Generate Report
+						Generate Report
 					</>
 				)}
 			</button>
@@ -1384,7 +1383,7 @@ const MissionRecords = () => {
 								onClick={() => setShowReportModal(false)}
 								className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
 							>
-								✕
+								×
 							</button>
 						</div>
 
@@ -1575,7 +1574,7 @@ const MissionRecords = () => {
 								onClick={handlePrintReport}
 								className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-2"
 							>
-								🖨️ Print Report
+								Print Report
 							</button>
 						</div>
 					</div>

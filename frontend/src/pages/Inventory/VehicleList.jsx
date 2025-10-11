@@ -152,13 +152,13 @@ const VehicleList = () => {
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              📦 Back to Inventory
+              Back to Inventory
             </Link>
             <Link
               to="/inventory/vehicles/add"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              🚗 Add New Vehicle
+              Add New Vehicle
             </Link>
           </div>
         </div>
@@ -318,19 +318,19 @@ const VehicleList = () => {
                           to={`/inventory/vehicles/${vehicle._id}`}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          👁️ View
+                          View
                         </Link>
                         <Link
                           to={`/inventory/vehicles/edit/${vehicle._id}`}
                           className="text-green-600 hover:text-green-900"
                         >
-                          ✏️ Edit
+                          Edit
                         </Link>
                         <button
                           onClick={() => handleDelete(vehicle._id)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          🗑️ Delete
+                          Delete
                         </button>
                       </div>
                     </td>
