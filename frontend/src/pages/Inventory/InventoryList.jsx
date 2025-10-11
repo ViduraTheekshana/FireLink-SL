@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { getItems, getCategories, getLocations, deleteItem } from '../../api/inventoryApi';
+import { getItems, getCategories, getLocations, deleteItem, addItemQuantity, removeItemQuantity } from '../../api/inventoryApi';
 import { createReorder } from '../../api/inventoryReorderApi';
 import firelinkLogo from '../../assets/images/firelink-logo.png';
 import Sidebar from '../UserManagement/Sidebar';
@@ -52,6 +52,9 @@ const InventoryList = () => {
   
   // Dashboard data state - for showing all inventory items in dashboard
   const [dashboardData, setDashboardData] = useState([]);
+
+  // Quick Adjust state - stores quantity inputs for each item
+  const [adjustQuantities, setAdjustQuantities] = useState({});
 
   useEffect(() => {
     loadInitialData();
@@ -215,6 +218,70 @@ const InventoryList = () => {
         setError('Failed to delete item');
         console.error(err);
       }
+    }
+  };
+
+  // Quick Adjust handlers
+  const handleQuantityChange = (itemId, value) => {
+    setAdjustQuantities(prev => ({
+      ...prev,
+      [itemId]: value
+    }));
+  };
+
+  const handleAddQuantity = async (itemId, itemName) => {
+    const amount = parseInt(adjustQuantities[itemId], 10);
+    if (!amount || amount < 1) {
+      alert('Please enter a valid quantity (at least 1)');
+      return;
+    }
+
+    // Frontend validation: maximum add amount per operation
+    const MAX_ADD_AMOUNT = 10000;
+    if (amount > MAX_ADD_AMOUNT) {
+      alert(`❌ Cannot add more than ${MAX_ADD_AMOUNT} units in a single operation`);
+      return;
+    }
+
+    try {
+      const response = await addItemQuantity(itemId, amount);
+      if (response.success) {
+        alert(`✅ Successfully added ${amount} units to ${itemName}`);
+        setAdjustQuantities(prev => ({ ...prev, [itemId]: '' })); // Clear input
+        loadInventoryData(); // Refresh the list
+      }
+    } catch (err) {
+      alert(`❌ Failed to add quantity: ${err.response?.data?.message || err.message}`);
+      console.error(err);
+    }
+  };
+
+  const handleRemoveQuantity = async (itemId, itemName, currentQuantity) => {
+    const amount = adjustQuantities[itemId];
+    if (!amount || amount < 1) {
+      alert('Please enter a valid quantity (at least 1)');
+      return;
+    }
+
+    if (amount > currentQuantity) {
+      alert(`❌ Cannot remove ${amount} units. Only ${currentQuantity} units available.`);
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to remove ${amount} units from ${itemName}?`)) {
+      return;
+    }
+
+    try {
+      const response = await removeItemQuantity(itemId, amount);
+      if (response.success) {
+        alert(`✅ Successfully removed ${amount} units from ${itemName}`);
+        setAdjustQuantities(prev => ({ ...prev, [itemId]: '' })); // Clear input
+        loadInventoryData(); // Refresh the list
+      }
+    } catch (err) {
+      alert(`❌ Failed to remove quantity: ${err.response?.data?.message || err.message}`);
+      console.error(err);
     }
   };
 
@@ -667,6 +734,7 @@ const InventoryList = () => {
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quick Adjust</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -829,6 +897,34 @@ const InventoryList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{item.location || 'N/A'}</div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="10000"
+                        placeholder="Qty"
+                        value={adjustQuantities[item._id] || ''}
+                        onChange={(e) => handleQuantityChange(item._id, e.target.value)}
+                        className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        title="Max: 10,000 per operation"
+                      />
+                      <button
+                        onClick={() => handleAddQuantity(item._id, item.item_name)}
+                        className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                        title="Add quantity"
+                      >
+                        ➕
+                      </button>
+                      <button
+                        onClick={() => handleRemoveQuantity(item._id, item.item_name, item.quantity)}
+                        className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700"
+                        title="Remove quantity"
+                      >
+                        ➖
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">

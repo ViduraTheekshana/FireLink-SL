@@ -8,6 +8,8 @@ const {
 	deleteItem,
 	generateReport,
 	checkItemIdExists,
+	addItemQuantity,
+	removeItemQuantity,
 } = require("../controllers/inventoryController");
 
 // Import middleware
@@ -126,4 +128,32 @@ router.put(
 // @access  Private - Admin only
 router.delete("/:id", protect, requireRole("admin"), deleteItem);
 
-module.exports = router;
+// @route   POST /api/inventory/:id/add-quantity
+// @desc    Add quantity to inventory item (Quick Adjust)
+// @access  Private - Inventory Manager, Admin
+router.post(
+	"/:id/add-quantity",
+	protect,
+	requireAnyPermission([
+		"inventory_management",
+		"equipment_tracking",
+		"all_access",
+	]),
+	addItemQuantity
+);
+
+// @route   POST /api/inventory/:id/remove-quantity
+// @desc    Remove quantity from inventory item (Quick Adjust)
+// @access  Private - Inventory Manager, Admin
+router.post(
+	"/:id/remove-quantity",
+	protect,
+	requireAnyPermission([
+		"inventory_management",
+		"equipment_tracking",
+		"all_access",
+	]),
+	removeItemQuantity
+);
+
+module.exports = router;

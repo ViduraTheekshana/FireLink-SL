@@ -96,6 +96,7 @@ const App = () => {
 				<Route path="/inventory/add" element={<InventoryForm />} />
 				<Route path="/inventory/vehicles" element={<VehicleList />} />
 				<Route path="/inventory/vehicles/add" element={<VehicleForm />} />
+				<Route path="/inventory/vehicles/edit/:id" element={<VehicleForm />} />
 				<Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
 				<Route path="/inventory/edit/:id" element={<InventoryForm />} />
 				<Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
