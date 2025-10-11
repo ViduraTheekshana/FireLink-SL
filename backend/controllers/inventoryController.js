@@ -374,7 +374,8 @@ const deleteItem = async (req, res) => {
         itemId: deletedItem._id,
         itemName: deletedItem.item_name,
         itemCategory: deletedItem.category,
-        description: `Deleted inventory item: ${deletedItem.item_name}`,
+        description: `Deleted inventory item: ${deletedItem.item_name} (Quantity: ${deletedItem.quantity})`,
+        quantityChange: -deletedItem.quantity, // Negative to indicate removal
         // TODO: Auth - Uncomment when auth is implemented
         // performedBy: req.user?._id || null,
         // performedByName: req.user?.name || 'System User',

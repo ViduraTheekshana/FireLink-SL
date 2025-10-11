@@ -867,6 +867,11 @@ const ReorderPage = () => {
                 <div>
                   <h1 className="text-lg font-bold text-red-600 print:text-base">FIRELINK-SL</h1>
                   <p className="text-xs font-semibold print:text-[10px] text-gray-700">Fire and Rescue Service</p>
+                  <div className="text-[10px] text-gray-600 print:text-[8px] mt-1">
+                    <p className="font-medium">Main Fire Station (Head Quarters)</p>
+                    <p>T.B. Jaya Mawatha, Colombo 10, Sri Lanka</p>
+                    <p>Contact: (+94) 11-1234567</p>
+                  </div>
                 </div>
               </div>
               

@@ -516,6 +516,13 @@ const InventoryForm = () => {
                 name="item_ID"
                 value={formData.item_ID}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9) for Item ID
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) are allowed in the Item ID field.');
+                  }
+                }}
                 required
                 readOnly={isEditing}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
@@ -525,7 +532,7 @@ const InventoryForm = () => {
                     ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 } ${isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                placeholder="Enter unique item ID (3-20 characters, letters, numbers, hyphens, underscores only)"
+                placeholder="Enter unique item ID (numbers only)"
               />
               
               {/* Field-specific error message */}
@@ -635,6 +642,13 @@ const InventoryForm = () => {
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9)
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) are allowed in the Quantity field.');
+                  }
+                }}
                 min="0"
                 required
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
@@ -666,6 +680,18 @@ const InventoryForm = () => {
                 name="unit_price"
                 value={formData.unit_price}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9) and decimal point
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) and decimal point (.) are allowed in the Unit Price field.');
+                  }
+                  // Prevent multiple decimal points
+                  if (e.key === '.' && e.target.value.includes('.')) {
+                    e.preventDefault();
+                    alert('Only one decimal point is allowed in the Unit Price field.');
+                  }
+                }}
                 min="0"
                 step="0.01"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
@@ -766,6 +792,13 @@ const InventoryForm = () => {
                 name="threshold"
                 value={formData.threshold}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9)
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) are allowed in the Threshold field.');
+                  }
+                }}
                 min="0"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
                   fieldErrors.threshold
