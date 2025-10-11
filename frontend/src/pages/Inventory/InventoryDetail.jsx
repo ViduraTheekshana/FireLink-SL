@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getItemById, deleteItem } from '../../api/inventoryApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 const InventoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -104,7 +115,7 @@ const InventoryDetail = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <div className="text-red-600 text-6xl mb-4 font-bold">⚠</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Item Not Found</h2>
           <p className="text-gray-600 mb-4">{error || 'The requested item could not be found.'}</p>
           <Link
@@ -119,8 +130,16 @@ const InventoryDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="min-h-screen bg-gray-50 pt-0 pb-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-start">
@@ -189,7 +208,7 @@ const InventoryDetail = () => {
                           to={`/inventory/${item._id}/reorder`}
                           className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                         >
-                          📋 Create Reorder
+                          Create Reorder
                         </Link>
                       </div>
                     </div>
@@ -313,13 +332,13 @@ const InventoryDetail = () => {
               to={`/inventory/${item._id}/reorder`}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              📋 Create Reorder
+              Create Reorder
             </Link>
             <Link
               to="/inventory/reorders"
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              📋 View All Reorders
+              View All Reorders
             </Link>
             <Link
               to="/inventory"
@@ -328,9 +347,11 @@ const InventoryDetail = () => {
               ← Back to Inventory
             </Link>
           </div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

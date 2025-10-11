@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getAllVehicleItems, assignItemToVehicle, updateVehicleItem, removeVehicleItem } from '../../api/inventoryVehicleItemsApi';
 import { getItems } from '../../api/inventoryApi';
 import { getVehicles } from '../../api/inventoryVehicleApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 const VehicleItemsPage = () => {
   const { vehicleId } = useParams(); // Get vehicleId from URL if present
+  const navigate = useNavigate();
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+
   const [vehicleItems, setVehicleItems] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
   const [availableVehicles, setAvailableVehicles] = useState([]);
@@ -213,7 +225,15 @@ const VehicleItemsPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-4 pt-0 pb-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
@@ -233,26 +253,26 @@ const VehicleItemsPage = () => {
               onClick={openAssignModal}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 disabled:opacity-60"
               disabled={actionLoading}
-            >➕ Assign Item</button>
+            >Assign Item</button>
             {vehicleId && (
               <Link
                 to={`/inventory/vehicles/${vehicleId}`}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
-                🚛 Back to Vehicle
+                Back to Vehicle
               </Link>
             )}
             <Link
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              📦 Back to Inventory
+              Back to Inventory
             </Link>
             <Link
               to="/dashboard"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              🏠 Dashboard
+              Dashboard
             </Link>
           </div>
         </div>
@@ -557,6 +577,8 @@ const VehicleItemsPage = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,9 +1,10 @@
 const Mission = require("../models/Mission");
+const Inventory = require("../models/Inventory");
+const InventoryLog = require("../models/InventoryLog");
 const { validationResult } = require("express-validator");
 
-// @desc    Create a new mission record
-// @route   POST /api/missions
-// @access  Private
+// Create a new mission record
+
 const createMission = async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -23,7 +24,7 @@ const createMission = async (req, res) => {
 			inventoryItems,
 		} = req.body;
 
-		// Resolve current actor (user via Bearer token or supplier via cookie)
+		
 		const currentUserId =
 			(req.user && (req.user.userId || req.user.id)) ||
 			(req.supplier && req.supplier._id);
@@ -35,7 +36,7 @@ const createMission = async (req, res) => {
 			});
 		}
 
-		// Validate inventory items
+		
 		if (inventoryItems && inventoryItems.length > 0) {
 			for (const item of inventoryItems) {
 				if (item.usedQuantity > item.quantity) {
@@ -60,6 +61,50 @@ const createMission = async (req, res) => {
 
 		await savedMission.populate("createdBy", "name gmail");
 
+		// Process damaged items - reduce inventory quantity
+		if (inventoryItems && inventoryItems.length > 0) {
+			for (const item of inventoryItems) {
+				if (item.isDamaged && item.damagedQuantity > 0 && item.inventoryItemId) {
+					try {
+						// Find inventory item by MongoDB _id
+						const inventoryItem = await Inventory.findById(item.inventoryItemId);
+						
+						if (inventoryItem) {
+							// Reduce quantity by damaged amount
+							const newQuantity = inventoryItem.quantity - item.damagedQuantity;
+							
+							if (newQuantity >= 0) {
+								const previousQuantity = inventoryItem.quantity;
+								inventoryItem.quantity = newQuantity;
+								await inventoryItem.save();
+
+								// Create inventory log entry with correct schema
+								await InventoryLog.create({
+									action: 'STOCK_CHANGE',
+									itemId: inventoryItem._id,
+									itemName: inventoryItem.item_name,
+									itemCategory: inventoryItem.category || 'Uncategorized',
+									description: `Damaged in mission: ${missionType} (Mission ID: ${savedMission._id})`,
+									previousValue: { quantity: previousQuantity },
+									newValue: { quantity: newQuantity },
+									quantityChange: -item.damagedQuantity,
+									performedBy: currentUserId,
+									performedByName: req.user?.name || req.user?.email || 'System'
+								});
+
+								console.log(`Reduced ${item.damagedQuantity} damaged units from ${inventoryItem.item_name} (ID: ${inventoryItem.item_ID})`);
+							} else {
+								console.error(`Cannot reduce inventory below 0 for item ${inventoryItem.item_ID}`);
+							}
+						}
+					} catch (invError) {
+						console.error(`Error reducing inventory for item ${item.itemCode}:`, invError);
+						// Don't fail the mission creation if inventory update fails
+					}
+				}
+			}
+		}
+
 		res.status(201).json({
 			success: true,
 			message: "Mission record created successfully",
@@ -75,9 +120,7 @@ const createMission = async (req, res) => {
 	}
 };
 
-// @desc    Get all mission records with pagination and filtering
-// @route   GET /api/missions
-// @access  Private
+
 const getMissions = async (req, res) => {
 	try {
 		const {
@@ -93,7 +136,7 @@ const getMissions = async (req, res) => {
 
 		const query = {};
 
-		// Apply filters
+		// filters
 		if (missionType) {
 			query.missionType = missionType;
 		}
@@ -110,7 +153,7 @@ const getMissions = async (req, res) => {
 			}
 		}
 
-		// Build sort object
+		
 		const sort = {};
 		sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
@@ -141,9 +184,8 @@ const getMissions = async (req, res) => {
 	}
 };
 
-// @desc    Get a single mission record by ID
-// @route   GET /api/missions/:id
-// @access  Private
+// Get  mission record by ID
+
 const getMissionById = async (req, res) => {
 	try {
 		const mission = await Mission.findById(req.params.id).populate(
@@ -173,9 +215,8 @@ const getMissionById = async (req, res) => {
 	}
 };
 
-// @desc    Update a mission record
-// @route   PUT /api/missions/:id
-// @access  Private
+// Update a mission record
+
 const updateMission = async (req, res) => {
 	try {
 		const errors = validationResult(req);
@@ -204,7 +245,7 @@ const updateMission = async (req, res) => {
 			});
 		}
 
-		// Validate inventory items
+		//  inventory items
 		if (inventoryItems && inventoryItems.length > 0) {
 			for (const item of inventoryItems) {
 				if (item.usedQuantity > item.quantity) {
@@ -216,7 +257,10 @@ const updateMission = async (req, res) => {
 			}
 		}
 
-		// Update fields
+		// Store old inventory items for comparison (to calculate damage delta)
+		const oldInventoryItems = mission.inventoryItems || [];
+
+		// Update 
 		if (missionType) mission.missionType = missionType;
 		if (missionDate) mission.missionDate = missionDate;
 		if (missionTime) mission.missionTime = missionTime;
@@ -226,6 +270,106 @@ const updateMission = async (req, res) => {
 
 		const updatedMission = await mission.save();
 		await updatedMission.populate("createdBy", "name email");
+
+		// Process damaged items - reduce inventory ONLY for NEW/INCREASED damaged quantities
+		if (inventoryItems && inventoryItems.length > 0) {
+			const currentUserId = (req.user && (req.user.userId || req.user.id)) || (req.supplier && req.supplier._id);
+			
+			console.log(`\nProcessing damaged items for mission update ${updatedMission._id}`);
+			console.log(`Old inventory items:`, JSON.stringify(oldInventoryItems.map(i => ({ 
+				itemCode: i.itemCode, 
+				inventoryItemId: i.inventoryItemId, 
+				isDamaged: i.isDamaged, 
+				damagedQty: i.damagedQuantity 
+			})), null, 2));
+			console.log(`New inventory items:`, JSON.stringify(inventoryItems.map(i => ({ 
+				itemCode: i.itemCode, 
+				inventoryItemId: i.inventoryItemId, 
+				isDamaged: i.isDamaged, 
+				damagedQty: i.damagedQuantity 
+			})), null, 2));
+			
+			for (const newItem of inventoryItems) {
+				console.log(`\nChecking item: ${newItem.itemCode}, isDamaged: ${newItem.isDamaged}, damagedQty: ${newItem.damagedQuantity}`);
+				
+				if (newItem.isDamaged && newItem.damagedQuantity > 0 && newItem.inventoryItemId) {
+					try {
+						// Find the old item to compare damaged quantities
+						// Try matching by inventoryItemId first, then fall back to itemCode
+						let oldItem = oldInventoryItems.find(
+							(old) => old.inventoryItemId && old.inventoryItemId.toString() === newItem.inventoryItemId.toString()
+						);
+						
+						// Fallback: match by itemCode if inventoryItemId not found
+						if (!oldItem) {
+							oldItem = oldInventoryItems.find(
+								(old) => old.itemCode === newItem.itemCode
+							);
+							console.log(`Matched by itemCode (fallback) for ${newItem.itemCode}`);
+						}
+						
+						const oldDamagedQty = (oldItem && oldItem.isDamaged) ? (oldItem.damagedQuantity || 0) : 0;
+						const newDamagedQty = newItem.damagedQuantity || 0;
+						
+						console.log(`Old damaged qty: ${oldDamagedQty}, New damaged qty: ${newDamagedQty}`);
+						
+						// Calculate delta (only reduce additional damage)
+						const damageDelta = newDamagedQty - oldDamagedQty;
+						
+						console.log(`Damage delta: ${damageDelta}`);
+						
+						if (damageDelta > 0) {
+							// Only reduce if there's NEW damage
+							const inventoryItem = await Inventory.findById(newItem.inventoryItemId);
+							
+							if (inventoryItem) {
+								console.log(`Found inventory item: ${inventoryItem.item_name}, current qty: ${inventoryItem.quantity}`);
+								
+								const newQuantity = inventoryItem.quantity - damageDelta;
+								
+								if (newQuantity >= 0) {
+									const previousQuantity = inventoryItem.quantity;
+									inventoryItem.quantity = newQuantity;
+									await inventoryItem.save();
+
+									// Create inventory log entry with correct schema
+									await InventoryLog.create({
+										action: 'STOCK_CHANGE',
+										itemId: inventoryItem._id,
+										itemName: inventoryItem.item_name,
+										itemCategory: inventoryItem.category || 'Uncategorized',
+										description: `Damaged in mission update: ${missionType} (Mission ID: ${updatedMission._id}) - Additional damage: ${damageDelta} units`,
+										previousValue: { quantity: previousQuantity },
+										newValue: { quantity: newQuantity },
+										quantityChange: -damageDelta,
+										performedBy: currentUserId,
+										performedByName: req.user?.name || req.user?.email || 'System'
+									});
+
+									console.log(`Reduced ${damageDelta} additional damaged units from ${inventoryItem.item_name} (ID: ${inventoryItem.item_ID})`);
+									console.log(`New inventory quantity: ${newQuantity}`);
+								} else {
+									console.error(`Cannot reduce inventory below 0 for item ${inventoryItem.item_ID}. Would be: ${newQuantity}`);
+								}
+							} else {
+								console.error(`Inventory item not found with ID: ${newItem.inventoryItemId}`);
+							}
+						} else if (damageDelta < 0) {
+							console.log(`Damaged quantity decreased by ${Math.abs(damageDelta)} for item ${newItem.itemCode}. Not restoring inventory (damage is permanent).`);
+						} else {
+							console.log(`No change in damaged quantity for item ${newItem.itemCode}`);
+						}
+					} catch (invError) {
+						console.error(`Error processing damaged inventory for item ${newItem.itemCode}:`, invError);
+						// Don't fail the mission update if inventory update fails
+					}
+				} else {
+					console.log(`Skipping item ${newItem.itemCode} - not damaged or missing data`);
+				}
+			}
+			
+			console.log(`\nFinished processing damaged items\n`);
+		}
 
 		res.json({
 			success: true,
@@ -242,9 +386,8 @@ const updateMission = async (req, res) => {
 	}
 };
 
-// @desc    Delete a mission record
-// @route   DELETE /api/missions/:id
-// @access  Private
+//   Delete a mission record
+
 const deleteMission = async (req, res) => {
 	try {
 		const mission = await Mission.findById(req.params.id);
@@ -272,9 +415,8 @@ const deleteMission = async (req, res) => {
 	}
 };
 
-// @desc    Get mission statistics
-// @route   GET /api/missions/stats
-// @access  Private
+//     Get mission 
+
 const getMissionStats = async (req, res) => {
 	try {
 		const { startDate, endDate } = req.query;

@@ -82,6 +82,29 @@ const inventoryReorderSchema = new mongoose.Schema({
   actualQuantity: {
     type: Number,
     default: null
+  },
+  
+  // Send to Supply Manager tracking
+  sentToManager: {
+    type: Boolean,
+    default: false
+  },
+  sentToManagerAt: {
+    type: Date,
+    default: null
+  },
+  sentBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  pdfData: {
+    type: String, // Base64 encoded PDF
+    default: null
+  },
+  reportData: {
+    type: Object, // Store complete report details for easy retrieval
+    default: null
   }
 }, {
   timestamps: true
