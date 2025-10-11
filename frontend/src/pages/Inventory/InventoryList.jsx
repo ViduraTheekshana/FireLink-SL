@@ -1015,6 +1015,12 @@ const InventoryList = () => {
                   <div className="text-left">
                     <h1 className="text-lg font-bold text-red-600 print:text-base">FIRELINK-SL</h1>
                     <p className="text-xs font-semibold print:text-[10px] text-gray-700">Fire and Rescue Service</p>
+                    <p className="text-[10px] print:text-[8px] text-gray-600 mt-0.5 leading-tight">
+                      Main Fire Station (Head Quarters)<br />
+                      T.B. Jaya Mawatha, Colombo 10<br />
+                      Sri Lanka<br />
+                      Contact: (+94) 11-1234567
+                    </p>
                   </div>
                 </div>
                 

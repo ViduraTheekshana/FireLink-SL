@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { missionService } from "../../services/missionService";
+import { inventoryService } from "../../services/inventoryService";
 import firelinkLogo from "../../assets/images/firelink-logo.png";
 
 const MissionRecords = () => {
@@ -23,6 +24,12 @@ const MissionRecords = () => {
 	const [filters, setFilters] = useState({
 		missionType: "",
 	});
+
+	// Inventory autocomplete state
+	const [inventoryItems, setInventoryItems] = useState([]);
+	const [showSuggestions, setShowSuggestions] = useState({});
+	const [filteredSuggestions, setFilteredSuggestions] = useState({});
+	const [selectedCategory, setSelectedCategory] = useState({});
 
 	// Report generation state
 	const [showReportModal, setShowReportModal] = useState(false);
@@ -48,6 +55,21 @@ const MissionRecords = () => {
 	useEffect(() => {
 		loadMissions();
 	}, [currentPage, filters]);
+
+	// Load inventory items for autocomplete
+	useEffect(() => {
+		fetchInventoryItems();
+	}, []);
+
+	const fetchInventoryItems = async () => {
+		try {
+			const data = await inventoryService.getItemsForMissions();
+			setInventoryItems(data.items || []);
+		} catch (error) {
+			// Silently fail to not disrupt existing functionality
+			console.error("Error fetching inventory items:", error);
+		}
+	};
 
 	const loadMissions = async () => {
 		try {
@@ -82,10 +104,41 @@ const MissionRecords = () => {
 			...updatedItems[index],
 			[field]: value,
 		};
+
+		// If itemCode is being changed, show suggestions
+		if (field === "itemCode") {
+			const filtered = inventoryItems.filter((item) => {
+				const itemId = String(item.item_ID).toLowerCase();
+				const itemName = item.itemName.toLowerCase();
+				const searchValue = value.toLowerCase().replace(/^id/, "");
+				return itemId.includes(searchValue) || itemName.includes(searchValue);
+			});
+			setFilteredSuggestions((prev) => ({ ...prev, [index]: filtered }));
+			setShowSuggestions((prev) => ({ ...prev, [index]: value.length > 0 && filtered.length > 0 }));
+		}
+
 		setFormData((prev) => ({
 			...prev,
 			inventoryItems: updatedItems,
 		}));
+	};
+
+	const selectInventoryItem = (index, item) => {
+		const updatedItems = [...formData.inventoryItems];
+		updatedItems[index] = {
+			...updatedItems[index],
+			inventoryItemId: item._id,
+			itemCode: `ID${String(item.item_ID).padStart(3, "0")}`,
+			itemName: item.itemName,
+			quantity: item.quantity,
+			isDamaged: false,
+			damagedQuantity: 0,
+		};
+		setFormData((prev) => ({
+			...prev,
+			inventoryItems: updatedItems,
+		}));
+		setShowSuggestions((prev) => ({ ...prev, [index]: false }));
 	};
 
 	const addInventoryItem = () => {
@@ -93,7 +146,7 @@ const MissionRecords = () => {
 			...prev,
 			inventoryItems: [
 				...prev.inventoryItems,
-				{ itemCode: "", quantity: 0, usedQuantity: 0 },
+				{ itemCode: "", itemName: "", quantity: 0, usedQuantity: 0, isDamaged: false, damagedQuantity: 0 },
 			],
 		}));
 	};
@@ -113,8 +166,22 @@ const MissionRecords = () => {
 
 			// Validate inventory items
 			const validItems = formData.inventoryItems.filter(
-				(item) => item.itemCode && item.quantity > 0
+				(item) => item.itemCode && item.usedQuantity > 0
 			);
+
+			// Validate damaged quantities
+			for (const item of validItems) {
+				if (item.isDamaged && (!item.damagedQuantity || item.damagedQuantity <= 0)) {
+					setError("Please enter damaged quantity for damaged items");
+					setLoading(false);
+					return;
+				}
+				if (item.damagedQuantity > item.usedQuantity) {
+					setError("Damaged quantity cannot exceed used quantity");
+					setLoading(false);
+					return;
+				}
+			}
 
 			const missionData = {
 				...formData,
@@ -156,9 +223,13 @@ const MissionRecords = () => {
 			missionTime: mission.missionTime || "",
 			description: mission.description || "",
 			inventoryItems: (mission.inventoryItems || []).map((it) => ({
+				inventoryItemId: it.inventoryItemId || null,
 				itemCode: it.itemCode || "",
-				quantity: Number(it.quantity) || 0,
+				itemName: it.itemName || "",
+				quantity: Number(it.quantity) || Number(it.availableQuantity) || 0,
 				usedQuantity: Number(it.usedQuantity) || 0,
+				isDamaged: Boolean(it.isDamaged) || false,
+				damagedQuantity: Number(it.damagedQuantity) || 0,
 			})),
 			status: mission.status || "Active",
 		});
@@ -878,79 +949,230 @@ const MissionRecords = () => {
 							{formData.inventoryItems.map((item, index) => (
 								<div
 									key={index}
-									className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded"
+									className="mb-6 p-4 border border-gray-200 rounded bg-gray-50"
 								>
-									<div>
-                                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                                          Item Code
-                                        </label>
-                                <input
-                                 type="text"
-                                 value={item.itemCode}
-                                 onChange={(e) => {
-                                 let value = e.target.value.toUpperCase();
+									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+										{/* Item Code with Autocomplete + Dropdown */}
+										<div className="relative">
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Item Code *
+											</label>
+											<div className="flex gap-2">
+												<input
+													type="text"
+													value={item.itemCode}
+													onChange={(e) => {
+														let value = e.target.value.toUpperCase();
+														if (!value.startsWith("ID") && value.length > 0) {
+															value = "ID" + value.replace(/^ID/, "");
+														}
+														if (value.length > 5) {
+															value = value.slice(0, 5);
+														}
+														handleInventoryItemChange(index, "itemCode", value);
+													}}
+													onFocus={() => {
+														if (item.itemCode && filteredSuggestions[index]) {
+															setShowSuggestions((prev) => ({ ...prev, [index]: true }));
+														}
+													}}
+													onBlur={() => {
+														// Delay to allow click on suggestion
+														setTimeout(() => {
+															setShowSuggestions((prev) => ({ ...prev, [index]: false }));
+														}, 200);
+													}}
+													className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+													placeholder="Type ID or name..."
+													required
+												/>
+												{/* Dropdown Button */}
+												<button
+													type="button"
+													onClick={() => {
+														// Show all items when clicking dropdown button
+														setFilteredSuggestions((prev) => ({ ...prev, [index]: inventoryItems }));
+														setShowSuggestions((prev) => ({ ...prev, [index]: !showSuggestions[index] }));
+													}}
+													className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+													title="Browse all items"
+												>
+													▼
+												</button>
+											</div>
+											{/* Autocomplete/Dropdown Suggestions */}
+											{showSuggestions[index] && filteredSuggestions[index] && filteredSuggestions[index].length > 0 && (
+												<div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden">
+													{/* Category Filter */}
+													<div className="sticky top-0 bg-gray-100 p-2 border-b border-gray-300">
+														<select
+															value={selectedCategory[index] || ""}
+															onChange={(e) => {
+																const category = e.target.value;
+																setSelectedCategory((prev) => ({ ...prev, [index]: category }));
+																const filtered = category
+																	? inventoryItems.filter((item) => item.category === category)
+																	: inventoryItems;
+																setFilteredSuggestions((prev) => ({ ...prev, [index]: filtered }));
+															}}
+															className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+															onClick={(e) => e.stopPropagation()}
+														>
+															<option value="">All Categories</option>
+															{[...new Set(inventoryItems.map((item) => item.category))].sort().map((cat) => (
+																<option key={cat} value={cat}>
+																	{cat}
+																</option>
+															))}
+														</select>
+													</div>
+													{/* Items List */}
+													<div className="overflow-y-auto max-h-60">
+														{filteredSuggestions[index].length === 0 ? (
+															<div className="px-3 py-4 text-center text-gray-500 text-sm">
+																No items found
+															</div>
+														) : (
+															filteredSuggestions[index].slice(0, 20).map((suggestion) => (
+																<div
+																	key={suggestion._id}
+																	onClick={() => {
+																		selectInventoryItem(index, suggestion);
+																		setSelectedCategory((prev) => ({ ...prev, [index]: "" }));
+																	}}
+																	className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+																>
+																	<div className="font-medium text-sm text-gray-900">
+																		ID{String(suggestion.item_ID).padStart(3, "0")} - {suggestion.itemName}
+																	</div>
+																	<div className="text-xs text-gray-500">
+																		Available: {suggestion.quantity} | Category: {suggestion.category}
+																	</div>
+																</div>
+															))
+														)}
+													</div>
+												</div>
+											)}
+										</div>
 
-      
-                                if (!value.startsWith("IT")) {
-                                   value = "ID" + value.replace(/^ID/, "");//ID auto 
-                                    }
+										{/* Item Name (Read-only, auto-filled) */}
+										<div>
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Item Name
+											</label>
+											<input
+												type="text"
+												value={item.itemName || ""}
+												readOnly
+												className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+												placeholder="Auto-filled"
+											/>
+										</div>
 
-    
-                                  if (value.length > 5) {
-                                    value = value.slice(0, 5);
-                                    }
-
-                                   handleInventoryItemChange(index, "itemCode", value);
-                                   }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="e.g., ID001"
-                                    required
-                                />
-                            </div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Available Quantity
-										</label>
-										<input
-											type="number"
-											value={item.quantity}
-											onChange={(e) =>
-												handleInventoryItemChange(
-													index,
-													"quantity",
-													parseInt(e.target.value) || 0
-												)
-											}
-											min="0"
-											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
+										{/* Available Quantity (Read-only, auto-filled) */}
+										<div>
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Available Quantity
+											</label>
+											<input
+												type="number"
+												value={item.quantity || 0}
+												readOnly
+												className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+											/>
+										</div>
 									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">
-											Used Quantity
-										</label>
-										<input
-											type="number"
-											value={item.usedQuantity}
-											onChange={(e) =>
-												handleInventoryItemChange(
-													index,
-													"usedQuantity",
-													parseInt(e.target.value) || 0
-												)
-											}
-											min="0"
-											max={item.quantity}
-											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-										/>
+
+									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+										{/* Used Quantity */}
+										<div>
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Used Quantity *
+											</label>
+											<input
+												type="number"
+												value={item.usedQuantity}
+												onChange={(e) =>
+													handleInventoryItemChange(
+														index,
+														"usedQuantity",
+														parseInt(e.target.value) || 0
+													)
+												}
+												min="0"
+												max={item.quantity}
+												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+												required
+											/>
+										</div>
+
+										{/* Is Damaged */}
+										<div>
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Item Damaged?
+											</label>
+											<div className="flex items-center space-x-4 pt-2">
+												<label className="flex items-center">
+													<input
+														type="radio"
+														name={`isDamaged-${index}`}
+														checked={item.isDamaged === false}
+														onChange={() =>
+															handleInventoryItemChange(index, "isDamaged", false)
+														}
+														className="mr-2"
+													/>
+													No
+												</label>
+												<label className="flex items-center">
+													<input
+														type="radio"
+														name={`isDamaged-${index}`}
+														checked={item.isDamaged === true}
+														onChange={() =>
+															handleInventoryItemChange(index, "isDamaged", true)
+														}
+														className="mr-2"
+													/>
+													Yes
+												</label>
+											</div>
+										</div>
+
+										{/* Damaged Quantity (only if damaged) */}
+										<div>
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Damaged Quantity
+											</label>
+											<input
+												type="number"
+												value={item.damagedQuantity || 0}
+												onChange={(e) =>
+													handleInventoryItemChange(
+														index,
+														"damagedQuantity",
+														parseInt(e.target.value) || 0
+													)
+												}
+												min="0"
+												max={item.usedQuantity}
+												disabled={!item.isDamaged}
+												className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+													!item.isDamaged ? "bg-gray-100 text-gray-400" : ""
+												}`}
+											/>
+										</div>
 									</div>
-									<div className="flex items-end">
+
+									{/* Remove Button */}
+									<div className="mt-4 flex justify-end">
 										<button
 											type="button"
 											onClick={() => removeInventoryItem(index)}
-											className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded"
+											className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
 										>
-											Remove
+											Remove Item
 										</button>
 									</div>
 								</div>

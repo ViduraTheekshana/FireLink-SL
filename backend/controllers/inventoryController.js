@@ -682,6 +682,112 @@ const removeItemQuantity = async (req, res) => {
   }
 };
 
+// @desc    Get available inventory items for missions (Mission Records integration)
+// @route   GET /api/inventory/items-for-missions
+// @access  Private - Record Managers
+const getItemsForMissions = async (req, res) => {
+  try {
+    const { search, category } = req.query;
+
+    // Build query - only get available items
+    let query = { status: 'Available' };
+
+    // Add search filter
+    if (search) {
+      query.$or = [
+        { item_ID: { $regex: search, $options: 'i' } },
+        { item_name: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Add category filter
+    if (category) {
+      query.category = category;
+    }
+
+    // Fetch items, sorted by item_ID
+    const items = await Inventory.find(query)
+      .select('_id item_ID item_name category quantity condition location')
+      .sort({ item_ID: 1 })
+      .limit(100);
+
+    // Format response
+    const formattedItems = items.map(item => ({
+      _id: item._id,
+      item_ID: item.item_ID,
+      itemName: item.item_name,
+      category: item.category,
+      quantity: item.quantity,
+      condition: item.condition,
+      location: item.location
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedItems.length,
+      items: formattedItems
+    });
+  } catch (error) {
+    console.error('Error fetching items for missions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch inventory items',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get single item by item_ID for validation (Mission Records integration)
+// @route   GET /api/inventory/by-item-id/:itemId
+// @access  Private - Record Managers
+const getItemByItemId = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    // Find item by item_ID (not MongoDB _id)
+    const item = await Inventory.findOne({ item_ID: itemId });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: `Item with ID ${itemId} not found`
+      });
+    }
+
+    // Check if available
+    if (item.status !== 'Available') {
+      return res.status(400).json({
+        success: false,
+        message: `Item ${itemId} is not available (Status: ${item.status})`
+      });
+    }
+
+    // Format response
+    const formattedItem = {
+      _id: item._id,
+      item_ID: item.item_ID,
+      itemName: item.item_name,
+      category: item.category,
+      quantity: item.quantity,
+      condition: item.condition,
+      location: item.location,
+      status: item.status
+    };
+
+    res.status(200).json({
+      success: true,
+      item: formattedItem
+    });
+  } catch (error) {
+    console.error('Error fetching item by item_ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch item',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createItem,
   getItems,
@@ -691,5 +797,7 @@ module.exports = {
   generateReport,
   checkItemIdExists,
   addItemQuantity,
-  removeItemQuantity
+  removeItemQuantity,
+  getItemsForMissions,
+  getItemByItemId
 };
