@@ -40,7 +40,7 @@ const SalaryManagement = () => {
 		return perDay / 8;
 	}, [form.perDaySalary]);
 
-	// Salary calculation logic
+	
 	useEffect(() => {
 		const totalDays = Math.max(0, Number(form.totalWorkingDays) || 0);
 		const present = Math.max(0, Math.min(Number(form.daysPresent) || 0, totalDays));
@@ -51,14 +51,14 @@ const SalaryManagement = () => {
 		const otHours = Math.max(0, Number(form.otHours) || 0);
 		const otPay = perHourRate * otHours;
 
-		const meal = Number(form.mealAllowance) || 0;
-		const transport = Number(form.transportAllowance) || 0;
-		const medical = Number(form.medicalAllowance) || 0;
+		const meal = Math.max(0, Number(form.mealAllowance) || 0);
+		const transport = Math.max(0, Number(form.transportAllowance) || 0);
+		const medical = Math.max(0, Number(form.medicalAllowance) || 0);
 
 		const noPayDays = Math.max(0, Number(form.noPayLeaves) || 0);
 		const noPay = noPayDays * perDay;
-		const taxRate = Number(form.taxRate) || 0;
-		const epfRate = Number(form.epfRate) || 0;
+		const taxRate = Math.max(0, Number(form.taxRate) || 0);
+		const epfRate = Math.max(0, Number(form.epfRate) || 0);
 
 		const gross = basic + otPay + meal + transport + medical;
 		const epfAmount = (basic * epfRate) / 100;
@@ -86,7 +86,7 @@ const SalaryManagement = () => {
 		form.epfRate,
 	]);
 
-	// Fetch users from backend
+	// Fetch 
 	useEffect(() => {
 		const fetchUsers = async () => {
 			try {
@@ -105,16 +105,46 @@ const SalaryManagement = () => {
 		fetchUsers();
 	}, []);
 
-	// Handle form input change
+	
 	const handleChange = (e) => {
 		const { name, value } = e.target;
+
+		
+		if (
+			[
+				"totalWorkingDays",
+				"daysPresent",
+				"basicSalary",
+				"otHours",
+				"mealAllowance",
+				"transportAllowance",
+				"medicalAllowance",
+				"noPayLeaves",
+				"taxRate",
+				"epfRate",
+			].includes(name)
+		) {
+			const num = Number(value);
+			if (num < 0) return; 
+		}
+
+		
+		if (name === "daysPresent" && Number(value) > Number(form.totalWorkingDays)) {
+			alert("Days Present cannot exceed Total Working Days");
+			return;
+		}
+
 		setForm((prev) => ({
 			...prev,
-			[name]: name === "employeeName" || name === "email" || name === "role" ? value : value === "" ? "" : Number(value),
+			[name]: ["employeeName", "email", "role"].includes(name)
+				? value
+				: value === ""
+				? ""
+				: Number(value),
 		}));
 	};
 
-	// When user selected from dropdown
+	
 	const onSelectUser = (e) => {
 		const id = e.target.value;
 		setUserId(id);
@@ -129,7 +159,7 @@ const SalaryManagement = () => {
 		}));
 	};
 
-	// Reset form
+	
 	const resetForm = () => {
 		setError("");
 		setForm(initialForm);
@@ -137,7 +167,7 @@ const SalaryManagement = () => {
 		setUserId("");
 	};
 
-	// Submit salary record
+	
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
@@ -148,27 +178,7 @@ const SalaryManagement = () => {
 			if (!form.email.trim()) throw new Error("Email is required");
 			if (!form.role.trim()) throw new Error("Role is required");
 
-			const payload = {
-				employeeName: form.employeeName,
-				email: form.email,
-				role: form.role,
-				totalWorkingDays: form.totalWorkingDays,
-				daysPresent: form.daysPresent,
-				daysAbsent: form.daysAbsent,
-				title: "salary",
-				basicSalary: form.basicSalary,
-				perDaySalary: form.perDaySalary,
-				otHours: form.otHours,
-				finalSalary: form.finalSalary,
-				mealAllowance: form.mealAllowance,
-				transportAllowance: form.transportAllowance,
-				medicalAllowance: form.medicalAllowance,
-				noPayLeaves: form.noPayLeaves,
-				taxRate: form.taxRate,
-				otPay: form.otPay,
-				epfRate: form.epfRate,
-				epfAmount: form.epfAmount,
-			};
+			const payload = { ...form, title: "salary" };
 
 			await salaryService.create(payload);
 			alert("Salary saved successfully!");
@@ -184,7 +194,9 @@ const SalaryManagement = () => {
 		<div className="salary-container">
 			<div className="salary-header">
 				<h1 className="title">Salary Management</h1>
-				<p className="subtitle">Calculate and manage monthly salaries with allowances & deductions.</p>
+				<p className="subtitle">
+					Calculate and manage monthly salaries with allowances & deductions.
+				</p>
 			</div>
 
 			<div className="actions">
@@ -215,27 +227,56 @@ const SalaryManagement = () => {
 						{/* Basic info */}
 						<div className="form-group">
 							<label>Employee Name</label>
-							<input name="employeeName" value={form.employeeName} onChange={handleChange} placeholder="Enter name" />
+							<input
+								name="employeeName"
+								value={form.employeeName}
+								onChange={handleChange}
+								placeholder="Enter name"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Email</label>
-							<input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Enter email" />
+							<input
+								type="email"
+								name="email"
+								value={form.email}
+								onChange={handleChange}
+								placeholder="Enter email"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Role</label>
-							<input name="role" value={form.role} onChange={handleChange} placeholder="Enter role (e.g. Firefighter, Clerk)" />
+							<input
+								name="role"
+								value={form.role}
+								onChange={handleChange}
+								placeholder="Enter role (e.g. Firefighter, Clerk)"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Total Working Days</label>
-							<input type="number" name="totalWorkingDays" value={form.totalWorkingDays} onChange={handleChange} />
+							<input
+								type="number"
+								name="totalWorkingDays"
+								value={form.totalWorkingDays}
+								onChange={handleChange}
+								min="1"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Days Present</label>
-							<input type="number" name="daysPresent" value={form.daysPresent} onChange={handleChange} />
+							<input
+								type="number"
+								name="daysPresent"
+								value={form.daysPresent}
+								onChange={handleChange}
+								min="0"
+								max={form.totalWorkingDays}
+							/>
 						</div>
 
 						<div className="form-group">
@@ -246,7 +287,13 @@ const SalaryManagement = () => {
 						<div className="section-title">Salary Calculation</div>
 						<div className="form-group">
 							<label>Basic Salary</label>
-							<input type="number" name="basicSalary" value={form.basicSalary} onChange={handleChange} />
+							<input
+								type="number"
+								name="basicSalary"
+								value={form.basicSalary}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="form-group">
@@ -256,7 +303,13 @@ const SalaryManagement = () => {
 
 						<div className="form-group">
 							<label>OT Hours</label>
-							<input type="number" name="otHours" value={form.otHours} onChange={handleChange} />
+							<input
+								type="number"
+								name="otHours"
+								value={form.otHours}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="form-group">
@@ -267,28 +320,58 @@ const SalaryManagement = () => {
 						<div className="section-title">Allowances</div>
 						<div className="form-group">
 							<label>Meal Allowance</label>
-							<input type="number" name="mealAllowance" value={form.mealAllowance} onChange={handleChange} />
+							<input
+								type="number"
+								name="mealAllowance"
+								value={form.mealAllowance}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Transport Allowance</label>
-							<input type="number" name="transportAllowance" value={form.transportAllowance} onChange={handleChange} />
+							<input
+								type="number"
+								name="transportAllowance"
+								value={form.transportAllowance}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Medical Allowance</label>
-							<input type="number" name="medicalAllowance" value={form.medicalAllowance} onChange={handleChange} />
+							<input
+								type="number"
+								name="medicalAllowance"
+								value={form.medicalAllowance}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="section-title">Deductions</div>
 						<div className="form-group">
 							<label>No Pay Leaves</label>
-							<input type="number" name="noPayLeaves" value={form.noPayLeaves} onChange={handleChange} />
+							<input
+								type="number"
+								name="noPayLeaves"
+								value={form.noPayLeaves}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="form-group">
 							<label>Tax Rate (%)</label>
-							<input type="number" name="taxRate" value={form.taxRate} onChange={handleChange} />
+							<input
+								type="number"
+								name="taxRate"
+								value={form.taxRate}
+								onChange={handleChange}
+								min="0"
+							/>
 						</div>
 
 						<div className="form-group">
@@ -318,4 +401,3 @@ const SalaryManagement = () => {
 };
 
 export default SalaryManagement;
-//edit now
