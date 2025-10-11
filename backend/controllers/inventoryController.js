@@ -93,7 +93,7 @@ const createItem = async (req, res) => {
   }
 };
 
-// @desc    Get all inventory items with search/filter
+// @desc    Get all inventory items with search/filter  
 // @route   GET /api/inventory
 // @access  Private
 const getItems = async (req, res) => {//get all inventory items
@@ -131,13 +131,29 @@ const getItems = async (req, res) => {//get all inventory items
         });
       } else {
         // Regular text search
-        andConditions.push({
-          $or: [
-            { item_name: { $regex: search, $options: 'i' } },
-            { category: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } }
-          ]
-        });
+        const searchConditions = [
+          { item_name: { $regex: search, $options: 'i' } },
+          { category: { $regex: search, $options: 'i' } },
+          { location: { $regex: search, $options: 'i' } }
+        ];
+        
+        // If search looks like a number, also search by item_ID (partial match)
+        // Convert item_ID to string and use regex for partial matching
+        if (!isNaN(search)) {
+          searchConditions.push({
+            $expr: {
+              $regexMatch: {
+                input: { $toString: '$item_ID' },
+                regex: search,
+                options: 'i'
+              }
+            }
+          });
+          console.log(`Search by ID (partial): "${search}"`);
+        }
+        
+        console.log('Search conditions:', JSON.stringify(searchConditions, null, 2));
+        andConditions.push({ $or: searchConditions });
       }
     }
     
