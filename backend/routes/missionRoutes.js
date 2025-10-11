@@ -24,8 +24,8 @@ const validateMission = [
     .withMessage('Invalid time format (HH:MM)'),
   body('description')
     .trim()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('Description must be between 10 and 1000 characters'),
+    .isLength({ min: 10, max: 25 })
+    .withMessage('Description must be between 10 and 25 characters'),
   body('inventoryItems')
     .optional()
     .isArray()
