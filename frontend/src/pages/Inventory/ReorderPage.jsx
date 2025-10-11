@@ -4,6 +4,7 @@ import { getItemById } from '../../api/inventoryApi';
 import { createReorder, getReorders, sendReorderToManager } from '../../api/inventoryReorderApi';
 import firelinkLogo from '../../assets/images/firelink-logo.png';
 import Sidebar from '../UserManagement/Sidebar';
+import { FaUser } from 'react-icons/fa';
 
 const ReorderPage = () => {
   const { id } = useParams();
@@ -505,7 +506,7 @@ const ReorderPage = () => {
       const response = await sendReorderToManager(lastCreatedReorderId, base64PDF, reportData);
 
       if (response.success) {
-        alert(`✅ Report sent to Supply Manager successfully!\n\nReorder ID: ${response.data.reorderId}\nItem: ${response.data.itemName}\nQuantity: ${response.data.quantity}\nPriority: ${response.data.priority}`);
+        alert(`Report sent to Supply Manager successfully!\n\nReorder ID: ${response.data.reorderId}\nItem: ${response.data.itemName}\nQuantity: ${response.data.quantity}\nPriority: ${response.data.priority}`);
         console.log('Report sent successfully:', response.data);
       } else {
         alert('Failed to send report to Supply Manager. Please try again.');
@@ -560,7 +561,14 @@ const ReorderPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Reorder Item</h1>
             <p className="text-gray-600">Create reorder for low stock item</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-3 items-center">
+            <Link
+              to="/inventory-manager/profile"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+            >
+              <FaUser className="text-sm" />
+              Profile
+            </Link>
             <Link
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
@@ -806,7 +814,7 @@ const ReorderPage = () => {
               disabled={submitting}
               className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              {submitting ? 'Submitting...' : '📋 Submit Reorder'}
+              {submitting ? 'Submitting...' : 'Submit Reorder'}
             </button>
             <button
               type="button"
@@ -814,7 +822,7 @@ const ReorderPage = () => {
               disabled={!item || !reorderData.quantity}
               className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              📄 Download PDF Report
+              Download PDF Report
             </button>
             <button
               type="button"
@@ -822,7 +830,7 @@ const ReorderPage = () => {
               disabled={!lastCreatedReorderId || sending}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              {sending ? '📤 Sending...' : '📤 Send to Supply Manager'}
+              {sending ? 'Sending...' : 'Send to Supply Manager'}
             </button>
             <Link
               to="/inventory"
@@ -853,12 +861,17 @@ const ReorderPage = () => {
                     }}
                   />
                   <div className="w-full h-full bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm print:text-xs hidden">
-                    🚒
+                    
                   </div>
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-red-600 print:text-base">FIRELINK-SL</h1>
                   <p className="text-xs font-semibold print:text-[10px] text-gray-700">Fire and Rescue Service</p>
+                  <div className="text-[10px] text-gray-600 print:text-[8px] mt-1">
+                    <p className="font-medium">Main Fire Station (Head Quarters)</p>
+                    <p>T.B. Jaya Mawatha, Colombo 10, Sri Lanka</p>
+                    <p>Contact: (+94) 11-1234567</p>
+                  </div>
                 </div>
               </div>
               
@@ -1032,7 +1045,7 @@ const ReorderPage = () => {
           {(item.threshold > 0 && item.quantity < item.threshold) && (
             <div className="border border-red-300 p-4 mt-4 bg-red-50">
               <h3 className="text-lg font-semibold mb-3 text-red-600">
-                <span className="print:hidden">⚠️ </span>URGENT REORDER REQUIRED
+                URGENT REORDER REQUIRED
               </h3>
               <div className="bg-white p-3 rounded border border-red-200">
                 <div className="flex justify-between items-center">

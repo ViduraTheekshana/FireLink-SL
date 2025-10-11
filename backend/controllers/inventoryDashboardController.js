@@ -203,7 +203,7 @@ const generateTrendData = async () => {
         action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
       });
       
-      // Get QUANTITY removed (from STOCK_CHANGE logs with negative quantityChange)
+      // Get QUANTITY removed (from STOCK_CHANGE logs with negative quantityChange AND DELETE actions)
       const quantityRemovedAgg = await InventoryLog.aggregate([
         {
           $match: {
@@ -211,8 +211,10 @@ const generateTrendData = async () => {
               $gte: dayStart,
               $lt: dayEnd
             },
-            action: 'STOCK_CHANGE',
-            quantityChange: { $lt: 0 } // Only negative changes (removals)
+            $or: [
+              { action: 'STOCK_CHANGE', quantityChange: { $lt: 0 } }, // Quantity reductions
+              { action: 'DELETE', quantityChange: { $lt: 0 } } // Item deletions with quantity
+            ]
           }
         },
         {

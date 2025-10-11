@@ -10,6 +10,8 @@ const {
 	checkItemIdExists,
 	addItemQuantity,
 	removeItemQuantity,
+	getItemsForMissions,
+	getItemByItemId,
 } = require("../controllers/inventoryController");
 
 // Import middleware
@@ -91,6 +93,35 @@ router.get(
 		"all_access",
 	]),
 	generateReport
+);
+
+// Mission Records Integration Routes (MUST be before /:id route)
+// @route   GET /api/inventory/items-for-missions
+// @desc    Get available inventory items for mission records
+// @access  Private - Record Managers
+router.get(
+	"/items-for-missions",
+	protect,
+	requireAnyPermission([
+		"mission_records",
+		"inventory_management",
+		"all_access",
+	]),
+	getItemsForMissions
+);
+
+// @route   GET /api/inventory/by-item-id/:itemId
+// @desc    Get single item by item_ID for validation
+// @access  Private - Record Managers
+router.get(
+	"/by-item-id/:itemId",
+	protect,
+	requireAnyPermission([
+		"mission_records",
+		"inventory_management",
+		"all_access",
+	]),
+	getItemByItemId
 );
 
 // @route   GET /api/inventory/:id
