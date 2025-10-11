@@ -230,9 +230,29 @@ class PreventionCertificateAPI {
       };
     }
   }
+
+  // Fetch all inspected applications
+  async getInspectedDocuments() {
+    try {
+      const response = await this.api.get('/api/prevention/certificates/inspected');
+      return response.data; // Return the backend response directly
+    } catch (error) {
+      console.error('Error fetching inspected documents:', error);
+      
+      // Return error when backend is not available
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message,
+        data: [],
+      };
+    }
+  }
 }
 
 // Create singleton instance
 const preventionCertificateAPI = new PreventionCertificateAPI();
+
+// Named exports for individual functions
+export const getInspectedDocuments = () => preventionCertificateAPI.getInspectedDocuments();
 
 export default preventionCertificateAPI;

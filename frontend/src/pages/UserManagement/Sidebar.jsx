@@ -8,6 +8,7 @@ import {
   FaClipboardList,
   FaTruck,
   FaUsers,
+  FaRegClipboard
 } from "react-icons/fa";
 
 const Sidebar = ({ user, onLogout }) => {
@@ -33,7 +34,8 @@ const Sidebar = ({ user, onLogout }) => {
           { name: "Edit Profile", path: `/update-user/${user._id}`, icon: <FaUser /> },
           { name: "Inventory", path: "/inventory", icon: <FaTruck /> },
           { name: "Finance Reports", path: "/finance", icon: <FaClipboardList /> },
-          { name: "Records", path: "/records", icon: <FaClipboardList /> }
+          { name: "Records", path: "/records", icon: <FaClipboardList /> },
+          { name: "Inspected Documents", path: "/inspected-documents", icon: <FaRegClipboard /> }
         );
         break;
 
@@ -71,7 +73,12 @@ const Sidebar = ({ user, onLogout }) => {
         break;
 
       case "preventionmanager":
-        links.push({ name: "Prevention", path: "/prevention", icon: <FaClipboardList /> });
+      case "prevention manager":
+      case "prevention_manager":
+        links.push(
+          { name: "Inspected Documents", path: "/inspected-documents", icon: <FaRegClipboard /> },
+          { name: "Test Page", path: "/test", icon: <FaRegClipboard /> }
+        );
         break;
 
       case "trainingsessionmanager":
