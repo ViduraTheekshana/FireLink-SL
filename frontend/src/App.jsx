@@ -19,6 +19,11 @@ import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
 import Profile from "./pages/UserManagement/profile";
 import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
+import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
+import FighterDashboard from "./pages/UserManagement/FighterDashboard";
+
+
+
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -62,8 +67,28 @@ const App = () => {
 				<Route path="/update-user/:id" element={<UpdateUser />} />
 				<Route path="/userdetails/:id" element={<UserDetails />} />
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
+				<Route path="/profile" element={<Profile />} />
+				<Route path="/settings" element={<Settings />} />
+				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
 
-				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+
+				<Route
+					path="/fighter-dashboard"
+					element={
+						<FighterDashboard />
+					}
+				/>
+
+<Route
+  path="/civilian-dashboard"
+  element={
+    localStorage.getItem("accessToken") ? (
+      <CivilianDashboard />
+    ) : (
+      <Navigate to="/civilian-login" replace />
+    )
+  }
+/>
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 
