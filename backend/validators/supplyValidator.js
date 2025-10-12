@@ -1,14 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
 
-const validate = (req, res, next) => {
-	const errors = validationResult(req);
-	if (!errors.isEmpty()) {
-		const errorMessages = errors.array().map((err) => err.msg);
-		return res.status(400).json({ errors: errorMessages });
-	}
-	next();
-};
-
 const loginValidationRules = () => {
 	return [
 		body("email")
@@ -103,7 +94,6 @@ const idValidationRules = () => {
 };
 
 module.exports = {
-	validate,
 	loginValidationRules,
 	createSupplierValidationRules,
 	updateSupplierValidationRules,

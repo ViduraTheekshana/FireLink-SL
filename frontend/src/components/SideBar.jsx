@@ -8,6 +8,10 @@ import {
 	UserIcon,
 	ClipboardCheckIcon,
 	ShoppingCartIcon,
+	LayoutDashboard,
+	BarChart3,
+	CreditCardIcon,
+	PieChartIcon,
 } from "lucide-react";
 import { useAuth } from "../context/auth";
 import { useSupplierAuth } from "../context/supplierAuth";
@@ -43,6 +47,11 @@ const Sidebar = () => {
 	if (checkRole("supply_manager")) {
 		menuItems = [
 			{
+				id: "supply-dashboard",
+				label: "Dashboard",
+				icon: <LayoutDashboard size={20} />,
+			},
+			{
 				id: "suppliers",
 				label: "Suppliers",
 				icon: <Users size={20} />,
@@ -51,6 +60,31 @@ const Sidebar = () => {
 				id: "supply-requests",
 				label: "Supply Requests",
 				icon: <ClipboardList size={20} />,
+			},
+			{
+				id: "procurement-report",
+				label: "Procurement Report",
+				icon: <BarChart3 size={20} />,
+			},
+		];
+	}
+
+	if (checkRole("finance_manager")) {
+		menuItems = [
+			{
+				id: "finance-dashboard",
+				label: "Dashboard",
+				icon: <PieChartIcon size={20} />,
+			},
+			{
+				id: "transactions",
+				label: "Transactions",
+				icon: <CreditCardIcon size={20} />,
+			},
+			{
+				id: "budget",
+				label: "Budget Allocation",
+				icon: <PieChartIcon size={20} />,
 			},
 		];
 	}

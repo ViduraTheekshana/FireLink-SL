@@ -8,18 +8,18 @@ const RejectedDocumentsTable = ({
   loading = false 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('fullName');
-  const [sortDirection, setSortDirection] = useState('asc');
   const [selectedApplications, setSelectedApplications] = useState([]);
+  const [showReactivationModal, setShowReactivationModal] = useState(false);
+  const [selectedAppForReactivation, setSelectedAppForReactivation] = useState(null);
 
   // Filter rejected applications
   const rejectedApplications = useMemo(() => {
     return applications.filter(app => app.status === 'Rejected');
   }, [applications]);
 
-  // Filter and sort applications
-  const filteredAndSortedApplications = useMemo(() => {
-    let filtered = rejectedApplications.filter(app => {
+  // Filter applications
+  const filteredApplications = useMemo(() => {
+    return rejectedApplications.filter(app => {
       const searchLower = searchTerm.toLowerCase();
       return (
         app.fullName?.toLowerCase().includes(searchLower) ||
@@ -29,39 +29,14 @@ const RejectedDocumentsTable = ({
         app.serviceType?.toLowerCase().includes(searchLower)
       );
     });
+  }, [rejectedApplications, searchTerm]);
 
-    // Sort applications
-    filtered.sort((a, b) => {
-      let aValue = a[sortField] || '';
-      let bValue = b[sortField] || '';
-      
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
 
-    return filtered;
-  }, [rejectedApplications, searchTerm, sortField, sortDirection]);
-
-  // Handle sorting
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
 
   // Handle select all
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedApplications(filteredAndSortedApplications.map(app => app._id));
+      setSelectedApplications(filteredApplications.map(app => app._id));
     } else {
       setSelectedApplications([]);
     }
@@ -98,9 +73,16 @@ const RejectedDocumentsTable = ({
     }
   };
 
+  // Handle reactivation from modal
+  const handleReactivateFromModal = async () => {
+    await onReactivate(selectedAppForReactivation._id);
+    setShowReactivationModal(false);
+    setSelectedAppForReactivation(null);
+  };
+
   // Table styles
   const tableContainerStyle = {
-    backgroundColor: 'white',
+    backgroundColor: '#CED6DF',
     borderRadius: '12px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     overflow: 'hidden',
@@ -226,7 +208,7 @@ const RejectedDocumentsTable = ({
   return (
     <div style={tableContainerStyle}>
       <h3 style={tableTitleStyle}>
-        Rejected Documents ({filteredAndSortedApplications.length})
+        Rejected Documents ({filteredApplications.length})
       </h3>
       
       {/* Search and Batch Actions */}
@@ -268,21 +250,21 @@ const RejectedDocumentsTable = ({
               <th style={thStyle}>
                 <input
                   type="checkbox"
-                  checked={selectedApplications.length === filteredAndSortedApplications.length && filteredAndSortedApplications.length > 0}
+                  checked={selectedApplications.length === filteredApplications.length && filteredApplications.length > 0}
                   onChange={handleSelectAll}
                 />
               </th>
-              <th style={thStyle} onClick={() => handleSort('fullName')}>
-                Full Name {sortField === 'fullName' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Full Name
               </th>
-              <th style={thStyle} onClick={() => handleSort('nic')}>
-                NIC {sortField === 'nic' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                NIC
               </th>
-              <th style={thStyle} onClick={() => handleSort('serviceType')}>
-                Service Type {sortField === 'serviceType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Service Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('rejectedAt')}>
-                Rejected Date {sortField === 'rejectedAt' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Rejected Date
               </th>
               <th style={thStyle}>Rejection Reason</th>
               <th style={thStyle}>Status</th>
@@ -290,14 +272,14 @@ const RejectedDocumentsTable = ({
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedApplications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ ...tdStyle, textAlign: 'center', color: '#6b7280', padding: '40px' }}>
                   {searchTerm ? 'No applications match your search.' : 'No rejected applications found.'}
                 </td>
               </tr>
             ) : (
-              filteredAndSortedApplications.map((app) => (
+              filteredApplications.map((app) => (
                 <tr key={app._id} style={{ backgroundColor: selectedApplications.includes(app._id) ? '#fef2f2' : 'transparent' }}>
                   <td style={tdStyle}>
                     <input
@@ -329,9 +311,8 @@ const RejectedDocumentsTable = ({
                     </button>
                     <button
                       onClick={() => {
-                        if (window.confirm(`Are you sure you want to reactivate ${app.fullName}'s application? It will be moved back to pending status.`)) {
-                          onReactivate(app._id);
-                        }
+                        setSelectedAppForReactivation(app);
+                        setShowReactivationModal(true);
                       }}
                       style={{ ...actionButtonStyle, backgroundColor: '#f59e0b', color: 'white' }}
                     >
@@ -366,6 +347,165 @@ const RejectedDocumentsTable = ({
         <strong>Note:</strong> Reactivated applications will be moved back to pending status for review. 
         Deleted applications will be permanently removed from the database.
       </div>
+
+      {/* Reactivation Modal */}
+      {showReactivationModal && selectedAppForReactivation && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: 0,
+              }}>
+                Reactivate Application - {selectedAppForReactivation.fullName}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowReactivationModal(false);
+                  setSelectedAppForReactivation(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+                marginBottom: '20px',
+                padding: '16px',
+                backgroundColor: '#fff7ed',
+                borderRadius: '8px',
+                border: '1px solid #fed7aa',
+              }}>
+                <div>
+                  <strong>Service Type:</strong>
+                  <div>{selectedAppForReactivation.serviceType || 'Fire Prevention Certificate'}</div>
+                </div>
+                <div>
+                  <strong>NIC:</strong>
+                  <div>{selectedAppForReactivation.nic}</div>
+                </div>
+                <div>
+                  <strong>Rejected Date:</strong>
+                  <div>{selectedAppForReactivation.rejectedAt ? new Date(selectedAppForReactivation.rejectedAt).toLocaleDateString() : 'N/A'}</div>
+                </div>
+                <div>
+                  <strong>Current Status:</strong>
+                  <div style={{ color: '#dc2626', fontWeight: '500' }}>
+                    {selectedAppForReactivation.status}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                padding: '20px',
+                backgroundColor: '#f0fdf4',
+                borderRadius: '8px',
+                border: '1px solid #bbf7d0',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  color: '#166534',
+                  marginBottom: '12px',
+                }}>
+                  Are you sure you want to reactivate this application?
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  color: '#166534',
+                }}>
+                  This application will be moved back to pending status for review.
+                </div>
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '16px',
+              marginTop: '24px',
+            }}>
+              <button
+                onClick={() => {
+                  setShowReactivationModal(false);
+                  setSelectedAppForReactivation(null);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minWidth: '80px',
+                }}
+              >
+                No
+              </button>
+              <button
+                onClick={handleReactivateFromModal}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#16a34a',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  minWidth: '80px',
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

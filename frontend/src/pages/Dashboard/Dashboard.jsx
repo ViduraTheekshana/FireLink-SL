@@ -6,6 +6,7 @@ import TrainingSession from "../TraningSessionManagement/TrainingSessionManager"
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
 import MissionRecords from "../MissionRecords/MissionRecords";
+import PreventionOfficerDashboard from "../PreventionManagement/PreventionOfficerDashboardNew";
 import FighterDashboard from "../../pages/UserManagement/FighterDashboard";
 
 const DynamicDashboard = () => {
@@ -20,6 +21,9 @@ const DynamicDashboard = () => {
 		}
 		if (user.position === "supply_manager") {
 			navigate("/suppliers", { state: { user } });
+		}
+		if (user.position === "finance_manager") {
+			navigate("/transactions", { state: { user } });
 		}
 	}, [user, navigate]);
 
@@ -36,7 +40,6 @@ const DynamicDashboard = () => {
 			.toLowerCase()
 			.trim()
 			.replace(/\s+/g, "");
-		console.log("Normalized position:", position);
 
 		switch (position) {
 			case "chiefofficer":
@@ -79,14 +82,7 @@ const DynamicDashboard = () => {
 				return <MissionRecords />;
 
 			case "preventionmanager":
-				return (
-					<div className="p-6">
-						<h1 className="text-3xl font-bold mb-4">
-							Prevention Manager Dashboard
-						</h1>
-						<p>Oversee fire safety and prevention measures.</p>
-					</div>
-				);
+				return <PreventionOfficerDashboard />;
 
 			case "trainingsessionmanager":
 				return <TrainingSession user={user} />;

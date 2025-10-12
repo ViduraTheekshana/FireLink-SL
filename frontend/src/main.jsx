@@ -13,10 +13,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
-      <SupplierAuthProvider>
-        <App />
+        <SupplierAuthProvider>
+          <App />
         </SupplierAuthProvider>
-        </AuthProvider>
+      </AuthProvider>
     </GoogleOAuthProvider>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
