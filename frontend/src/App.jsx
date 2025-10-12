@@ -39,6 +39,7 @@ import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 import PreventionCertificateForm from "./pages/PreventionManagement/PreventionCertificateForm";
 import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionOfficerDashboardNew";
+import Home from "./pages/Home/Home";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
@@ -52,7 +53,8 @@ const App = () => {
 		<BrowserRouter>
 			<Routes>
 				{/* Public routes */}
-				<Route path="/" element={<LoginFireStaff />} />
+				<Route path="/" element={<Home />} />
+				<Route path="/home" element={<Home />} />
 				<Route path="/staff-login" element={<LoginFireStaff />} />
 				<Route path="/civilian-login" element={<CivilianLogin />} />
 				<Route path="/supplier-login" element={<SupplierLogin />} />
