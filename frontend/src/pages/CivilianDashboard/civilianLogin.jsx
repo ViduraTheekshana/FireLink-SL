@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { FaUserAlt, FaLock, FaEnvelope, FaPhoneAlt, FaUser } from "react-icons/fa";
@@ -7,6 +7,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-c
 
 const CivilianLogin = () => {
   const navigate = useNavigate();
+  const googleButtonRef = useRef(null);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
@@ -108,6 +109,81 @@ const CivilianLogin = () => {
       setLoading(false);
     }
   };
+
+  // ---------------------- Google Identity Services ----------------------
+  useEffect(() => {
+    const clientId = GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    // Add script if not present
+    if (!document.getElementById("google-identity-script")) {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.id = "google-identity-script";
+      document.body.appendChild(script);
+
+      script.onload = () => initGoogle();
+    } else {
+      initGoogle();
+    }
+
+    function initGoogle() {
+      if (!window.google) return;
+
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response) => {
+            // response.credential is the ID token
+            try {
+              setLoading(true);
+              const res = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1"}/civilian-auth/google-login`,
+                { credential: response.credential },
+                { withCredentials: true }
+              );
+
+              const data = res.data;
+              if (data.success) {
+                // reuse success logic: persist tokens/user and navigate
+                const token = data.token && data.token.length > 0 ? data.token : "civilian-session-token";
+                localStorage.setItem("accessToken", token);
+                localStorage.setItem("token", token);
+                if (data.user) {
+                  try { localStorage.setItem("user", JSON.stringify(data.user)); } catch (e) { /* ignore */ }
+                }
+                setSuccess("Login successful! Redirecting...");
+                setTimeout(() => navigate("/civilian-dashboard", { replace: true }), 150);
+              } else {
+                setError(data.message || "Google login failed");
+              }
+            } catch (err) {
+              console.error(err);
+              setError("Google login failed");
+            } finally {
+              setLoading(false);
+            }
+          },
+        });
+
+        // Render a visible button (optional) into the ref
+        if (googleButtonRef.current) {
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: "outline",
+            size: "large",
+          });
+        }
+      } catch (err) {
+        console.warn("GSI init failed", err);
+      }
+    }
+
+    return () => {
+      // cleanup not strictly necessary; GSI doesn't provide destroy
+    };
+  }, [navigate]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -330,6 +406,28 @@ const CivilianLogin = () => {
             {loading ? (isSignup ? "Creating..." : "Logging in...") : isSignup ? "Sign Up" : "Login"}
           </button>
         </form>
+
+        {/* Google Sign-in button (rendered by Google Identity Services) */}
+        <div className="mt-4 text-center">
+          <div ref={googleButtonRef} />
+          {!window.google && (
+            <button
+              type="button"
+              onClick={() => {
+                // If GSI isn't loaded yet, try to prompt the user to wait
+                if (window.google && window.google.accounts) {
+                  window.google.accounts.id.prompt();
+                } else {
+                  alert("Please wait a moment — Google sign-in is loading.");
+                }
+              }}
+              className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2 border rounded-xl text-sm font-medium shadow-sm hover:shadow-md"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path d="M533.5 278.4c0-17.4-1.6-34.3-4.6-50.6H272v95.7h146.9c-6.3 34-25.6 62.8-54.5 82v68.1h87.9c51.5-47.4 80.2-117.5 80.2-195.2z" fill="#4285F4"/><path d="M272 544.3c73.7 0 135.6-24.6 180.8-66.8l-87.9-68.1c-24.4 16.3-55.8 26-92.9 26-71.4 0-132-48.1-153.6-112.8H29.6v70.9C74.7 487.4 167 544.3 272 544.3z" fill="#34A853"/><path d="M118.4 325.6c-10.9-32.2-10.9-66.8 0-99l-88.8-70.9C9.9 210 0 247.3 0 284.6s9.9 74.6 29.6 128.9l88.8-70.9z" fill="#FBBC05"/><path d="M272 109.6c39.9 0 75.8 13.7 104.1 40.6l78.2-78.2C401.7 24.3 339.8 0 272 0 167 0 74.7 56.9 29.6 142.2l88.8 70.9C140 157.7 200.6 109.6 272 109.6z" fill="#EA4335"/></svg>
+              Sign in with Google
+            </button>
+          )}
+        </div>
 
         <div className="mt-4 text-center">
           {isSignup ? (
