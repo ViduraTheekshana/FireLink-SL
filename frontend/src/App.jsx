@@ -21,9 +21,6 @@ import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
 import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
 import FighterDashboard from "./pages/UserManagement/FighterDashboard";
-
-
-
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -49,6 +46,11 @@ import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionO
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
 import { Bounce, ToastContainer } from "react-toastify";
+import SupplyDashboard from "./pages/SupplyManagement/DashBoard";
+import { ProcurementReport } from "./pages/SupplyManagement/ProcurementReport";
+import Transactions from "./pages/FinanceManagement/Transaction";
+import FinancialDashboard from "./pages/FinanceManagement/FinanceDashboard";
+import BudgetAllocation from "./pages/FinanceManagement/BudgetAllocation";
 
 const App = () => {
 	const user = JSON.parse(localStorage.getItem("user"));
@@ -80,18 +82,15 @@ const App = () => {
 					}
 				/>
 
-<Route
-  path="/civilian-dashboard"
-  element={
-    localStorage.getItem("accessToken") ? (
-      <CivilianDashboard />
-    ) : (
-      <Navigate to="/civilian-login" replace />
-    )
-  }
-/>
-				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
-				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
+				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+				<Route
+					path="/prevention-certificate-form"
+					element={<PreventionCertificateForm />}
+				/>
+				<Route
+					path="/prevention-officer-dashboard"
+					element={<PreventionOfficerDashboard />}
+				/>
 
 				<Route
 					path="/training-dashboard"
@@ -133,14 +132,53 @@ const App = () => {
 				<Route path="/inventory-manager/profile" element={<InventoryManagerProfile />} />
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
-				{/* Shift Management routes */}
-				{/* <Route path="/shifts" element={<ShiftDashboard />} /> */}
-				{/* <Route path="/shifts/create" element={<CreateShift />} /> */}
-				{/* <Route path="/shifts/my-shifts" element={<MyShifts />} /> */}
-				{/* <Route path="/shifts/change-requests" element={<ChangeRequests />} /> */}
-				{/* <Route path="/shifts/messages" element={<Messages />} /> */}
+				<Route path="/staff-management" element={<StaffManagementTable />} />
+
+				{/* Finance routes */}
+				<Route
+					path="/transactions"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<Transactions />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/finance-dashboard"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<FinancialDashboard />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/budget"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<BudgetAllocation />
+						</ProtectedRoute>
+					}
+				/>
 
 				{/* Supplier routes  */}
+				<Route
+					path="/supply-dashboard"
+					element={
+						<ProtectedRoute allowedRoles={["supply_manager"]}>
+							<SupplyDashboard />
+						</ProtectedRoute>
+					}
+				/>
+
+				<Route
+					path="/procurement-report"
+					element={
+						<ProtectedRoute allowedRoles={["supply_manager"]}>
+							<ProcurementReport />
+						</ProtectedRoute>
+					}
+				/>
+
 				<Route
 					path="/suppliers"
 					element={
@@ -149,8 +187,6 @@ const App = () => {
 						</ProtectedRoute>
 					}
 				/>
-
-				<Route path="/staff-management" element={<StaffManagementTable />} />
 
 				<Route
 					path="/supply-requests"

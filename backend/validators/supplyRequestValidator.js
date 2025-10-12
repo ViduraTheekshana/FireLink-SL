@@ -1,14 +1,5 @@
 const { body, param, query, validationResult } = require("express-validator");
 
-const validate = (req, res, next) => {
-	const errors = validationResult(req);
-	if (!errors.isEmpty()) {
-		const errorMessages = errors.array().map((err) => err.msg);
-		return res.status(400).json({ errors: errorMessages });
-	}
-	next();
-};
-
 const categoryEnum = [
 	"Equipment",
 	"Vehicle Maintenance",
@@ -17,7 +8,7 @@ const categoryEnum = [
 	"Services",
 	"Other",
 ];
-const statusEnum = ["Open", "Closed"];
+const statusEnum = ["Open", "Assigned", "Rejected", "Closed"];
 
 const validateIdParam = [
 	param("id").isMongoId().withMessage("Invalid ID format"),
@@ -163,5 +154,4 @@ module.exports = {
 	validateAddBid,
 	validateUpdateBid,
 	validateAssignSupplier,
-	validate,
 };

@@ -21,6 +21,9 @@ const DynamicDashboard = () => {
 		if (user.position === "supply_manager") {
 			navigate("/suppliers", { state: { user } });
 		}
+		if (user.position === "finance_manager") {
+			navigate("/transactions", { state: { user } });
+		}
 	}, [user, navigate]);
 
 	if (!user) return null;
@@ -36,7 +39,6 @@ const DynamicDashboard = () => {
 			.toLowerCase()
 			.trim()
 			.replace(/\s+/g, "");
-		console.log("Normalized position:", position);
 
 		switch (position) {
 			case "chiefofficer":
