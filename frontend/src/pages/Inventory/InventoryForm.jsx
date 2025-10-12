@@ -223,16 +223,16 @@ const InventoryForm = () => {
 
     try {
       setCheckingItemId(true);
-      console.log('🔍 Checking item ID:', itemId);
+      console.log('Checking item ID:', itemId);
       
       // Use the new API function to check if item ID exists
       const response = await checkItemIdExists(itemId);
-      console.log('📡 API Response:', response);
+      console.log('API Response:', response);
       
       setItemIdExists(response.exists);
-      console.log('✅ Set itemIdExists to:', response.exists);
+      console.log('Set itemIdExists to:', response.exists);
     } catch (err) {
-      console.error('❌ Error checking item ID:', err);
+      console.error('Error checking item ID:', err);
       // If error, item ID doesn't exist (which is what we want)
       setItemIdExists(false);
     } finally {
@@ -370,7 +370,7 @@ const InventoryForm = () => {
 
     // Check if item ID already exists (only for new items)
     if (!isEditing && itemIdExists) {
-      setError('❌ Item ID already exists! Please choose a different Item ID.');
+      setError('Item ID already exists! Please choose a different Item ID.');
       return false;
     }
     
@@ -411,12 +411,12 @@ const InventoryForm = () => {
         console.log('Calling updateItem API with data:', submitData);
         const result = await updateItem(id, submitData);
         console.log('Update API successful, result:', result);
-        alert('✅ Item updated successfully!'); // Temporary success indicator
+        alert('Item updated successfully!'); // Temporary success indicator
       } else {
         console.log('Calling addItem API with:', submitData);
         const result = await addItem(submitData);
         console.log('Add API successful, result:', result);
-        alert('✅ Item added successfully!'); // Temporary success indicator
+        alert('Item added successfully!'); // Temporary success indicator
       }
       console.log('API call completed successfully, navigating to inventory list...');
       navigate('/inventory');
@@ -432,7 +432,7 @@ const InventoryForm = () => {
         const backendMessage = err.response.data.message;
         
         if (backendMessage.includes('Item ID already exists')) {
-          errorMessage = '❌ Item ID already exists! Please choose a different Item ID.';
+          errorMessage = 'Item ID already exists! Please choose a different Item ID.';
         } else if (backendMessage.includes('validation failed')) {
           errorMessage = `Validation Error: ${backendMessage}`;
         } else {
@@ -443,7 +443,7 @@ const InventoryForm = () => {
       }
       
       setError(errorMessage);
-      alert('❌ Error: ' + errorMessage); // Temporary error alert
+      alert('Error: ' + errorMessage); // Temporary error alert
     } finally {
       setSubmitting(false);
     }
@@ -516,6 +516,13 @@ const InventoryForm = () => {
                 name="item_ID"
                 value={formData.item_ID}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9) for Item ID
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) are allowed in the Item ID field.');
+                  }
+                }}
                 required
                 readOnly={isEditing}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
@@ -525,7 +532,7 @@ const InventoryForm = () => {
                     ? 'border-green-300 focus:ring-green-500 focus:border-green-500'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 } ${isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                placeholder="Enter unique item ID (3-20 characters, letters, numbers, hyphens, underscores only)"
+                placeholder="Enter unique item ID (numbers only)"
               />
               
               {/* Field-specific error message */}
@@ -546,15 +553,15 @@ const InventoryForm = () => {
                 <div className="mt-1">
                   {checkingItemId ? (
                     <p className="text-xs text-blue-600">
-                      🔍 Checking if Item ID is available...
+                      Checking if Item ID is available...
                     </p>
                   ) : itemIdExists ? (
                     <p className="text-xs text-red-600 font-medium">
-                      ⚠️ This Item ID already exists! Please choose a different one.
+                      Warning: This Item ID already exists! Please choose a different one.
                     </p>
                   ) : (
                     <p className="text-xs text-green-600 font-medium">
-                      ✅ Item ID is available
+                      Item ID is available
                     </p>
                   )}
                 </div>
@@ -635,6 +642,13 @@ const InventoryForm = () => {
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9)
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) are allowed in the Quantity field.');
+                  }
+                }}
                 min="0"
                 required
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
@@ -666,6 +680,18 @@ const InventoryForm = () => {
                 name="unit_price"
                 value={formData.unit_price}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9) and decimal point
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) and decimal point (.) are allowed in the Unit Price field.');
+                  }
+                  // Prevent multiple decimal points
+                  if (e.key === '.' && e.target.value.includes('.')) {
+                    e.preventDefault();
+                    alert('Only one decimal point is allowed in the Unit Price field.');
+                  }
+                }}
                 min="0"
                 step="0.01"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
@@ -766,6 +792,13 @@ const InventoryForm = () => {
                 name="threshold"
                 value={formData.threshold}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  // Only allow numbers (0-9)
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                    alert('Only numbers (0-9) are allowed in the Threshold field.');
+                  }
+                }}
                 min="0"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
                   fieldErrors.threshold

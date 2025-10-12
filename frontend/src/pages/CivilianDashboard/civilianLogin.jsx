@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { GoogleLogin } from "@react-oauth/google";
 import { FaUserAlt, FaLock, FaEnvelope, FaPhoneAlt, FaUser } from "react-icons/fa";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id";
@@ -26,6 +27,7 @@ const CivilianLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [googleDebug, setGoogleDebug] = useState(null);
 
   // ---------------------- Validation functions ----------------------
   const validateName = (name) => /^[a-zA-Z\s\.\-]{2,50}$/.test(name);
@@ -81,8 +83,20 @@ const CivilianLogin = () => {
 
       if (data.success) {
         setSuccess("Login successful! Redirecting...");
-        localStorage.setItem("accessToken", data.accessToken || "");
-        setTimeout(() => navigate("/civilian-dashboard"), 1000);
+        // store token if provided
+        if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
+        // set a simple logged-in flag so client routes can detect login even when auth uses cookies
+        localStorage.setItem("civilianLoggedIn", "true");
+        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+        // short delay to show message, then navigate; fallback to window.location if navigate fails
+        setTimeout(() => {
+          try {
+            navigate("/civilian-dashboard", { replace: true });
+          } catch (err) {
+            // fallback
+            window.location.href = "/civilian-dashboard";
+          }
+        }, 800);
       } else {
         setError(data.message || "Login failed");
       }
@@ -111,8 +125,9 @@ const CivilianLogin = () => {
       );
 
       if (data.success) {
-        setSuccess("Account created successfully! Please log in.");
-        setIsSignup(false);
+        // Show success and auto-redirect to the login page
+        setSuccess("Account created successfully! Redirecting to login...");
+        // clear form
         setSignupData({
           firstName: "",
           lastName: "",
@@ -124,6 +139,11 @@ const CivilianLogin = () => {
           username: "",
           newsletterSubscription: false,
         });
+        // briefly show message then redirect to login route
+        setTimeout(() => {
+          setIsSignup(false);
+          navigate("/civilian-login");
+        }, 1200);
       } else {
         setError(data.message || "Signup failed");
       }
@@ -135,9 +155,65 @@ const CivilianLogin = () => {
     }
   };
 
+  // ---------------------- Google Login ----------------------
+  const handleGoogleLogin = async (credentialResponse) => {
+    if (!credentialResponse?.credential) {
+      setError("Google login failed. No credential returned.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    // quick debug info for developer
+    setGoogleDebug({ credentialPreview: credentialResponse.credential?.slice(0, 40) });
+    console.debug("Google credential (preview):", credentialResponse.credential?.slice(0, 80));
+
+    try {
+      const payload = { credential: credentialResponse.credential, id_token: credentialResponse.credential };
+      console.debug("Sending Google login payload:", payload);
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1"}/civilian-auth/google-login`,
+        // send both common keys some backends expect
+        payload,
+        { withCredentials: true }
+      );
+
+      if (data.success) {
+        setSuccess("Login successful! Redirecting...");
+        if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("civilianLoggedIn", "true");
+        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+        setTimeout(() => {
+          try {
+            navigate("/civilian-dashboard", { replace: true });
+          } catch (err) {
+            window.location.href = "/civilian-dashboard";
+          }
+        }, 800);
+      } else {
+        setError(data.message || "Google login failed");
+        setGoogleDebug((prev) => ({ ...prev, server: data }));
+      }
+    } catch (err) {
+      console.error(err);
+      // Axios error handling: prefer server message if available
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.message || err?.response?.data || err?.message;
+      if (status === 400) {
+        setError(
+          `Google login failed (400): ${serverMsg}. This often means the request is malformed or your Google OAuth client is misconfigured. Check VITE_GOOGLE_CLIENT_ID, and ensure your OAuth origin (e.g. http://localhost:5173) is added in Google Cloud Console.`
+        );
+        setGoogleDebug((prev) => ({ ...prev, status, server: serverMsg }));
+      } else {
+        setError(serverMsg || "Google login failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Auto redirect if logged in
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) navigate("/civilian-dashboard");
+    if (localStorage.getItem("accessToken") || localStorage.getItem("civilianLoggedIn")) navigate("/civilian-dashboard");
   }, [navigate]);
 
   // ---------------------- JSX ----------------------
@@ -316,6 +392,16 @@ const CivilianLogin = () => {
           </button>
         </form>
 
+        {/* Google Login Button (only show on login view) */}
+        {!isSignup && (
+          <div className="mt-4 flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => setError("Google login failed. Please try again.")}
+            />
+          </div>
+        )}
+
         <div className="mt-4 text-center">
           {isSignup ? (
             <p>
@@ -337,6 +423,21 @@ const CivilianLogin = () => {
         <div className="mt-4 text-center">
           <Link to="/login" className="text-gray-500 underline text-sm">
             ← Back to Staff Login
+                    {/* Debug panel for Google OAuth issues */}
+                    {googleDebug && (
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800 rounded">
+                        <div><strong>Google Debug:</strong></div>
+                        <div>Client ID: {import.meta.env.VITE_GOOGLE_CLIENT_ID || "(not set)"}</div>
+                        <div>Origin: {window.location.origin}</div>
+                        {googleDebug.credentialPreview && (
+                          <div>Credential (preview): {googleDebug.credentialPreview}...</div>
+                        )}
+                        {googleDebug.status && <div>Server status: {googleDebug.status}</div>}
+                        {googleDebug.server && (
+                          <div className="mt-2 whitespace-pre-wrap">Server response: {JSON.stringify(googleDebug.server)}</div>
+                        )}
+                      </div>
+                    )}
           </Link>
         </div>
       </div>

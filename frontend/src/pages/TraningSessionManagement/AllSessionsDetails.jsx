@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import QRCode from "react-qr-code";
 import { FiClock, FiMapPin, FiUsers, FiHash } from "react-icons/fi";
+import Sidebar from "../UserManagement/Sidebar";
 
 const SessionsList = ({ userFromProps }) => {
   const [sessions, setSessions] = useState([]);
@@ -61,6 +62,7 @@ const SessionsList = ({ userFromProps }) => {
   if (error) return <div className="p-6 text-red-400">{error}</div>;
 
   return (
+    
     <div className="min-h-screen bg-[#1e2a38] p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <h1 className="text-3xl text-white font-bold">Training Sessions</h1>

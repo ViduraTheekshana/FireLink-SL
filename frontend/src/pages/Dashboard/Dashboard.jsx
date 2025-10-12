@@ -6,6 +6,7 @@ import TrainingSession from "../TraningSessionManagement/TrainingSessionManager"
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
 import MissionRecords from "../MissionRecords/MissionRecords";
+import FighterDashboard from "../../pages/UserManagement/FighterDashboard";
 
 const DynamicDashboard = () => {
 	const location = useLocation();
@@ -19,6 +20,9 @@ const DynamicDashboard = () => {
 		}
 		if (user.position === "supply_manager") {
 			navigate("/suppliers", { state: { user } });
+		}
+		if (user.position === "finance_manager") {
+			navigate("/transactions", { state: { user } });
 		}
 	}, [user, navigate]);
 
@@ -35,7 +39,6 @@ const DynamicDashboard = () => {
 			.toLowerCase()
 			.trim()
 			.replace(/\s+/g, "");
-		console.log("Normalized position:", position);
 
 		switch (position) {
 			case "chiefofficer":
@@ -57,8 +60,7 @@ const DynamicDashboard = () => {
 			case "fighter":
 				return (
 					<div className="p-6">
-						<h1 className="text-3xl font-bold mb-4">Firefighter Dashboard</h1>
-						<p>Welcome {user.name}, this is your firefighter dashboard.</p>
+						 <FighterDashboard user={user} />
 					</div>
 				);
 

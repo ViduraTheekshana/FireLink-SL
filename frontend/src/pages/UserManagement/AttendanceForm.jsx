@@ -139,7 +139,7 @@ const AttendanceForm = () => {
             {loading ? "Submitting..." : <><FiCheck /> Submit</>}
           </button>
         </form>
-
+        
         {message && (
           <p className="mt-4 text-center text-gray-700 font-medium">{message}</p>
         )}
