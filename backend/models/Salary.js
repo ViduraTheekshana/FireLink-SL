@@ -27,7 +27,7 @@ const salarySchema = new mongoose.Schema(
 
 		finalSalary: { type: Number, required: true, min: 0 },
 
-		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserReg" },
+		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 	},
 	{ timestamps: true }
 );

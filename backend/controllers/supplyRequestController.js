@@ -3,6 +3,7 @@ const Supplier = require("../models/Supplier");
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const generateId = require("../utils/generateUniqueId");
+const Budget = require("../models/Budget");
 
 const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 	const { title, description, category, quantity, applicationDeadline, unit } =
@@ -393,6 +394,24 @@ const confirmDelivery = catchAsyncErrors(async (req, res, next) => {
 		);
 	}
 
+	const supplyBudget = await Budget.findOne({
+		user: req.user._id,
+		month: new Date().getMonth() + 1,
+		year: new Date().getFullYear(),
+	});
+
+	if (!supplyBudget) {
+		return next(
+			new ErrorHandler("Budget not assigned for this month yet!", 400)
+		);
+	}
+
+	if (supplyBudget.remainingAmount >= assignedBid.offerPrice) {
+		return next(new ErrorHandler("Budget is not Sufficient", 400));
+	}
+
+	supplyBudget.remainingAmount -= assignedBid.offerPrice;
+
 	const deliveredAt = new Date();
 	const onTime = deliveredAt <= new Date(assignedBid.deliveryDate);
 
@@ -401,6 +420,7 @@ const confirmDelivery = catchAsyncErrors(async (req, res, next) => {
 	supplyRequest.status = "Closed";
 
 	await supplyRequest.save();
+	await supplyBudget.save();
 
 	res.status(200).json({
 		success: true,

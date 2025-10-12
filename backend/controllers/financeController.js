@@ -1,6 +1,6 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Budget = require("../models/Budget");
-const Expense = require("../models/Transaction");
+const Expense = require("../models/Expense");
 const UserReg = require("../models/UserManagement/UserReg");
 const ErrorHandler = require("../utils/errorHandler");
 const generateUniqueId = require("../utils/generateUniqueId");
@@ -105,8 +105,27 @@ const getSupplyManagerBudget = catchAsyncErrors(async (req, res, next) => {
 	res.status(200).json({ success: true, data: budgetData });
 });
 
-const createExpense = catchAsyncErrors(async (req, res) => {
+const createExpense = catchAsyncErrors(async (req, res, next) => {
 	const { amount, type, description } = req.body;
+
+	const financeBudget = await Budget.findOne({
+		user: req.user._id,
+		month: new Date().getMonth() + 1,
+		year: new Date().getFullYear(),
+	});
+
+	if (!financeBudget) {
+		return next(
+			new ErrorHandler("Budget not assigned for this month yet!", 400)
+		);
+	}
+
+	if (financeBudget.remainingAmount >= amount) {
+		return next(new ErrorHandler("Budget is not Sufficient", 400));
+	}
+
+	financeBudget.remainingAmount -= amount;
+	await financeBudget.save();
 
 	const expense = await Expense.create({
 		id: generateUniqueId("exp"),

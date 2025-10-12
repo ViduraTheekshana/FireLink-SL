@@ -4,7 +4,7 @@ const ExpenseSchema = new mongoose.Schema(
 	{
 		id: {
 			type: String,
-			required: [true, "Transaction id is required"],
+			required: [true, "Expense id is required"],
 			unique: true,
 		},
 		amount: { type: Number, required: true },

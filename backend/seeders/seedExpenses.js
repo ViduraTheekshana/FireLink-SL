@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 const path = require("path");
-const Transaction = require("../models/Transaction");
+const Transaction = require("../models/Expense");
 const generateUniqueId = require("../utils/generateUniqueId");
 const connectDatabase = require("../config/database");
 

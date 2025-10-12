@@ -38,9 +38,9 @@ const validateCreateExpense = [
 
 	body("type")
 		.notEmpty()
-		.withMessage("Transaction type is required")
+		.withMessage("Expense type is required")
 		.isIn(typeEnum)
-		.withMessage("Invalid transaction type"),
+		.withMessage("Invalid expense type"),
 
 	body("description")
 		.optional()

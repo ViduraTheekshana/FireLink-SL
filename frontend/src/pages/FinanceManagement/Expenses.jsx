@@ -32,6 +32,7 @@ const Expenses = () => {
 	const [error, setError] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filterType, setFilterType] = useState("");
+	const [searchQuery, setSearchQuery] = useState("");
 	const [sortField, setSortField] = useState("date");
 	const [sortDirection, setSortDirection] = useState("desc");
 	const [showAddModal, setShowAddModal] = useState(false);
@@ -74,10 +75,16 @@ const Expenses = () => {
 		}
 	}, [error]);
 
-	const filteredTransactions =
-		filterType === ""
-			? expenses
-			: expenses.filter((t) => t.type === filterType);
+	const filteredTransactions = expenses.filter((t) => {
+		const matchesType = filterType === "" || t.type === filterType;
+
+		const matchesSearch =
+			searchQuery === "" ||
+			t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			t.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+		return matchesType && matchesSearch;
+	});
 
 	const sortedTransactions = [...filteredTransactions].sort((a, b) => {
 		if (sortField === "date") {
@@ -224,7 +231,7 @@ const Expenses = () => {
 												.reduce((sum, t) => sum + t.amount, 0)
 												.toLocaleString()}
 										</p>
-										<p className="text-red-100 mt-1">Critical funds</p>
+										<p className="text-red-100 mt-1">Critical Expenses</p>
 									</div>
 									<div className="bg-red-400/30 p-4 rounded-full">
 										<TagIcon size={32} />
@@ -244,7 +251,7 @@ const Expenses = () => {
 												.reduce((sum, t) => sum + t.amount, 0)
 												.toLocaleString()}
 										</p>
-										<p className="text-green-100 mt-1">Operational funds</p>
+										<p className="text-green-100 mt-1">Operational Expenses</p>
 									</div>
 									<div className="bg-green-400/30 p-4 rounded-full">
 										<DollarSignIcon size={32} />
@@ -265,7 +272,7 @@ const Expenses = () => {
 								<div className="relative">
 									<button
 										onClick={() => setShowDatePicker(!showDatePicker)}
-										className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors text-sm"
+										className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
 									>
 										<CalendarIcon size={16} className="text-blue-600" />
 										<span>
@@ -274,7 +281,7 @@ const Expenses = () => {
 										<ChevronDownIcon size={16} className="text-gray-500" />
 									</button>
 									{showDatePicker && (
-										<div className="absolute right-0 mt-2 z-10 bg-white rounded-lg shadow-lg border p-4 w-64">
+										<div className="absolute right-0 mt-2 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64">
 											<div className="flex justify-between items-center mb-4">
 												<button
 													onClick={handlePrevMonth}
@@ -293,20 +300,26 @@ const Expenses = () => {
 												</button>
 											</div>
 											<div className="grid grid-cols-3 gap-2">
-												{Array.from(
-													{
-														length: 12,
-													},
-													(_, i) => (
+												{Array.from({ length: 12 }, (_, i) => {
+													const isFutureMonth =
+														selectedYear === currentDate.getFullYear() &&
+														i > currentDate.getMonth();
+
+													return (
 														<button
 															key={i}
 															onClick={() => {
-																setSelectedMonth(i);
-																setShowDatePicker(false);
+																if (!isFutureMonth) {
+																	setSelectedMonth(i);
+																	setShowDatePicker(false);
+																}
 															}}
+															disabled={isFutureMonth}
 															className={`py-2 px-1 text-sm rounded-md ${
 																selectedMonth === i
 																	? "bg-blue-100 text-blue-700 font-medium"
+																	: isFutureMonth
+																	? "text-gray-300 cursor-not-allowed"
 																	: "hover:bg-gray-100"
 															}`}
 														>
@@ -314,8 +327,8 @@ const Expenses = () => {
 																month: "short",
 															})}
 														</button>
-													)
-												)}
+													);
+												})}
 											</div>
 											<div className="mt-4 grid grid-cols-2 gap-2">
 												<select
@@ -323,7 +336,7 @@ const Expenses = () => {
 													onChange={(e) =>
 														setSelectedYear(parseInt(e.target.value))
 													}
-													className="p-2 border rounded text-sm"
+													className="p-2 border border-gray-200 rounded text-sm"
 												>
 													{Array.from(
 														{
@@ -364,7 +377,9 @@ const Expenses = () => {
 										<input
 											type="text"
 											placeholder="Search transactions..."
-											className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+											className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+											value={searchQuery}
+											onChange={(e) => setSearchQuery(e.target.value)}
 										/>
 									</div>
 									<div className="flex items-center space-x-2 ml-4">

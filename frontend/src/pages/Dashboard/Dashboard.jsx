@@ -23,7 +23,7 @@ const DynamicDashboard = () => {
 			navigate("/suppliers", { state: { user } });
 		}
 		if (user.position === "finance_manager") {
-			navigate("/transactions", { state: { user } });
+			navigate("/finance-dashboard", { state: { user } });
 		}
 	}, [user, navigate]);
 
@@ -61,7 +61,7 @@ const DynamicDashboard = () => {
 			case "fighter":
 				return (
 					<div className="p-6">
-						 <FighterDashboard user={user} />
+						<FighterDashboard user={user} />
 					</div>
 				);
 
