@@ -42,6 +42,7 @@ import Bids from "./pages/SupplyManagement/Bids";
 import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 import PreventionCertificateForm from "./pages/PreventionManagement/PreventionCertificateForm";
 import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionOfficerDashboardNew";
+import InspectedDocuments from "./pages/PreventionManagement/InspectedDocuments";
 import Home from "./pages/Home/Home";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -96,6 +97,8 @@ const App = () => {
 				/>
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
+				<Route path="/inspected-documents" element={<InspectedDocuments />} />
+				<Route path="/profile" element={<DynamicDashboard />} />
 
 				<Route
 					path="/training-dashboard"

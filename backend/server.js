@@ -1,7 +1,10 @@
+const dotenv = require("dotenv");
+
+// Load environment variables from config.env
+dotenv.config({ path: './config/config.env' });
+
 const app = require("./app");
 const connectDatabase = require("./config/database");
-
-const dotenv = require("dotenv");
 
 // handle uncaught exceptions
 process.on("uncaughtException", (err) => {

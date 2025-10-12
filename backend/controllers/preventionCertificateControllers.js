@@ -34,12 +34,10 @@ exports.applyCertificate = async (req, res) => {
 // Officer views all applications
 exports.getAllCertificates = async (req, res) => {
   try {
-    const applications = await PreventionCertificate.find().populate(
-      "assignedOfficer",
-      "name email"
-    );
+    const applications = await PreventionCertificate.find();
     res.status(200).json(applications);
   } catch (error) {
+    console.error("Error in getAllCertificates:", error);
     res.status(500).json({ message: "Error fetching applications", error: error.message });
   }
 };
@@ -77,7 +75,10 @@ exports.updatePayment = async (req, res) => {
     const { payment } = req.body;
     const updatedApplication = await PreventionCertificate.findByIdAndUpdate(
       req.params.id,
-      { payment },
+      { 
+        payment,
+        paymentAssignedAt: new Date()
+      },
       { new: true }
     );
     if (!updatedApplication)
@@ -111,7 +112,7 @@ exports.markAsInspected = async (req, res) => {
     const { inspectionNotes, inspectedBy } = req.body;
     const updateData = {
       status: "Inspected",
-      inspectionDate: new Date(),
+      inspectionDate: new Date(), // Date when marked as inspected
       inspectedBy: inspectedBy || req.user?.id, // Use authenticated user if available
     };
     
@@ -150,5 +151,21 @@ exports.deleteCertificate = async (req, res) => {
       message: "Error deleting application", 
       error: error.message 
     });
+  }
+};
+
+// Get all inspected applications
+exports.getInspectedApplications = async (req, res) => {
+  try {
+    const inspectedApps = await PreventionCertificate.find({ status: "Inspected" })
+      .select('_id fullName nic address contactNumber email serviceType constructionType urgencyLevel inspectionNotes inspectionDate createdAt status appliedDate');
+    res.status(200).json({
+      success: true,
+      message: "Inspected applications fetched successfully",
+      count: inspectedApps.length,
+      data: inspectedApps
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching inspected applications", error: error.message });
   }
 };
