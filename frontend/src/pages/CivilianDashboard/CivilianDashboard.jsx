@@ -9,7 +9,8 @@ const CivilianDashboard = () => {
 		if (confirmLogout) {
 			//  Clear session/local storage
 			localStorage.removeItem("accessToken");
-			      localStorage.removeItem("user");
+		      localStorage.removeItem("user");
+		      localStorage.removeItem("civilianLoggedIn");
 
 			sessionStorage.removeItem("accessToken");
 
