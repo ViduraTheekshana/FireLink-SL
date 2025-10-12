@@ -1,13 +1,13 @@
 const ShiftSchedule = require("../../models/UserManagement/ShiftSchedule.js");
 
-// ✅ Get all ready vehicles with their shift schedule
+//  Get all ready vehicles with their shift schedule
 exports.getReadyShifts = async (req, res) => {
   try {
     const shifts = await ShiftSchedule.find()
       .populate("members", "name position")
       .sort({ date: 1 });
 
-    // Example filter: only include vehicles that are ready today or upcoming
+    //  only include vehicles that are ready today or upcoming
     const today = new Date();
     const readyShifts = shifts.filter((s) => new Date(s.date) >= today);
 

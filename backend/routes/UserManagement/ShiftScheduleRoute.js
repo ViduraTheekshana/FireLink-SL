@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const ShiftSchedule = require("../../models/UserManagement/ShiftSchedule");
 const UserReg = require("../../models/UserManagement/UserReg");
-const { Parser } = require("json2csv"); // for CSV conversion
+const { Parser } = require("json2csv"); 
 const { get } = require("mongoose");
 const { getReadyShifts } = require("../../controllers/UserManagement/shiftController.js"); 
+
+
 // Create new shift schedule
 router.post("/", async (req, res) => {
   try {
@@ -69,7 +71,7 @@ router.get("/", async (req, res) => {
     const schedules = await ShiftSchedule.find()
       .populate("members", "name staffId position")
       .sort({ date: -1 });
-    console.log(schedules); // <-- check what data is returned
+    console.log(schedules); 
     res.status(200).json({ schedules });
   } catch (err) {
     console.error(err);

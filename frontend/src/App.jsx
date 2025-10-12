@@ -21,7 +21,7 @@ import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
 import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
 import FighterDashboard from "./pages/UserManagement/FighterDashboard";
-
+import AboutUs from "./components/abouteus";
 
 
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
@@ -71,15 +71,8 @@ const App = () => {
 				<Route path="/profile" element={<Profile />} />
 				<Route path="/settings" element={<Settings />} />
 				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
-
-
-				<Route
-					path="/fighter-dashboard"
-					element={
-						<FighterDashboard />
-					}
-				/>
-
+				<Route path="/about-us" element={<AboutUs />} />
+				<Route path="/fighter-dashboard" element={<FighterDashboard />}/>
 				<Route
 					path="/civilian-dashboard"
 					element={
@@ -90,6 +83,9 @@ const App = () => {
 						)
 					}
 				/>
+
+
+				
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 
