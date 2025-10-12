@@ -15,13 +15,19 @@ const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 const shiftScheduleRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
 const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
 const preventionOfficerRoutes = require("./routes/preventionOfficerRoutes");
+const shiftChangeRoutes = require("./routes/UserManagement/shiftChangeRoutes.js");
+const shiftRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
 
+
+
+// connect to database
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
 require("./models/UserManagement/UserReg.js");
 require("./models/UserManagement/TrainingSession.js");
 require("./models/UserManagement/ShiftSchedule.js")    
-require("./models/Mission.js"); // Mission schema
+require("./models/Mission.js");
+ // Mission schema
 // setting up config file
 dotenv.config({ path: "config/config.env" });
 
@@ -84,6 +90,9 @@ app.use("/users", userRouter);
 app.use("/sessions", sessionRouter);
 app.use("/attendance", attendanceRouter);
 app.use("/shift-schedules", shiftScheduleRoutes);
+app.use("/shift-change-requests", shiftChangeRoutes);
+app.use("/api/shiftChange", shiftChangeRoutes);
+app.use("/api/shifts", shiftRoutes);
 
 // Civilian login endpoint
 const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");

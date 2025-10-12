@@ -19,6 +19,11 @@ import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
 import Profile from "./pages/UserManagement/profile";
 import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
+import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
+import FighterDashboard from "./pages/UserManagement/FighterDashboard";
+
+
+
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -31,6 +36,7 @@ import VehicleItemsPage from "./pages/Inventory/VehicleItemsPage";
 import ReorderPage from "./pages/Inventory/ReorderPage";
 import ReordersList from "./pages/Inventory/ReordersList";
 import InventoryLogs from "./pages/Inventory/InventoryLogs";
+import InventoryManagerProfile from "./pages/Inventory/InventoryManagerProfile";
 
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
@@ -64,8 +70,28 @@ const App = () => {
 				<Route path="/update-user/:id" element={<UpdateUser />} />
 				<Route path="/userdetails/:id" element={<UserDetails />} />
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
+				<Route path="/profile" element={<Profile />} />
+				<Route path="/settings" element={<Settings />} />
+				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
 
-				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+
+				<Route
+					path="/fighter-dashboard"
+					element={
+						<FighterDashboard />
+					}
+				/>
+
+<Route
+  path="/civilian-dashboard"
+  element={
+    localStorage.getItem("accessToken") ? (
+      <CivilianDashboard />
+    ) : (
+      <Navigate to="/civilian-login" replace />
+    )
+  }
+/>
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 
@@ -98,6 +124,7 @@ const App = () => {
 				<Route path="/inventory/add" element={<InventoryForm />} />
 				<Route path="/inventory/vehicles" element={<VehicleList />} />
 				<Route path="/inventory/vehicles/add" element={<VehicleForm />} />
+				<Route path="/inventory/vehicles/edit/:id" element={<VehicleForm />} />
 				<Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
 				<Route path="/inventory/edit/:id" element={<InventoryForm />} />
 				<Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
@@ -105,6 +132,7 @@ const App = () => {
 				<Route path="/inventory/reorders" element={<ReordersList />} />
 				<Route path="/inventory/reorders/list" element={<ReordersList />} />
 				<Route path="/inventory/logs" element={<InventoryLogs />} />
+				<Route path="/inventory-manager/profile" element={<InventoryManagerProfile />} />
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
 				{/* Shift Management routes */}

@@ -6,6 +6,7 @@ import TrainingSession from "../TraningSessionManagement/TrainingSessionManager"
 import OfficerProfile from "../UserManagement/1stClassOfficerprofile";
 import InventoryManagerDashboard from "../Inventory/InventoryManagerDashboard";
 import MissionRecords from "../MissionRecords/MissionRecords";
+import FighterDashboard from "../../pages/UserManagement/FighterDashboard";
 
 const DynamicDashboard = () => {
 	const location = useLocation();
@@ -57,8 +58,7 @@ const DynamicDashboard = () => {
 			case "fighter":
 				return (
 					<div className="p-6">
-						<h1 className="text-3xl font-bold mb-4">Firefighter Dashboard</h1>
-						<p>Welcome {user.name}, this is your firefighter dashboard.</p>
+						 <FighterDashboard user={user} />
 					</div>
 				);
 

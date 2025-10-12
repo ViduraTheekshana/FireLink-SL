@@ -166,62 +166,67 @@ const generateTrendData = async () => {
       
       console.log(`Checking date ${dateStr} (${targetDate.toLocaleDateString()}) - Day range: ${dayStart.toISOString()} to ${dayEnd.toISOString()}`);
       
-      // Get items added (from Inventory collection - new items created)
-      const [itemsAddedToday, quantityAddedToday] = await Promise.all([
-        Inventory.countDocuments({
-          createdAt: {
-            $gte: dayStart,
-            $lt: dayEnd
+      // Get items added (NEW inventory records created)
+      const itemsAddedToday = await Inventory.countDocuments({
+        createdAt: {
+          $gte: dayStart,
+          $lt: dayEnd
+        }
+      });
+      
+      // Get QUANTITY added (from STOCK_CHANGE logs with positive quantityChange)
+      const quantityAddedAgg = await InventoryLog.aggregate([
+        {
+          $match: {
+            timestamp: {
+              $gte: dayStart,
+              $lt: dayEnd
+            },
+            action: 'STOCK_CHANGE',
+            quantityChange: { $gt: 0 } // Only positive changes (additions)
           }
-        }),
-        Inventory.aggregate([
-          {
-            $match: {
-              createdAt: {
-                $gte: dayStart,
-                $lt: dayEnd
-              }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalQuantity: { $sum: '$quantity' }
-            }
+        },
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: '$quantityChange' }
           }
-        ])
+        }
       ]);
       
-      // Get items removed (from InventoryLog collection - DELETE actions)
-      const [itemsRemovedToday, quantityRemovedToday] = await Promise.all([
-        InventoryLog.countDocuments({
-          timestamp: {
-            $gte: dayStart,
-            $lt: dayEnd
-          },
-          action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
-        }),
-        InventoryLog.aggregate([
-          {
-            $match: {
-              timestamp: {
-                $gte: dayStart,
-                $lt: dayEnd
-              },
-              action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalItems: { $sum: 1 }
-            }
+      // Get items removed (DELETE actions from logs)
+      const itemsRemovedToday = await InventoryLog.countDocuments({
+        timestamp: {
+          $gte: dayStart,
+          $lt: dayEnd
+        },
+        action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
+      });
+      
+      // Get QUANTITY removed (from STOCK_CHANGE logs with negative quantityChange AND DELETE actions)
+      const quantityRemovedAgg = await InventoryLog.aggregate([
+        {
+          $match: {
+            timestamp: {
+              $gte: dayStart,
+              $lt: dayEnd
+            },
+            $or: [
+              { action: 'STOCK_CHANGE', quantityChange: { $lt: 0 } }, // Quantity reductions
+              { action: 'DELETE', quantityChange: { $lt: 0 } } // Item deletions with quantity
+            ]
           }
-        ])
+        },
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: '$quantityChange' }
+          }
+        }
       ]);
       
-      const dayQuantityAdded = quantityAddedToday[0]?.totalQuantity || 0;
-      const dayQuantityRemoved = quantityRemovedToday[0]?.totalItems || 0;
+      const dayQuantityAdded = quantityAddedAgg[0]?.totalQuantity || 0;
+      const dayQuantityRemoved = Math.abs(quantityRemovedAgg[0]?.totalQuantity || 0); // Make it positive for display
       
       console.log(`${dateStr}: Added ${itemsAddedToday} items (${dayQuantityAdded} qty), Removed ${itemsRemovedToday} items (${dayQuantityRemoved} qty)`);
       
