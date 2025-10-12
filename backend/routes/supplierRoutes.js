@@ -14,9 +14,9 @@ const {
 const { isAuthenticatedUser, isNotLoggedIn } = require("../middlewares/auth");
 const { protect } = require("../middlewares/authMiddleware");
 const { authorizePositions } = require("../middlewares/roleMiddleware");
+const validate = require("../middlewares/validation");
 
 const {
-	validate,
 	createSupplierValidationRules,
 	idValidationRules,
 	loginValidationRules,

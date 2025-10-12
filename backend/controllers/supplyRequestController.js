@@ -1,4 +1,5 @@
-const SupplyRequest = require("../models/supplyRequest");
+const SupplyRequest = require("../models/SupplyRequest");
+const Supplier = require("../models/Supplier");
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const generateId = require("../utils/generateUniqueId");
@@ -7,11 +8,7 @@ const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 	const { title, description, category, quantity, applicationDeadline, unit } =
 		req.body;
 
-	const createdBy = req.user.id;
-
 	const id = generateId("req");
-
-	const public = req.user.position === "supply_manager";
 
 	const supplyRequest = await SupplyRequest.create({
 		title,
@@ -19,9 +16,7 @@ const createSupplyRequest = catchAsyncErrors(async (req, res) => {
 		category,
 		quantity,
 		applicationDeadline,
-		createdBy,
 		id,
-		public,
 		unit,
 	});
 
@@ -47,19 +42,23 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 		query.bids = { $elemMatch: { supplier: req.supplier._id } };
 	}
 
-	// Made only supply_manager can see every request other insiders can see only requests made by them
-	// suppliers only can see public requests
-	if (req.user && !req.user.position === "supply_manager") {
-		query.createdBy = req.user._id;
-	}
+	// suppliers only can see open requests
 	if (req.supplier) {
-		query.public = true;
 		query.status = "Open";
 	}
 
 	let supplyRequestsQuery = SupplyRequest.find(query).sort({
 		createdAt: -1,
 	});
+
+	if (req.query.limit && !req.supplier) {
+		const limit = parseInt(req.query.limit);
+		if (!isNaN(limit) && limit > 0) {
+			supplyRequestsQuery = supplyRequestsQuery
+				.limit(limit)
+				.populate("assignedSupplier", "name");
+		}
+	}
 
 	if (req.user && req.user.position === "supply_manager") {
 		supplyRequestsQuery = supplyRequestsQuery.populate("bids.supplier");
@@ -91,7 +90,6 @@ const getAllSupplyRequests = catchAsyncErrors(async (req, res) => {
 const getSupplyRequestById = catchAsyncErrors(async (req, res, next) => {
 	const supplyRequest = await SupplyRequest.findOne({
 		_id: req.params.id,
-		public: true,
 	}).lean();
 
 	if (!supplyRequest) {
@@ -111,16 +109,11 @@ const getSupplyRequestById = catchAsyncErrors(async (req, res, next) => {
 
 const getSupplyRequestByIdByAdmin = catchAsyncErrors(async (req, res, next) => {
 	const supplyRequest = await SupplyRequest.findById(req.params.id)
-		.populate("createdBy", "name email")
 		.populate("assignedSupplier", "name email phone")
 		.populate("bids.supplier", "name email");
 
 	if (!supplyRequest) {
 		return next(new ErrorHandler("Supply Request Not Found! ", 404));
-	}
-
-	if (!supplyRequest.createdBy === req.user._id) {
-		return next(new ErrorHandler("You don't own this Request", 403));
 	}
 
 	res.status(200).json({
@@ -130,15 +123,8 @@ const getSupplyRequestByIdByAdmin = catchAsyncErrors(async (req, res, next) => {
 });
 
 const updateSupplyRequest = catchAsyncErrors(async (req, res, next) => {
-	const {
-		title,
-		description,
-		category,
-		quantity,
-		applicationDeadline,
-		unit,
-		public,
-	} = req.body;
+	const { title, description, category, quantity, applicationDeadline, unit } =
+		req.body;
 
 	let supplyRequest = await SupplyRequest.findById(req.params.id);
 
@@ -146,15 +132,10 @@ const updateSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 		return next(new ErrorHandler("Supply Request Not Found! ", 404));
 	}
 
-	if (
-		!req.user.position === "supply_manager" &&
-		supplyRequest.createdBy.toString() !== req.user.id
-	) {
-		return next(new ErrorHandler("You don't own this Request", 403));
-	}
-
-	if (supplyRequest.status === "Closed") {
-		return next(new ErrorHandler("Cannot update a closed request!", 400));
+	if (supplyRequest.status !== "Open") {
+		return next(
+			new ErrorHandler("Cannot update a closed or assigned request!", 400)
+		);
 	}
 
 	if (supplyRequest.assignedSupplier) {
@@ -175,7 +156,6 @@ const updateSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 			quantity,
 			applicationDeadline,
 			unit,
-			public,
 		},
 		{
 			new: true,
@@ -191,25 +171,6 @@ const deleteSupplyRequest = catchAsyncErrors(async (req, res, next) => {
 
 	if (!supplyRequest) {
 		return next(new ErrorHandler("Supply Request Not Found!", 404));
-	}
-
-	if (
-		!req.user.position === "supply_manager" &&
-		!supplyRequest.createdBy === req.user.id
-	) {
-		return next(new ErrorHandler("You don't own this Request", 403));
-	}
-
-	if (
-		!req.user.position === "supply_manager" &&
-		supplyRequest.public === true
-	) {
-		return next(
-			new ErrorHandler(
-				"This request is Published ask supply manager to delete it",
-				403
-			)
-		);
 	}
 
 	if (supplyRequest.assignedSupplier) {
@@ -278,8 +239,10 @@ const assignSupplierToRequest = catchAsyncErrors(async (req, res, next) => {
 		return next(new ErrorHandler("Supply Request Not Found! ", 404));
 	}
 
-	if (supplyRequest.status === "Closed") {
-		return next(new ErrorHandler("This request is already closed", 400));
+	if (supplyRequest.status !== "Open") {
+		return next(
+			new ErrorHandler("This request is already closed or Assigned", 400)
+		);
 	}
 
 	if (new Date() < new Date(supplyRequest.applicationDeadline)) {
@@ -289,16 +252,29 @@ const assignSupplierToRequest = catchAsyncErrors(async (req, res, next) => {
 	}
 
 	if (
-		!supplyRequest.bids.some((bid) => bid.supplier.toString() === supplierId)
+		!supplyRequest.bids.some(
+			(bid) => bid.supplier.toString() === supplierId.toString()
+		)
 	) {
 		return next(
 			new ErrorHandler("This supplier has not bid on the request", 400)
 		);
 	}
 
+	const supplier = await Supplier.findById(supplierId);
+
+	if (!supplier) {
+		return next(
+			new ErrorHandler("Supplier not found with given supplier id", 404)
+		);
+	}
+
+	supplier.supplyCount++;
 	supplyRequest.assignedSupplier = supplierId;
-	supplyRequest.status = "Closed";
+	supplyRequest.status = "Assigned";
+
 	await supplyRequest.save();
+	await supplier.save();
 
 	res.status(200).json({ success: true, data: supplyRequest });
 });
@@ -380,6 +356,105 @@ const deleteBid = catchAsyncErrors(async (req, res, next) => {
 	});
 });
 
+const confirmDelivery = catchAsyncErrors(async (req, res, next) => {
+	const supplyRequest = await SupplyRequest.findById(req.params.id).populate(
+		"assignedSupplier",
+		"name email"
+	);
+
+	if (!supplyRequest) {
+		return next(new ErrorHandler("Supply Request not found", 404));
+	}
+
+	if (supplyRequest.status !== "Assigned") {
+		return next(
+			new ErrorHandler("Only assigned requests can be confirmed", 400)
+		);
+	}
+
+	if (supplyRequest.deliveredAt) {
+		return next(
+			new ErrorHandler("This request has already been confirmed", 400)
+		);
+	}
+
+	// Find assigned supplier's bid to get their delivery date
+	const assignedBid = supplyRequest.bids.find(
+		(bid) =>
+			bid.supplier.toString() === supplyRequest.assignedSupplier._id.toString()
+	);
+
+	if (!assignedBid) {
+		return next(
+			new ErrorHandler(
+				"No bid found for the assigned supplier — cannot confirm delivery",
+				400
+			)
+		);
+	}
+
+	const deliveredAt = new Date();
+	const onTime = deliveredAt <= new Date(assignedBid.deliveryDate);
+
+	supplyRequest.deliveredAt = deliveredAt;
+	supplyRequest.onTime = onTime;
+	supplyRequest.status = "Closed";
+
+	await supplyRequest.save();
+
+	res.status(200).json({
+		success: true,
+		message: "Delivery confirmed and request closed successfully",
+		data: { ...supplyRequest },
+	});
+});
+
+const rejectDelivery = catchAsyncErrors(async (req, res, next) => {
+	const supplyRequest = await SupplyRequest.findById(req.params.id).populate(
+		"assignedSupplier",
+		"name email"
+	);
+
+	if (!supplyRequest) {
+		return next(new ErrorHandler("Supply Request not found", 404));
+	}
+
+	if (supplyRequest.status !== "Assigned") {
+		return next(
+			new ErrorHandler("Only assigned requests can be rejected", 400)
+		);
+	}
+
+	if (supplyRequest.deliveredAt) {
+		return next(
+			new ErrorHandler(
+				"This request has already been confirmed as delivered",
+				400
+			)
+		);
+	}
+
+	const supplier = await Supplier.findById(supplyRequest.assignedSupplier._id);
+
+	if (!supplier) {
+		return next(
+			new ErrorHandler("Supplier not found with given supplier id", 404)
+		);
+	}
+
+	supplier.failedSupplyCount++;
+	supplyRequest.status = "Rejected";
+
+	await supplyRequest.save();
+	await supplier.save();
+
+	res.status(200).json({
+		success: true,
+		message: "Delivery rejected successfully",
+		data: { ...supplyRequest },
+	});
+});
+
 module.exports = {
 	createSupplyRequest,
 	getAllSupplyRequests,
@@ -391,4 +466,6 @@ module.exports = {
 	deleteSupplyRequest,
 	updateBid,
 	deleteBid,
+	confirmDelivery,
+	rejectDelivery,
 };

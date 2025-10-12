@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom"; // ✅ Added useNavigate
+import { Link, useNavigate } from "react-router-dom"; 
 
 const CivilianDashboard = () => {
 	const navigate = useNavigate();
@@ -9,7 +9,8 @@ const CivilianDashboard = () => {
 		if (confirmLogout) {
 			//  Clear session/local storage
 			localStorage.removeItem("accessToken");
-			      localStorage.removeItem("user");
+		      localStorage.removeItem("user");
+		      localStorage.removeItem("civilianLoggedIn");
 
 			sessionStorage.removeItem("accessToken");
 

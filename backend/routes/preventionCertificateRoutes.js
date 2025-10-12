@@ -38,6 +38,9 @@ router.patch("/:id/inspection-notes", preventionController.updateInspectionNotes
 // Officer marks as inspected
 router.patch("/:id/inspect", preventionController.markAsInspected);
 
+// Get all inspected applications
+router.get("/inspected", preventionController.getInspectedApplications);
+
 // Officer deletes application
 router.delete("/:id", preventionController.deleteCertificate);
 
@@ -53,5 +56,8 @@ router.get("/file/:id", async (req, res) => {
     res.status(404).json({ error: "File not found" });
   }
 });
+
+// Get all inspected applications
+router.get("/inspected", preventionController.getInspectedApplications);
 
 module.exports = router;

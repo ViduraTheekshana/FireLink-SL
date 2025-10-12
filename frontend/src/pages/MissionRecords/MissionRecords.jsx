@@ -41,7 +41,7 @@ const MissionRecords = () => {
 		endDate: ""
 	});
 
-	// Mission types for dropdown
+	
 	const missionTypes = [
 		"Fire Emergency",
 		"Rescue Operation",
@@ -51,7 +51,6 @@ const MissionRecords = () => {
 		"Other",
 	];
 
-	// Load missions on component mount
 	useEffect(() => {
 		loadMissions();
 	}, [currentPage, filters]);
@@ -164,7 +163,7 @@ const MissionRecords = () => {
 			setLoading(true);
 			setError("");
 
-			// Validate inventory items
+			// Validate 
 			const validItems = formData.inventoryItems.filter(
 				(item) => item.itemCode && item.usedQuantity > 0
 			);
@@ -194,7 +193,7 @@ const MissionRecords = () => {
 				await missionService.createMission(missionData);
 			}
 
-			// Reset form and reload missions
+			
 			setFormData({
 				missionType: "",
 				missionDate: "",
@@ -257,7 +256,7 @@ const MissionRecords = () => {
 			...prev,
 			[name]: value,
 		}));
-		setCurrentPage(1); // Reset to first page when filtering
+		setCurrentPage(1); 
 	};
 
 	const formatDate = (dateString) => {
@@ -268,20 +267,20 @@ const MissionRecords = () => {
 		return timeString;
 	};
 
-	// Load all missions for report generation
+	
 	const loadAllMissionsForReport = async () => {
 		try {
 			setLoadingReport(true);
 			setError("");
 			
-			// Fetch ALL missions (no pagination limit)
+			
 			const params = {
 				page: 1,
-				limit: 10000, // Large number to get all missions
-				missionType: filters.missionType, // Apply current filter if any
+				limit: 10000, 
+				missionType: filters.missionType, 
 			};
 
-			// Add date range filter if specified
+			
 			if (dateRange.startDate) {
 				params.startDate = dateRange.startDate;
 			}
@@ -294,7 +293,7 @@ const MissionRecords = () => {
 			
 			setAllMissionsData(allMissions);
 			
-			// Calculate statistics
+			// Calculate 
 			const stats = calculateStatistics(allMissions);
 			setReportStats(stats);
 			
@@ -307,7 +306,7 @@ const MissionRecords = () => {
 		}
 	};
 
-	// Calculate statistics from missions data
+	
 	const calculateStatistics = (missionsData) => {
 		const stats = {
 			totalMissions: missionsData.length,
@@ -329,17 +328,16 @@ const MissionRecords = () => {
 		};
 
 		missionsData.forEach(mission => {
-			// Count by status
+			// Count 
 			if (stats.byStatus[mission.status] !== undefined) {
 				stats.byStatus[mission.status]++;
 			}
 
-			// Count by type
+			
 			if (stats.byType[mission.missionType] !== undefined) {
 				stats.byType[mission.missionType]++;
 			}
 
-			// Count inventory items
 			if (mission.inventoryItems && mission.inventoryItems.length > 0) {
 				mission.inventoryItems.forEach(item => {
 					stats.totalItemsUsed += item.usedQuantity || 0;
@@ -349,7 +347,7 @@ const MissionRecords = () => {
 		});
 
 		stats.uniqueItemCodesCount = stats.uniqueItemCodes.size;
-		delete stats.uniqueItemCodes; // Remove Set object before storing
+		delete stats.uniqueItemCodes; 
 
 		return stats;
 	};
@@ -365,7 +363,7 @@ const MissionRecords = () => {
 			// Create a new window for printing
 			const printWindow = window.open('', '', 'width=800,height=600');
 			
-			// Build report HTML
+			
 			const reportHTML = `
 				<!DOCTYPE html>
 				<html>
@@ -731,7 +729,7 @@ const MissionRecords = () => {
 			printWindow.document.write(reportHTML);
 			printWindow.document.close();
 			
-			// Wait for content to load, then print
+			
 			setTimeout(() => {
 				printWindow.print();
 				printWindow.close();
@@ -784,7 +782,7 @@ const MissionRecords = () => {
 			<button
 				onClick={() => {
 					if (showForm) {
-						// Cancel - hide form and reset states
+						
 						setShowForm(false);
 						setEditingMissionId(null);
 						setFormData({
@@ -795,7 +793,7 @@ const MissionRecords = () => {
 							inventoryItems: [],
 						});
 					} else {
-						// Add New - show form for new mission
+						
 						setEditingMissionId(null);
 						setFormData({
 							missionType: "",

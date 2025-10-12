@@ -93,6 +93,5 @@ supplierSchema.methods.getJwt = function () {
 supplierSchema.index({ email: 1 });
 supplierSchema.index({ name: "text" });
 supplierSchema.index({ supplierType: 1 });
-supplierSchema.index({ status: 1 });
 
 module.exports = mongoose.model("Supplier", supplierSchema);

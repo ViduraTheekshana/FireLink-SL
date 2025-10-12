@@ -1,81 +1,88 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 const InspectionTrackingTable = ({ 
-  applications, 
-  onAddInspectionNotes,
-  onMarkAsInspected,
-  onDelete,
-  onViewDetails,
-  loading = false 
+  applications = [], 
+  loading = false, 
+  searchTerm = '', 
+  setSearchTerm = () => {}, 
+  sortField = 'fullName', 
+  setSortField = () => {}, 
+  sortDirection = 'asc', 
+  setSortDirection = () => {}, 
+ 
+  onMarkAsInspected = () => {}, 
+  onDeleteApplication = () => {},
+  onViewDetails = () => {} 
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState('fullName');
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [editingNotes, setEditingNotes] = useState(null);
-  const [inspectionNotes, setInspectionNotes] = useState('');
+
+  const [showInspectionModal, setShowInspectionModal] = useState(false);
+  const [selectedAppForInspection, setSelectedAppForInspection] = useState(null);
+  const [finalInspectionNotes, setFinalInspectionNotes] = useState('');
+
+  // Load Google Material Icons
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    return () => {
+      try {
+        document.head.removeChild(link);
+      } catch (e) {
+        // Ignore if already removed
+      }
+    };
+  }, []);
 
   // Filter payment assigned applications
   const paymentAssignedApplications = useMemo(() => {
+    if (!applications || !Array.isArray(applications)) {
+      return [];
+    }
     return applications.filter(app => app.status === 'Payment Assigned' && app.payment);
   }, [applications]);
 
-  // Filter and sort applications
-  const filteredAndSortedApplications = useMemo(() => {
-    let filtered = paymentAssignedApplications.filter(app => {
+  // Filter applications
+  const filteredApplications = useMemo(() => {
+    return paymentAssignedApplications.filter(app => {
       const searchLower = searchTerm.toLowerCase();
       return (
         app.fullName?.toLowerCase().includes(searchLower) ||
-        app.nic?.toLowerCase().includes(searchLower) ||
+        app.contactNumber?.toLowerCase().includes(searchLower) ||
         app.email?.toLowerCase().includes(searchLower) ||
         app.serviceType?.toLowerCase().includes(searchLower) ||
         app.inspectionNotes?.toLowerCase().includes(searchLower)
       );
     });
+  }, [paymentAssignedApplications, searchTerm]);
 
-    // Sort applications
-    filtered.sort((a, b) => {
-      let aValue = a[sortField] || '';
-      let bValue = b[sortField] || '';
-      
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
 
-    return filtered;
-  }, [paymentAssignedApplications, searchTerm, sortField, sortDirection]);
-
-  // Handle sorting
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  // Handle save inspection notes
-  const handleSaveInspectionNotes = async (id) => {
-    if (!inspectionNotes.trim()) {
-      alert('Please enter inspection notes');
-      return;
-    }
-
-    await onAddInspectionNotes(id, inspectionNotes);
-    setEditingNotes(null);
-    setInspectionNotes('');
-  };
 
   // Handle mark as inspected
   const handleMarkAsInspected = async (id, notes) => {
     const finalNotes = notes || prompt('Enter final inspection notes (optional):') || '';
     await onMarkAsInspected(id, finalNotes);
+  };
+
+  // Open inspection completion modal
+  const openInspectionModal = (app) => {
+    setSelectedAppForInspection(app);
+    setFinalInspectionNotes('');
+    setShowInspectionModal(true);
+  };
+
+  // Handle inspection completion from modal
+  const handleMarkAsInspectedFromModal = async () => {
+    if (!finalInspectionNotes.trim()) {
+      toast.error('Inspection notes are required before marking as inspected');
+      return;
+    }
+
+    await onMarkAsInspected(selectedAppForInspection._id, finalInspectionNotes);
+    setShowInspectionModal(false);
+    setSelectedAppForInspection(null);
+    setFinalInspectionNotes('');
+    toast.success('Application marked as inspected successfully');
   };
 
   // Get days since payment assigned
@@ -94,11 +101,15 @@ const InspectionTrackingTable = ({
 
   // Table styles
   const tableContainerStyle = {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    overflow: 'hidden',
-    marginBottom: '20px',
+  backgroundColor: '#CED6DF',
+  borderRadius: '12px',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  overflow: 'hidden',
+  marginBottom: '20px',
+  width: '100%',
+  maxWidth: '1800px',
+  marginLeft: 'auto',
+  marginRight: 'auto',
   };
 
   const tableTitleStyle = {
@@ -137,8 +148,6 @@ const InspectionTrackingTable = ({
     fontSize: '14px',
     fontWeight: '600',
     color: '#374151',
-    cursor: 'pointer',
-    userSelect: 'none',
   };
 
   const tdStyle = {
@@ -146,7 +155,7 @@ const InspectionTrackingTable = ({
     borderBottom: '1px solid #f3f4f6',
     fontSize: '14px',
     color: '#374151',
-    verticalAlign: 'top',
+    verticalAlign: 'middle',
   };
 
   const statusBadgeStyle = {
@@ -167,6 +176,19 @@ const InspectionTrackingTable = ({
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     marginRight: '4px',
+  };
+
+  const iconButtonStyle = {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '32px',
+    height: '32px',
   };
 
   const notesInputStyle = {
@@ -204,7 +226,7 @@ const InspectionTrackingTable = ({
   return (
     <div style={tableContainerStyle}>
       <h3 style={tableTitleStyle}>
-        Inspection Tracking - Payment Assigned Applications ({filteredAndSortedApplications.length})
+        Inspection Tracking - Payment Assigned Applications ({filteredApplications.length})
       </h3>
       
       {/* Search */}
@@ -223,43 +245,42 @@ const InspectionTrackingTable = ({
         <table style={tableStyle}>
           <thead>
             <tr>
-              <th style={thStyle} onClick={() => handleSort('fullName')}>
-                Full Name {sortField === 'fullName' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Full Name
               </th>
-              <th style={thStyle} onClick={() => handleSort('nic')}>
-                NIC {sortField === 'nic' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Contact Number
               </th>
-              <th style={thStyle} onClick={() => handleSort('serviceType')}>
-                Service Type {sortField === 'serviceType' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Service Type
               </th>
-              <th style={thStyle} onClick={() => handleSort('payment')}>
-                Payment {sortField === 'payment' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Payment
               </th>
-              <th style={thStyle} onClick={() => handleSort('urgencyLevel')}>
-                Priority {sortField === 'urgencyLevel' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th style={thStyle}>
+                Priority
               </th>
               <th style={thStyle}>Days Since Payment</th>
-              <th style={thStyle}>Inspection Notes</th>
               <th style={thStyle}>Status</th>
-              <th style={thStyle}>Actions</th>
+              <th style={{ ...thStyle, minWidth: '200px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedApplications.length === 0 ? (
+            {filteredApplications.length === 0 ? (
               <tr>
-                <td colSpan="9" style={{ ...tdStyle, textAlign: 'center', color: '#6b7280', padding: '40px' }}>
+                <td colSpan="8" style={{ ...tdStyle, textAlign: 'center', color: '#6b7280', padding: '40px' }}>
                   {searchTerm ? 'No applications match your search.' : 'No applications ready for inspection found.'}
                 </td>
               </tr>
             ) : (
-              filteredAndSortedApplications.map((app) => {
+              filteredApplications.map((app) => {
                 const daysSincePayment = getDaysSincePayment(app.approvedAt);
                 const priorityColor = getPriorityColor(app.urgencyLevel, daysSincePayment);
                 
                 return (
                   <tr key={app._id}>
                     <td style={tdStyle}>{app.fullName}</td>
-                    <td style={tdStyle}>{app.nic}</td>
+                    <td style={tdStyle}>{app.contactNumber || 'N/A'}</td>
                     <td style={tdStyle}>{app.serviceType || 'Fire Prevention Certificate'}</td>
                     <td style={tdStyle}>
                       <span style={{ color: '#059669', fontWeight: '500' }}>
@@ -271,79 +292,63 @@ const InspectionTrackingTable = ({
                         {app.urgencyLevel || 'Normal'}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                    <td style={{ ...tdStyle, textAlign: 'center' }}>
                       <span style={{ color: priorityColor, fontWeight: '500' }}>
                         {daysSincePayment} days
                       </span>
                     </td>
                     <td style={tdStyle}>
-                      {editingNotes === app._id ? (
-                        <div>
-                          <textarea
-                            value={inspectionNotes}
-                            onChange={(e) => setInspectionNotes(e.target.value)}
-                            placeholder="Enter inspection notes..."
-                            style={notesInputStyle}
-                          />
-                          <div style={{ marginTop: '8px' }}>
-                            <button
-                              onClick={() => handleSaveInspectionNotes(app._id)}
-                              style={{ ...buttonStyle, backgroundColor: '#10b981', color: 'white' }}
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingNotes(null);
-                                setInspectionNotes('');
-                              }}
-                              style={{ ...buttonStyle, backgroundColor: '#6b7280', color: 'white' }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div style={notesDisplayStyle}>
-                          {app.inspectionNotes || 'No notes added'}
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                        <span style={statusBadgeStyle}>Pending</span>
+                      </div>
                     </td>
-                    <td style={tdStyle}>
-                      <span style={statusBadgeStyle}>{app.status}</span>
-                    </td>
-                    <td style={tdStyle}>
-                      <button
-                        onClick={() => onViewDetails && onViewDetails(app)}
-                        style={{ ...buttonStyle, backgroundColor: '#3b82f6', color: 'white' }}
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingNotes(app._id);
-                          setInspectionNotes(app.inspectionNotes || '');
-                        }}
-                        style={{ ...buttonStyle, backgroundColor: '#f59e0b', color: 'white' }}
-                      >
-                        Add Notes
-                      </button>
-                      <button
-                        onClick={() => handleMarkAsInspected(app._id, app.inspectionNotes)}
-                        style={{ ...buttonStyle, backgroundColor: '#10b981', color: 'white' }}
-                      >
-                        Mark Inspected
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete ${app.fullName}'s application? This will permanently remove it from the database.`)) {
-                            onDelete(app._id);
-                          }
-                        }}
-                        style={{ ...buttonStyle, backgroundColor: '#ef4444', color: 'white' }}
-                      >
-                        Delete
-                      </button>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '4px',
+                        flexWrap: 'nowrap'
+                      }}>
+                        {/* View Icon Button */}
+                        <button
+                          onClick={() => onViewDetails && onViewDetails(app)}
+                          style={{ ...iconButtonStyle, backgroundColor: '#3b82f6', color: 'white' }}
+                          title="View Details"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>visibility</span>
+                        </button>
+                        
+
+                        {/* Delete Icon Button */}
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete ${app.fullName}'s application? This will permanently remove it from the database.`)) {
+                              onDeleteApplication(app._id);
+                            }
+                          }}
+                          style={{ ...iconButtonStyle, backgroundColor: '#ef4444', color: 'white' }}
+                          title="Delete"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
+                        </button>
+                        
+                        {/* Mark Inspected Button */}
+                        <button
+                          onClick={() => openInspectionModal(app)}
+                          style={{ 
+                            ...buttonStyle, 
+                            backgroundColor: '#10b981', 
+                            color: 'white',
+                            marginRight: '0',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          Mark Inspected
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -366,6 +371,138 @@ const InspectionTrackingTable = ({
         <span style={{ color: '#ea580c', marginLeft: '12px' }}>● High Priority/Due Soon (7+ days)</span>
         <span style={{ color: '#059669', marginLeft: '12px' }}>● Normal Priority</span>
       </div>
+
+
+
+      {/* Inspection Completion Modal */}
+      {showInspectionModal && selectedAppForInspection && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '500px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                marginBottom: '16px',
+                color: '#111827',
+                fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
+              }}
+            >
+              Complete Inspection - {selectedAppForInspection.applicantName}
+            </h3>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#6b7280', 
+                marginBottom: '12px',
+                fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
+              }}>
+                Application ID: {selectedAppForInspection.applicationId}
+              </p>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#374151', 
+                marginBottom: '16px',
+                fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
+              }}>
+                Please provide final inspection notes before marking this application as inspected. This field is mandatory.
+              </p>
+            </div>
+
+            <textarea
+              value={finalInspectionNotes}
+              onChange={(e) => setFinalInspectionNotes(e.target.value)}
+              placeholder="Enter final inspection notes... (Required)"
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '2px solid #d1d5db',
+                fontSize: '14px',
+                fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
+                resize: 'vertical',
+                minHeight: '100px',
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#10b981'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+            />
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '20px',
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowInspectionModal(false);
+                  setSelectedAppForInspection(null);
+                  setFinalInspectionNotes('');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMarkAsInspectedFromModal}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: finalInspectionNotes.trim() ? '#10b981' : '#9ca3af',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: finalInspectionNotes.trim() ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Public Sans, system-ui, -apple-system, sans-serif',
+                }}
+                disabled={!finalInspectionNotes.trim()}
+              >
+                Mark as Inspected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

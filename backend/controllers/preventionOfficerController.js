@@ -100,3 +100,79 @@ exports.reactivateApplication = async (req, res) => {
     res.status(500).json({ message: "Error reactivating application", error: err.message });
   }
 };
+
+// Get all applications with assigned payments for financial officer
+exports.getAssignedPayments = async (req, res) => {
+  try {
+    // Extract query parameters for filtering
+    const { status, startDate, endDate, paymentStartDate, paymentEndDate } = req.query;
+    
+    // Build filter query
+    let filterQuery = {
+      payment: { $exists: true, $ne: null, $ne: 0 }
+    };
+
+    // Filter by status if provided
+    if (status) {
+      filterQuery.status = status;
+    }
+
+    // Filter by application date range if provided
+    if (startDate || endDate) {
+      filterQuery.createdAt = {};
+      if (startDate) {
+        filterQuery.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filterQuery.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Filter by payment assignment date range if provided
+    if (paymentStartDate || paymentEndDate) {
+      filterQuery.paymentAssignedAt = {};
+      if (paymentStartDate) {
+        filterQuery.paymentAssignedAt.$gte = new Date(paymentStartDate);
+      }
+      if (paymentEndDate) {
+        filterQuery.paymentAssignedAt.$lte = new Date(paymentEndDate);
+      }
+    }
+
+    // Fetch applications that match the filter criteria
+    const assignedPayments = await PreventionCertificate.find(filterQuery).select(
+      '_id applicationId applicantName contactNumber payment paymentAssignedAt status createdAt updatedAt'
+    ).sort({ paymentAssignedAt: -1 }); // Sort by payment assignment date, newest first
+
+    // Format the response for financial officer
+    const formattedData = assignedPayments.map(app => ({
+      id: app._id,
+      applicationId: app.applicationId,
+      applicantName: app.applicantName,
+      contactNumber: app.contactNumber,
+      assignedPayment: app.payment,
+      paymentAssignedDate: app.paymentAssignedAt || app.updatedAt,
+      status: app.status,
+      applicationDate: app.createdAt
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Assigned payments fetched successfully",
+      count: formattedData.length,
+      filters: {
+        status: status || "all",
+        applicationDateRange: startDate || endDate ? { startDate, endDate } : "all",
+        paymentDateRange: paymentStartDate || paymentEndDate ? { paymentStartDate, paymentEndDate } : "all"
+      },
+      data: formattedData
+    });
+  } catch (err) {
+    console.error("Error fetching assigned payments:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Error fetching assigned payments", 
+      error: err.message 
+    });
+  }
+};
