@@ -512,7 +512,7 @@ const CivilianLogin = () => {
         </div>
 
         <div className="mt-4 text-center">
-          <Link to="/login" className="text-gray-500 underline text-sm">
+          <Link to="/staff-login" className="text-gray-500 underline text-sm">
             ← Back to Staff Login
                     {/* Debug panel for Google OAuth issues */}
                     {googleDebug && (
