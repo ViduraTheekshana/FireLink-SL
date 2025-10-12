@@ -1,6 +1,6 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Budget = require("../models/Budget");
-const Transaction = require("../models/Transaction");
+const Expense = require("../models/Transaction");
 const UserReg = require("../models/UserManagement/UserReg");
 const ErrorHandler = require("../utils/errorHandler");
 const generateUniqueId = require("../utils/generateUniqueId");
@@ -105,20 +105,20 @@ const getSupplyManagerBudget = catchAsyncErrors(async (req, res, next) => {
 	res.status(200).json({ success: true, data: budgetData });
 });
 
-const createTransaction = catchAsyncErrors(async (req, res) => {
+const createExpense = catchAsyncErrors(async (req, res) => {
 	const { amount, type, description } = req.body;
 
-	const transaction = await Transaction.create({
+	const expense = await Expense.create({
 		id: generateUniqueId("trx"),
 		amount,
 		type,
 		description,
 	});
 
-	res.status(201).json({ success: true, data: transaction });
+	res.status(201).json({ success: true, data: expense });
 });
 
-const getTransactions = catchAsyncErrors(async (req, res, next) => {
+const getExpenses = catchAsyncErrors(async (req, res, next) => {
 	const { year, month, all } = req.query;
 	let query = {};
 
@@ -165,16 +165,16 @@ const getTransactions = catchAsyncErrors(async (req, res, next) => {
 
 	query.date = { $gte: startDate, $lte: endDate };
 
-	const transactions = await Transaction.find(query).sort({ date: -1 });
+	const expenses = await Expense.find(query).sort({ date: -1 });
 
-	if (!transactions.length) {
-		return next(new ErrorHandler("Transactions not found!", 404));
+	if (!expenses.length) {
+		return next(new ErrorHandler("Expenses not found!", 404));
 	}
 
 	res.status(200).json({
 		success: true,
-		count: transactions.length,
-		data: transactions,
+		count: expenses.length,
+		data: expenses,
 		range: { startDate, endDate },
 	});
 });
@@ -182,7 +182,7 @@ const getTransactions = catchAsyncErrors(async (req, res, next) => {
 module.exports = {
 	assignBudget,
 	getSupplyManagerBudget,
-	createTransaction,
-	getTransactions,
+	createExpense,
+	getExpenses,
 	initializeBudget,
 };

@@ -29,7 +29,7 @@ const validateGetSupplyManagerBudget = [
 		.withMessage("Year must be a valid number"),
 ];
 
-const validateCreateTransaction = [
+const validateCreateExpense = [
 	body("amount")
 		.notEmpty()
 		.withMessage("Amount is required")
@@ -51,7 +51,7 @@ const validateCreateTransaction = [
 ];
 
 module.exports = {
-	validateCreateTransaction,
+	validateCreateExpense,
 	validateGetSupplyManagerBudget,
 	validateAssignBudget,
 };

@@ -1,21 +1,21 @@
 import api from "../api";
 
-export const getTransaction = async (year, month) => {
+export const getExpenses = async (year, month) => {
 	const response = await api.get(
-		`/v1/finance/transaction?month=${month}&year=${year}`
+		`/v1/finance/expenses?month=${month}&year=${year}`
 	);
 
 	if (!response.data.success) {
-		return new Error(response.data.message || "Failed to fetch Transaction!");
+		return new Error(response.data.message || "Failed to fetch Expense!");
 	}
 	return response.data;
 };
 
-export const createTransaction = async (transactionData) => {
-	const response = await api.post("/v1/finance/transaction", transactionData);
+export const createExpense = async (expenseData) => {
+	const response = await api.post("/v1/finance/expenses", expenseData);
 
 	if (!response.data.success) {
-		return new Error(response.data.message || "Failed to create Transaction");
+		return new Error(response.data.message || "Failed to create Expense");
 	}
 	return response.data;
 };

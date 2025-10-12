@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import Sidebar from "../../components/SideBar";
 import {
-	createTransaction,
-	getTransaction,
+	createExpense,
+	getExpenses,
 } from "../../services/finance/financeService";
 import { toast } from "react-toastify";
 import extractErrorMessage from "../../utils/errorMessageParser";
@@ -27,7 +27,7 @@ import { useEffect } from "react";
 import Loader from "../../components/Loader";
 import formatDate from "../../utils/convertDate";
 
-const Transactions = () => {
+const Expenses = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
@@ -41,21 +41,21 @@ const Transactions = () => {
 		amount: 0,
 		description: "",
 	});
-	const [transactions, setTransactions] = useState([]);
+	const [expenses, setExpenses] = useState([]);
 	const currentDate = new Date();
 	const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
 	const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 	const [showDatePicker, setShowDatePicker] = useState(false);
 	const itemsPerPage = 10;
 
-	const fetchTransaction = async () => {
+	const fetchExpenses = async () => {
 		setLoading(true);
 		try {
-			const transactionData = await getTransaction(
+			const transactionData = await getExpenses(
 				selectedYear,
 				selectedMonth + 1
 			);
-			setTransactions(transactionData.data);
+			setExpenses(transactionData.data);
 		} catch (exception) {
 			setError(extractErrorMessage(exception));
 		} finally {
@@ -64,7 +64,7 @@ const Transactions = () => {
 	};
 
 	useEffect(() => {
-		fetchTransaction();
+		fetchExpenses();
 	}, [selectedMonth, selectedYear]);
 
 	useEffect(() => {
@@ -76,8 +76,8 @@ const Transactions = () => {
 
 	const filteredTransactions =
 		filterType === ""
-			? transactions
-			: transactions.filter((t) => t.type === filterType);
+			? expenses
+			: expenses.filter((t) => t.type === filterType);
 
 	const sortedTransactions = [...filteredTransactions].sort((a, b) => {
 		if (sortField === "date") {
@@ -144,8 +144,8 @@ const Transactions = () => {
 
 		const submitTransaction = async () => {
 			try {
-				await createTransaction(newTransaction);
-				fetchTransaction();
+				await createExpense(newTransaction);
+				fetchExpenses();
 				toast.success("Transaction created successfully!");
 			} catch (exception) {
 				setError(extractErrorMessage(exception));
@@ -203,7 +203,7 @@ const Transactions = () => {
 										<h3 className="text-lg font-semibold mb-1">
 											Total Transactions
 										</h3>
-										<p className="text-3xl font-bold">{transactions.length}</p>
+										<p className="text-3xl font-bold">{expenses.length}</p>
 										<p className="text-blue-100 mt-1">Last 30 days</p>
 									</div>
 									<div className="bg-blue-400/30 p-4 rounded-full">
@@ -219,7 +219,7 @@ const Transactions = () => {
 										</h3>
 										<p className="text-3xl font-bold">
 											Rs.
-											{transactions
+											{expenses
 												.filter((t) => t.type === "emergency")
 												.reduce((sum, t) => sum + t.amount, 0)
 												.toLocaleString()}
@@ -239,7 +239,7 @@ const Transactions = () => {
 										</h3>
 										<p className="text-3xl font-bold">
 											Rs.
-											{transactions
+											{expenses
 												.filter((t) => t.type !== "emergency")
 												.reduce((sum, t) => sum + t.amount, 0)
 												.toLocaleString()}
@@ -716,4 +716,4 @@ const Transactions = () => {
 	);
 };
 
-export default Transactions;
+export default Expenses;
