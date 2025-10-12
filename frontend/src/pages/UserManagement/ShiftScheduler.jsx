@@ -86,17 +86,28 @@ const ShiftScheduler = () => {
   // Validate team composition - must have at least one team captain
   const validateTeamComposition = (memberIds) => {
     if (memberIds.length === 0) return null;
-
     const selectedMembers = members.filter(m => memberIds.includes(m._id));
-    const hasTeamCaptain = selectedMembers.some(m =>
-      m.position.toLowerCase().includes('captain') ||
-      m.position.toLowerCase().includes('chief') ||
-      m.position.toLowerCase().includes('officer')
-    );
 
-    if (!hasTeamCaptain) {
-      return "Team must include at least one Captain, Chief, or Officer";
+    // Define required role checks
+    const has1stClassOfficer = selectedMembers.some(m => {
+      const pos = m.position?.toLowerCase() || '';
+      return (pos.includes('1st') || pos.includes('1stclass') || pos.includes('1st-class') || pos.includes('first')) && pos.includes('officer')
+        || pos === '1stclass officer' || pos === '1st-class officer';
+    });
+
+    const hasFighter = selectedMembers.some(m => (m.position || '').toLowerCase().includes('fighter'));
+
+    const hasTeamCaptain = selectedMembers.some(m => (m.position || '').toLowerCase().includes('captain'));
+
+    const missing = [];
+    if (!has1stClassOfficer) missing.push('1st-class Officer');
+    if (!hasFighter) missing.push('Fighter');
+    if (!hasTeamCaptain) missing.push('teamcaptain');
+
+    if (missing.length > 0) {
+      return `Team must include: ${missing.join(', ')}`;
     }
+
     return null;
   };
 
@@ -344,7 +355,7 @@ const ShiftScheduler = () => {
               <p className="text-gray-600 mt-2">Schedule shifts for fire vehicles with up to 8 members per vehicle</p>
               <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Requirements:</strong> Cannot schedule past dates • Team must include at least one Captain/Chief/Officer • Maximum 8 members per vehicle
+                  <strong>Requirements:</strong> Cannot schedule past dates • Team must include one 1st-class Officer, one Fighter, and one Team Captain • Maximum 8 members per vehicle
                 </p>
               </div>
             </div>
@@ -474,11 +485,17 @@ const ShiftScheduler = () => {
                 >
                   <option value="">Select member to add...</option>
                   {members
-                    .filter(m =>
-                      ['officer', 'team captain', 'fighter'].some(role =>
-                        m.position.toLowerCase().includes(role)
-                      )
-                    )
+                    .filter(m => {
+                      const pos = (m.position || '').toLowerCase();
+                      // Accept common variants for the required roles
+                      const is1stClass = pos.includes('1st') || pos.includes('1stclass') || pos.includes('1st-class') || pos.includes('first');
+                      const isOfficer = pos.includes('officer');
+                      const isFighter = pos.includes('fighter');
+                      const isCaptain = pos.includes('captain');
+
+                      // Accept if matches one of the allowed roles
+                      return (is1stClass && isOfficer) || isFighter || isCaptain || pos === '1stclass officer' || pos === '1st-class officer';
+                    })
                     .map(m => (
                       <option key={m._id} value={m._id}>
                         {m.name} ({m.staffId}) - {m.position}
@@ -496,9 +513,9 @@ const ShiftScheduler = () => {
                     </svg>
                     {errors.members}
                   </p>
-                ) : (
+                  ) : (
                   <p className="text-xs text-gray-500 mt-1">
-                    ⭐ indicates leadership roles. Team must include at least one Captain, Chief, or Officer.
+                    ⭐ indicates leadership roles. Team must include a 1st-class Officer, a Fighter, and a Team Captain.
                   </p>
                 )}
               </div>
