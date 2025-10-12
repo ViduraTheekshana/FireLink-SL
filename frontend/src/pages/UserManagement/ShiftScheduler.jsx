@@ -484,26 +484,12 @@ const ShiftScheduler = () => {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="">Select member to add...</option>
-                  {members
-                    .filter(m => {
-                      const pos = (m.position || '').toLowerCase();
-                      // Accept common variants for the required roles
-                      const is1stClass = pos.includes('1st') || pos.includes('1stclass') || pos.includes('1st-class') || pos.includes('first');
-                      const isOfficer = pos.includes('officer');
-                      const isFighter = pos.includes('fighter');
-                      const isCaptain = pos.includes('captain');
-
-                      // Accept if matches one of the allowed roles
-                      return (is1stClass && isOfficer) || isFighter || isCaptain || pos === '1stclass officer' || pos === '1st-class officer';
-                    })
-                    .map(m => (
-                      <option key={m._id} value={m._id}>
-                        {m.name} ({m.staffId}) - {m.position}
-                        {isLeadershipRole(m.position) ? ' ⭐' : ''}
-                      </option>
-                    ))
-                  }
-
+                  {members.map(m => (
+                    <option key={m._id} value={m._id}>
+                      {m.name} ({m.staffId}) - {m.position}
+                      {isLeadershipRole(m.position) ? ' ⭐' : ''}
+                    </option>
+                  ))}
                 </select>
 
                 {errors.members ? (
