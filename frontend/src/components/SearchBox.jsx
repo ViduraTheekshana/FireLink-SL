@@ -4,7 +4,7 @@ import { useAuth } from "../context/auth";
 import { useSupplierAuth } from "../context/supplierAuth";
 import { useNavigate } from "react-router-dom";
 
-const SearchBox = ({ searchQuery, setSearchQuery }) => {
+const SearchBox = ({ searchQuery, setSearchQuery, hideSearchBar }) => {
 	const { user } = useAuth();
 	const { user: supplier } = useSupplierAuth();
 	const navigate = useNavigate();
@@ -20,21 +20,23 @@ const SearchBox = ({ searchQuery, setSearchQuery }) => {
 					<Menu size={24} />
 				</button>
 			</div>
-			<div className="flex-1 max-w-xl mx-4">
-				<div className="relative">
-					<Search
-						className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-						size={18}
-					/>
-					<input
-						type="text"
-						placeholder="Search suppliers, requests"
-						className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
+			{!hideSearchBar && (
+				<div className="flex-1 max-w-xl mx-4">
+					<div className="relative">
+						<Search
+							className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+							size={18}
+						/>
+						<input
+							type="text"
+							placeholder="Search suppliers, requests"
+							className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+						/>
+					</div>
 				</div>
-			</div>
+			)}
 			<div className="flex items-center gap-4">
 				<button className="relative p-1">
 					<Bell size={20} className="text-gray-600" />

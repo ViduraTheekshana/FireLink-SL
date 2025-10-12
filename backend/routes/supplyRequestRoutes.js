@@ -12,11 +12,13 @@ const {
 	assignSupplierToRequest,
 	updateBid,
 	deleteBid,
+	confirmDelivery,
+	rejectDelivery,
 } = require("../controllers/supplyRequestController");
 
 const { isAuthenticatedUser, userOrSupplier } = require("../middlewares/auth");
 const { protect } = require("../middlewares/authMiddleware");
-
+const validate = require("../middlewares/validation");
 const { authorizePositions } = require("../middlewares/roleMiddleware");
 
 const {
@@ -26,7 +28,6 @@ const {
 	validateAddBid,
 	validateUpdateBid,
 	validateAssignSupplier,
-	validate,
 } = require("../validators/supplyRequestValidator");
 const { idValidationRules } = require("../validators/supplyValidator");
 
@@ -48,8 +49,20 @@ router
 
 router
 	.route("/:id")
-	.put(protect, validateUpdateSupplyRequest(), validate, updateSupplyRequest)
-	.delete(protect, authorizePositions(["supply_manager"]), deleteSupplyRequest);
+	.put(
+		protect,
+		authorizePositions(["supply_manager"]),
+		validateUpdateSupplyRequest(),
+		validate,
+		updateSupplyRequest
+	)
+	.delete(
+		protect,
+		authorizePositions(["supply_manager"]),
+		idValidationRules(),
+		validate,
+		deleteSupplyRequest
+	);
 
 router
 	.route("/admin/:id")
@@ -98,5 +111,25 @@ router
 		updateBid
 	)
 	.delete(isAuthenticatedUser, idValidationRules(), validate, deleteBid);
+
+router
+	.route("/:id/confirm-delivery")
+	.put(
+		protect,
+		authorizePositions(["supply_manager"]),
+		idValidationRules(),
+		validate,
+		confirmDelivery
+	);
+
+router
+	.route("/:id/reject-delivery")
+	.put(
+		protect,
+		authorizePositions(["supply_manager"]),
+		idValidationRules(),
+		validate,
+		rejectDelivery
+	);
 
 module.exports = router;

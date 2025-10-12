@@ -122,3 +122,24 @@ export const assignSupplierToRequest = async (requestId, supplierId) => {
 	}
 	return response.data;
 };
+export const confirmRequest = async (requestId) => {
+	const response = await api.put(
+		`/v1/supply-requests/${requestId}/confirm-delivery`
+	);
+
+	if (!response.data.success) {
+		return new Error(response.data.message || "Failed to confirm delivery!");
+	}
+	return response.data;
+};
+
+export const rejectRequest = async (requestId) => {
+	const response = await api.put(
+		`/v1/supply-requests/${requestId}/reject-delivery`
+	);
+
+	if (!response.data.success) {
+		return new Error(response.data.message || "Failed to reject request!");
+	}
+	return response.data;
+};

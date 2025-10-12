@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, Check } from "lucide-react";
+import { toast } from "react-toastify";
 import formatDate from "../utils/convertDate";
 import { assignSupplierToRequest } from "../services/supply/supplyRequestService";
 import extractErrorMessage from "../utils/errorMessageParser";
@@ -11,6 +12,7 @@ export function BidComparisonModal({
 	setError,
 }) {
 	const [selectedBid, setSelectedBid] = useState(null);
+	const [selectedSupplierId, setSelectedSupplierId] = useState(null);
 
 	const calculateSuccessRate = (supplier) => {
 		if (!supplier) return 0;
@@ -22,17 +24,18 @@ export function BidComparisonModal({
 			: 0;
 	};
 
-	const handleSelectBid = (bidId) => {
+	const handleSelectBid = (bidId, supplierId) => {
 		setSelectedBid(bidId);
+		setSelectedSupplierId(supplierId);
 	};
 
 	const handleAssignSupplier = () => {
 		if (!selectedBid) return;
 		const sendRequest = async () => {
 			try {
-				await assignSupplierToRequest(request._id, selectedBid);
+				await assignSupplierToRequest(request._id, selectedSupplierId);
 				fetchRequests();
-				toast.success("Request created successfully");
+				toast.success("Request Assigned successfully");
 			} catch (exception) {
 				setError(extractErrorMessage(exception));
 			} finally {
@@ -200,7 +203,7 @@ export function BidComparisonModal({
 											className={`hover:bg-gray-50 ${
 												isSelected ? "bg-blue-50" : ""
 											}`}
-											onClick={() => handleSelectBid(bid._id)}
+											onClick={() => handleSelectBid(bid._id, bid.supplier._id)}
 										>
 											<td className="px-4 py-2 border">
 												<div className="flex justify-center">
