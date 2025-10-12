@@ -3,18 +3,19 @@ const router = express.Router();
 const ShiftSchedule = require("../../models/UserManagement/ShiftSchedule");
 const UserReg = require("../../models/UserManagement/UserReg");
 const { Parser } = require("json2csv"); // for CSV conversion
-
+const { get } = require("mongoose");
+const { getReadyShifts } = require("../../controllers/UserManagement/shiftController.js"); 
 // Create new shift schedule
 router.post("/", async (req, res) => {
   try {
-    const { date, vehicle, shiftType, members, notes} = req.body;
+    const { date, vehicle, shiftType, members, notes } = req.body;
 
     if (members.length > 8) return res.status(400).json({ message: "Maximum 8 members allowed" });
 
     const existing = await ShiftSchedule.findOne({ date, vehicle, shiftType });
     if (existing) return res.status(400).json({ message: "Schedule already exists" });
 
-    const newSchedule = new ShiftSchedule({ date, vehicle, shiftType, members, notes});
+    const newSchedule = new ShiftSchedule({ date, vehicle, shiftType, members, notes });
     await newSchedule.save();
     res.status(201).json({ message: "Shift schedule created", schedule: newSchedule });
   } catch (err) {
@@ -60,14 +61,15 @@ router.get("/download", async (req, res) => {
     res.status(500).send({ message: "Server error" });
   }
 });
-
+// GET ready vehicles
+router.get("/ready", getReadyShifts);
 // Get all shift schedules
 router.get("/", async (req, res) => {
   try {
     const schedules = await ShiftSchedule.find()
       .populate("members", "name staffId position")
       .sort({ date: -1 });
-          console.log(schedules); // <-- check what data is returned
+    console.log(schedules); // <-- check what data is returned
     res.status(200).json({ schedules });
   } catch (err) {
     console.error(err);

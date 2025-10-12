@@ -93,7 +93,7 @@ const createItem = async (req, res) => {
   }
 };
 
-// @desc    Get all inventory items with search/filter
+// @desc    Get all inventory items with search/filter  
 // @route   GET /api/inventory
 // @access  Private
 const getItems = async (req, res) => {//get all inventory items
@@ -131,13 +131,29 @@ const getItems = async (req, res) => {//get all inventory items
         });
       } else {
         // Regular text search
-        andConditions.push({
-          $or: [
-            { item_name: { $regex: search, $options: 'i' } },
-            { category: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } }
-          ]
-        });
+        const searchConditions = [
+          { item_name: { $regex: search, $options: 'i' } },
+          { category: { $regex: search, $options: 'i' } },
+          { location: { $regex: search, $options: 'i' } }
+        ];
+        
+        // If search looks like a number, also search by item_ID (partial match)
+        // Convert item_ID to string and use regex for partial matching
+        if (!isNaN(search)) {
+          searchConditions.push({
+            $expr: {
+              $regexMatch: {
+                input: { $toString: '$item_ID' },
+                regex: search,
+                options: 'i'
+              }
+            }
+          });
+          console.log(`Search by ID (partial): "${search}"`);
+        }
+        
+        console.log('Search conditions:', JSON.stringify(searchConditions, null, 2));
+        andConditions.push({ $or: searchConditions });
       }
     }
     
@@ -358,7 +374,8 @@ const deleteItem = async (req, res) => {
         itemId: deletedItem._id,
         itemName: deletedItem.item_name,
         itemCategory: deletedItem.category,
-        description: `Deleted inventory item: ${deletedItem.item_name}`,
+        description: `Deleted inventory item: ${deletedItem.item_name} (Quantity: ${deletedItem.quantity})`,
+        quantityChange: -deletedItem.quantity, // Negative to indicate removal
         // TODO: Auth - Uncomment when auth is implemented
         // performedBy: req.user?._id || null,
         // performedByName: req.user?.name || 'System User',
@@ -517,6 +534,277 @@ const generateReport = async (req, res) => {
   }
 };
 
+// @desc    Add quantity to inventory item (Quick Adjust)
+// @route   POST /api/inventory/:id/add-quantity
+// @access  Private
+const addItemQuantity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, reason } = req.body;
+
+    // Validate amount
+    const addAmount = parseInt(amount, 10);
+    if (!addAmount || addAmount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Amount must be at least 1'
+      });
+    }
+
+    // Maximum limit per single operation
+    const MAX_ADD_AMOUNT = 10000;
+    if (addAmount > MAX_ADD_AMOUNT) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot add more than ${MAX_ADD_AMOUNT} units in a single operation`
+      });
+    }
+
+    // Find item
+    const item = await Inventory.findById(id);
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    // Store previous values for logging
+    const previousQuantity = item.quantity;
+
+    // Maximum total quantity limit
+    const MAX_TOTAL_QUANTITY = 999999;
+    const newQuantity = item.quantity + addAmount;
+    if (newQuantity > MAX_TOTAL_QUANTITY) {
+      return res.status(400).json({
+        success: false,
+        message: `Total quantity cannot exceed ${MAX_TOTAL_QUANTITY}. Current: ${item.quantity}, Attempting to add: ${addAmount}`
+      });
+    }
+
+    // Add quantity
+    item.quantity = newQuantity;
+    item.lastUpdated = new Date();
+    await item.save();
+
+    // Create log entry
+    try {
+      const log = new InventoryLog({
+        action: 'STOCK_CHANGE',
+        itemId: item._id,
+        itemName: item.item_name,
+        itemCategory: item.category,
+        description: reason || `Added ${addAmount} units via Quick Adjust`,
+        previousValue: { quantity: previousQuantity },
+        newValue: { quantity: item.quantity },
+        quantityChange: addAmount,
+        performedBy: null, // TODO: Auth
+        performedByName: 'System User',
+        timestamp: new Date()
+      });
+      await log.save();
+    } catch (logError) {
+      console.error('Failed to create log entry:', logError);
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully added ${addAmount} units`,
+      data: item
+    });
+  } catch (error) {
+    console.error('Add quantity error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add quantity',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Remove quantity from inventory item (Quick Adjust)
+// @route   POST /api/inventory/:id/remove-quantity
+// @access  Private
+const removeItemQuantity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, reason } = req.body;
+
+    // Validate amount
+    const removeAmount = parseInt(amount, 10);
+    if (!removeAmount || removeAmount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Amount must be at least 1'
+      });
+    }
+
+    // Find item
+    const item = await Inventory.findById(id);
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    // Check if sufficient quantity available
+    if (item.quantity < removeAmount) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient quantity. Available: ${item.quantity}`
+      });
+    }
+
+    // Store previous values for logging
+    const previousQuantity = item.quantity;
+
+    // Remove quantity
+    item.quantity -= removeAmount;
+    item.lastUpdated = new Date();
+    await item.save();
+
+    // Create log entry
+    try {
+      const log = new InventoryLog({
+        action: 'STOCK_CHANGE',
+        itemId: item._id,
+        itemName: item.item_name,
+        itemCategory: item.category,
+        description: reason || `Removed ${removeAmount} units via Quick Adjust`,
+        previousValue: { quantity: previousQuantity },
+        newValue: { quantity: item.quantity },
+        quantityChange: -removeAmount,
+        performedBy: null, // TODO: Auth
+        performedByName: 'System User',
+        timestamp: new Date()
+      });
+      await log.save();
+    } catch (logError) {
+      console.error('Failed to create log entry:', logError);
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully removed ${removeAmount} units`,
+      data: item
+    });
+  } catch (error) {
+    console.error('Remove quantity error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove quantity',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get available inventory items for missions (Mission Records integration)
+// @route   GET /api/inventory/items-for-missions
+// @access  Private - Record Managers
+const getItemsForMissions = async (req, res) => {
+  try {
+    const { search, category } = req.query;
+
+    // Build query - only get available items
+    let query = { status: 'Available' };
+
+    // Add search filter
+    if (search) {
+      query.$or = [
+        { item_ID: { $regex: search, $options: 'i' } },
+        { item_name: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Add category filter
+    if (category) {
+      query.category = category;
+    }
+
+    // Fetch items, sorted by item_ID
+    const items = await Inventory.find(query)
+      .select('_id item_ID item_name category quantity condition location')
+      .sort({ item_ID: 1 })
+      .limit(100);
+
+    // Format response
+    const formattedItems = items.map(item => ({
+      _id: item._id,
+      item_ID: item.item_ID,
+      itemName: item.item_name,
+      category: item.category,
+      quantity: item.quantity,
+      condition: item.condition,
+      location: item.location
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedItems.length,
+      items: formattedItems
+    });
+  } catch (error) {
+    console.error('Error fetching items for missions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch inventory items',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get single item by item_ID for validation (Mission Records integration)
+// @route   GET /api/inventory/by-item-id/:itemId
+// @access  Private - Record Managers
+const getItemByItemId = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    // Find item by item_ID (not MongoDB _id)
+    const item = await Inventory.findOne({ item_ID: itemId });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: `Item with ID ${itemId} not found`
+      });
+    }
+
+    // Check if available
+    if (item.status !== 'Available') {
+      return res.status(400).json({
+        success: false,
+        message: `Item ${itemId} is not available (Status: ${item.status})`
+      });
+    }
+
+    // Format response
+    const formattedItem = {
+      _id: item._id,
+      item_ID: item.item_ID,
+      itemName: item.item_name,
+      category: item.category,
+      quantity: item.quantity,
+      condition: item.condition,
+      location: item.location,
+      status: item.status
+    };
+
+    res.status(200).json({
+      success: true,
+      item: formattedItem
+    });
+  } catch (error) {
+    console.error('Error fetching item by item_ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch item',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createItem,
   getItems,
@@ -524,5 +812,9 @@ module.exports = {
   updateItem,
   deleteItem,
   generateReport,
-  checkItemIdExists
+  checkItemIdExists,
+  addItemQuantity,
+  removeItemQuantity,
+  getItemsForMissions,
+  getItemByItemId
 };

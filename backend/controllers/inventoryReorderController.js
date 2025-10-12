@@ -413,6 +413,178 @@ const markDelivered = async (req, res) => {
   }
 };
 
+// Send reorder report to Supply Manager
+const sendReorderToManager = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { pdfData, reportData } = req.body;
+
+    // Find the reorder
+    const reorder = await InventoryReorder.findById(id);
+    if (!reorder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reorder not found'
+      });
+    }
+
+    // Update reorder with send tracking
+    reorder.sentToManager = true;
+    reorder.sentToManagerAt = new Date();
+    // TODO: Uncomment when auth is implemented
+    // reorder.sentBy = req.user?._id || null;
+    reorder.pdfData = pdfData; // Store base64 PDF
+    reorder.reportData = reportData; // Store complete report details
+
+    await reorder.save();
+
+    // Create log entry
+    try {
+      const log = new InventoryLog({
+        action: 'REORDER_SENT_TO_MANAGER',
+        itemId: reorder.inventoryItemId,
+        itemName: reorder.item_name,
+        itemCategory: reorder.category,
+        description: `Reorder report sent to Supply Manager for ${reorder.item_name} - Quantity: ${reorder.quantity}`,
+        // TODO: Auth - Uncomment when auth is implemented
+        // performedBy: req.user?._id || null,
+        // performedByName: req.user?.name || 'System User',
+        performedBy: null,
+        performedByName: 'System User',
+        timestamp: new Date()
+      });
+      await log.save();
+    } catch (logError) {
+      console.error('Failed to create log entry:', logError);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Reorder report sent to Supply Manager successfully',
+      data: {
+        reorderId: reorder._id,
+        sentAt: reorder.sentToManagerAt,
+        itemName: reorder.item_name,
+        quantity: reorder.quantity,
+        priority: reorder.priority
+      }
+    });
+
+  } catch (error) {
+    console.error('Send reorder to manager error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send reorder report',
+      error: error.message
+    });
+  }
+};
+
+// Get all reorders sent to Supply Manager
+const getSentReorders = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      priority,
+      sortBy = 'sentToManagerAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build filter - only sent reorders
+    const filter = { sentToManager: true };
+    if (status) filter.status = status;
+    if (priority) filter.priority = priority;
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    // Execute query with pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const reorders = await InventoryReorder.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('inventoryItemId', 'item_name category quantity threshold location')
+      .lean();
+
+    // Get total count for pagination
+    const total = await InventoryReorder.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: reorders,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        totalItems: total,
+        itemsPerPage: parseInt(limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Get sent reorders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch sent reorders',
+      error: error.message
+    });
+  }
+};
+
+// Get specific sent reorder details with PDF
+const getSentReorderDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the reorder that was sent to manager
+    const reorder = await InventoryReorder.findOne({
+      _id: id,
+      sentToManager: true
+    }).populate('inventoryItemId', 'item_name category quantity threshold location condition status expire_date').lean();
+
+    if (!reorder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sent reorder not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        reorder: {
+          _id: reorder._id,
+          item_ID: reorder.item_ID,
+          item_name: reorder.item_name,
+          category: reorder.category,
+          quantity: reorder.quantity,
+          priority: reorder.priority,
+          expectedDate: reorder.expectedDate,
+          supplier: reorder.supplier,
+          notes: reorder.notes,
+          status: reorder.status,
+          sentToManagerAt: reorder.sentToManagerAt,
+          createdAt: reorder.createdAt,
+          inventoryItem: reorder.inventoryItemId
+        },
+        pdfData: reorder.pdfData, // Base64 PDF
+        reportData: reorder.reportData // Additional report details
+      }
+    });
+
+  } catch (error) {
+    console.error('Get sent reorder details error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch reorder details',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createReorder,
   getReorders,
@@ -421,5 +593,8 @@ module.exports = {
   deleteReorder,
   getReorderStats,
   approveReorder,
-  markDelivered
+  markDelivered,
+  sendReorderToManager,
+  getSentReorders,
+  getSentReorderDetails
 };

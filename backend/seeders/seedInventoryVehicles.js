@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const InventoryVehicle = require('./models/inventoryVehicle');
-require('dotenv').config();
+const InventoryVehicle = require('../models/inventoryVehicle');
+require('dotenv').config({ path: './config/config.env' });
 
 // Sample vehicle data for FireLink SL
 const sampleVehicles = [
@@ -63,6 +63,126 @@ const sampleVehicles = [
     lastMaintenance: new Date('2024-02-05'),
     nextMaintenance: new Date('2024-08-05'),
     notes: "Incident command and control operations"
+  },
+  {
+    vehicle_ID: "V006",
+    vehicle_name: "Fire Truck - Engine 2",
+    vehicle_type: "Fire Engine",
+    license_plate: "FT-003",
+    capacity: "500 gallons",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 6",
+    lastMaintenance: new Date('2024-03-10'),
+    nextMaintenance: new Date('2024-09-10'),
+    notes: "Secondary response vehicle for Engine 2"
+  },
+  {
+    vehicle_ID: "V007",
+    vehicle_name: "Fire Truck - Pumper 1",
+    vehicle_type: "Fire Engine",
+    license_plate: "FT-004",
+    capacity: "750 gallons",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 7",
+    lastMaintenance: new Date('2024-03-15'),
+    nextMaintenance: new Date('2024-09-15'),
+    notes: "High-capacity pumper for large fires"
+  },
+  {
+    vehicle_ID: "V008",
+    vehicle_name: "Ambulance - Medical 2",
+    vehicle_type: "Ambulance",
+    license_plate: "AM-002",
+    capacity: "2 patients",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 8",
+    lastMaintenance: new Date('2024-02-20'),
+    nextMaintenance: new Date('2024-08-20'),
+    notes: "Backup medical response vehicle"
+  },
+  {
+    vehicle_ID: "V009",
+    vehicle_name: "Rescue Vehicle - Heavy Duty 1",
+    vehicle_type: "Rescue Vehicle",
+    license_plate: "RV-002",
+    capacity: "6 personnel",
+    status: "Maintenance",
+    location: "Main Station - Maintenance Bay",
+    lastMaintenance: new Date('2024-04-01'),
+    nextMaintenance: new Date('2024-10-01'),
+    notes: "Heavy rescue equipment carrier"
+  },
+  {
+    vehicle_ID: "V010",
+    vehicle_name: "Fire Truck - Ladder 2",
+    vehicle_type: "Ladder Truck",
+    license_plate: "FT-005",
+    capacity: "250 gallons",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 9",
+    lastMaintenance: new Date('2024-03-01'),
+    nextMaintenance: new Date('2024-09-01'),
+    notes: "Secondary aerial operations vehicle"
+  },
+  {
+    vehicle_ID: "V011",
+    vehicle_name: "Command Vehicle - Chief 2",
+    vehicle_type: "Command Vehicle",
+    license_plate: "CV-002",
+    capacity: "4 personnel",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 10",
+    lastMaintenance: new Date('2024-02-15'),
+    nextMaintenance: new Date('2024-08-15'),
+    notes: "Assistant Chief command vehicle"
+  },
+  {
+    vehicle_ID: "V012",
+    vehicle_name: "Fire Truck - Tanker 1",
+    vehicle_type: "Fire Engine",
+    license_plate: "FT-006",
+    capacity: "2000 gallons",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 11",
+    lastMaintenance: new Date('2024-01-30'),
+    nextMaintenance: new Date('2024-07-30'),
+    notes: "Water supply tanker for rural operations"
+  },
+  {
+    vehicle_ID: "V013",
+    vehicle_name: "Rescue Vehicle - Technical 2",
+    vehicle_type: "Rescue Vehicle",
+    license_plate: "RV-003",
+    capacity: "4 personnel",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 12",
+    lastMaintenance: new Date('2024-03-20'),
+    nextMaintenance: new Date('2024-09-20'),
+    notes: "Confined space and water rescue operations"
+  },
+  {
+    vehicle_ID: "V014",
+    vehicle_name: "Ambulance - Medical 3",
+    vehicle_type: "Ambulance",
+    license_plate: "AM-003",
+    capacity: "2 patients",
+    status: "In Use",
+    location: "Main Station - Vehicle Bay 13",
+    lastMaintenance: new Date('2024-02-25'),
+    nextMaintenance: new Date('2024-08-25'),
+    notes: "Advanced life support ambulance"
+  },
+  {
+    vehicle_ID: "V015",
+    vehicle_name: "Fire Truck - Brush Unit 1",
+    vehicle_type: "Other",
+    license_plate: "FT-007",
+    capacity: "200 gallons",
+    status: "Available",
+    location: "Main Station - Vehicle Bay 14",
+    lastMaintenance: new Date('2024-03-05'),
+    nextMaintenance: new Date('2024-09-05'),
+    notes: "Wildland and brush fire response"
   }
 ];
 
@@ -70,7 +190,7 @@ const sampleVehicles = [
 const seedInventoryVehicles = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.DB_URI);
     console.log('Connected to MongoDB');
 
     // Clear existing vehicle data

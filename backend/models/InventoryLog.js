@@ -5,7 +5,7 @@ const inventoryLogSchema = new mongoose.Schema(
     action: {
       type: String,
       required: true,
-      enum: ["CREATE", "UPDATE", "DELETE", "STOCK_CHANGE", "REORDER_CREATED", "REORDER_STATUS_CHANGE"]
+      enum: ["CREATE", "UPDATE", "DELETE", "STOCK_CHANGE", "REORDER_CREATED", "REORDER_STATUS_CHANGE", "REORDER_SENT_TO_MANAGER"]
     },
     itemId: {
       type: mongoose.Schema.Types.ObjectId,

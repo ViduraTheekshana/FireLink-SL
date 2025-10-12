@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getLogs, deleteLog, getLogStats, updateLog } from '../../api/inventoryLogApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 const InventoryLogs = () => {
+  const navigate = useNavigate();
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -150,95 +162,80 @@ const InventoryLogs = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-4 pt-0 pb-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-8 text-white shadow-2xl">
-          <div className="relative flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight">Inventory Logs</h1>
-                <p className="text-blue-100 text-lg mt-2">Complete audit trail of all inventory activities</p>
-              </div>
-            </div>
-            <div>
-              <Link
-                to="/inventory"
-                className="inline-flex items-center px-6 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold rounded-xl transition-all duration-300 backdrop-blur-sm border border-white border-opacity-30 hover:scale-105"
-              >
-                Back to Inventory
-              </Link>
-            </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Inventory Logs</h1>
+            <p className="text-gray-600">Complete audit trail of all inventory activities</p>
+          </div>
+          <div className="flex gap-4">
+            <Link
+              to="/inventory"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+            >
+              ← Back to Inventory
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Statistics Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white bg-opacity-20"></div>
-            <div className="relative flex items-center">
-
-              <div className="ml-4">
-                <p className="text-blue-100 text-sm font-medium">Total Logs</p>
-                <p className="text-3xl font-bold">{stats.totalLogs}</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="rounded-lg bg-blue-600 p-4 text-white shadow-md">
+            <div className="text-center">
+              <p className="text-blue-100 text-xs font-medium">Total Logs</p>
+              <p className="text-xl font-bold">{stats.totalLogs}</p>
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-green-600 p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white bg-opacity-20"></div>
-            <div className="relative flex items-center">
-
-              <div className="ml-4">
-                <p className="text-green-100 text-sm font-medium">Today's Activities</p>
-                <p className="text-3xl font-bold">{stats.todayLogs}</p>
-              </div>
+          <div className="rounded-lg bg-green-600 p-4 text-white shadow-md">
+            <div className="text-center">
+              <p className="text-green-100 text-xs font-medium">Today's Activities</p>
+              <p className="text-xl font-bold">{stats.todayLogs}</p>
             </div>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white bg-opacity-20"></div>
-            <div className="relative flex items-center">
-
-              <div className="ml-4">
-                <p className="text-purple-100 text-sm font-medium">Action Types</p>
-                <p className="text-3xl font-bold">{stats.actionBreakdown?.length || 0}</p>
-              </div>
+          <div className="rounded-lg bg-purple-600 p-4 text-white shadow-md">
+            <div className="text-center">
+              <p className="text-purple-100 text-xs font-medium">Action Types</p>
+              <p className="text-xl font-bold">{stats.actionBreakdown?.length || 0}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
-        <div className="flex items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Search & Filters</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Search & Filters</h2>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Search
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search logs..."
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Action
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Action</label>
             <select
               value={selectedAction}
               onChange={(e) => setSelectedAction(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Actions</option>
               <option value="CREATE">Create</option>
@@ -251,33 +248,29 @@ const InventoryLogs = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Start Date
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              End Date
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex items-end">
             <button
               onClick={handleSearch}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200"
             >
               Apply Filters
             </button>
@@ -451,6 +444,8 @@ const InventoryLogs = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -7,12 +7,14 @@ const CivilianDashboard = () => {
 	const handleLogout = () => {
 		const confirmLogout = window.confirm("Are you sure you want to log out?");
 		if (confirmLogout) {
-			// ✅ Clear session/local storage
-			localStorage.removeItem("token");
-			sessionStorage.removeItem("token");
+			//  Clear session/local storage
+			localStorage.removeItem("accessToken");
+			      localStorage.removeItem("user");
 
-			// ✅ Redirect to civilian login page
-			navigate("/staff-login");
+			sessionStorage.removeItem("accessToken");
+
+			//  Redirect to civilian login page
+			navigate("/civilian-login");
 		}
 	};
 
@@ -27,12 +29,7 @@ const CivilianDashboard = () => {
 							<p className="text-blue-200">Welcome to the Fire Department Services</p>
 						</div>
 						<div className="flex space-x-4">
-							<Link
-								to="/staff-login"
-								className="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-							>
-								Staff Login
-							</Link>
+							
 							<button
 								onClick={handleLogout} // ✅ added here
 								className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"

@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getVehicleById, deleteVehicle } from '../../api/inventoryVehicleApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 const VehicleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -119,7 +130,15 @@ const VehicleDetail = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-4 pt-0 pb-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
@@ -138,7 +157,7 @@ const VehicleDetail = () => {
               to={`/inventory/vehicles/edit/${vehicle._id}`}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              ✏️ Edit Vehicle
+              Edit Vehicle
             </Link>
           </div>
         </div>
@@ -330,28 +349,30 @@ const VehicleDetail = () => {
         <div className="px-6 py-4">
           <div className="flex flex-wrap gap-3">
             <Link
-              to={`/inventory/vehicle-items/vehicle/${vehicle._id}`}
+              to={`/inventory/vehicle-items?vehicleId=${vehicle._id}`}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              📦 View Assigned Items
+              View Assigned Items
             </Link>
             <Link
               to={`/inventory/vehicles/edit/${vehicle._id}`}
               className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              ✏️ Edit Vehicle
+              Edit Vehicle
             </Link>
             <button
               onClick={handleDelete}
               disabled={deleting}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400"
             >
-              {deleting ? 'Deleting...' : '🗑️ Delete Vehicle'}
+              {deleting ? 'Deleting...' : 'Delete Vehicle'}
             </button>
+          </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

@@ -144,84 +144,110 @@ const generateTrendData = async () => {
     const itemsAdded = [];
     const itemsRemoved = [];
     
+    // Generate data for the last 7 days including today - matching frontend logic
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    console.log(`Server time: ${now.toISOString()} | Today normalized: ${today.toISOString().split('T')[0]}`);
+    
     for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const dayStart = new Date(dateStr);
-      const dayEnd = new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000);
+      // Calculate the target date (today - i days) - same logic as frontend
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - i);
       
-      // Get items added (from Inventory collection - new items created)
-      const [itemsAddedToday, quantityAddedToday] = await Promise.all([
-        Inventory.countDocuments({
-          createdAt: {
-            $gte: dayStart,
-            $lt: dayEnd
+      // Create day boundaries - start and end of the target date
+      const dayStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
+      const dayEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+      
+      // Format date as YYYY-MM-DD in local timezone - same logic as frontend
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      console.log(`Checking date ${dateStr} (${targetDate.toLocaleDateString()}) - Day range: ${dayStart.toISOString()} to ${dayEnd.toISOString()}`);
+      
+      // Get items added (NEW inventory records created)
+      const itemsAddedToday = await Inventory.countDocuments({
+        createdAt: {
+          $gte: dayStart,
+          $lt: dayEnd
+        }
+      });
+      
+      // Get QUANTITY added (from STOCK_CHANGE logs with positive quantityChange)
+      const quantityAddedAgg = await InventoryLog.aggregate([
+        {
+          $match: {
+            timestamp: {
+              $gte: dayStart,
+              $lt: dayEnd
+            },
+            action: 'STOCK_CHANGE',
+            quantityChange: { $gt: 0 } // Only positive changes (additions)
           }
-        }),
-        Inventory.aggregate([
-          {
-            $match: {
-              createdAt: {
-                $gte: dayStart,
-                $lt: dayEnd
-              }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalQuantity: { $sum: '$quantity' }
-            }
+        },
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: '$quantityChange' }
           }
-        ])
+        }
       ]);
       
-      // Get items removed (from InventoryLog collection - DELETE actions)
-      const [itemsRemovedToday, quantityRemovedToday] = await Promise.all([
-        InventoryLog.countDocuments({
-          timestamp: {
-            $gte: dayStart,
-            $lt: dayEnd
-          },
-          action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
-        }),
-        InventoryLog.aggregate([
-          {
-            $match: {
-              timestamp: {
-                $gte: dayStart,
-                $lt: dayEnd
-              },
-              action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalItems: { $sum: 1 }
-            }
+      // Get items removed (DELETE actions from logs)
+      const itemsRemovedToday = await InventoryLog.countDocuments({
+        timestamp: {
+          $gte: dayStart,
+          $lt: dayEnd
+        },
+        action: { $in: ['DELETE', 'REMOVE', 'DELETED'] }
+      });
+      
+      // Get QUANTITY removed (from STOCK_CHANGE logs with negative quantityChange AND DELETE actions)
+      const quantityRemovedAgg = await InventoryLog.aggregate([
+        {
+          $match: {
+            timestamp: {
+              $gte: dayStart,
+              $lt: dayEnd
+            },
+            $or: [
+              { action: 'STOCK_CHANGE', quantityChange: { $lt: 0 } }, // Quantity reductions
+              { action: 'DELETE', quantityChange: { $lt: 0 } } // Item deletions with quantity
+            ]
           }
-        ])
+        },
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: '$quantityChange' }
+          }
+        }
       ]);
       
-      const dayQuantityAdded = quantityAddedToday[0]?.totalQuantity || 0;
-      const dayQuantityRemoved = quantityRemovedToday[0]?.totalItems || 0;
+      const dayQuantityAdded = quantityAddedAgg[0]?.totalQuantity || 0;
+      const dayQuantityRemoved = Math.abs(quantityRemovedAgg[0]?.totalQuantity || 0); // Make it positive for display
+      
+      console.log(`${dateStr}: Added ${itemsAddedToday} items (${dayQuantityAdded} qty), Removed ${itemsRemovedToday} items (${dayQuantityRemoved} qty)`);
       
       itemsAdded.push({
         date: dateStr,
         count: itemsAddedToday,
         quantity: dayQuantityAdded,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+        dayName: targetDate.toLocaleDateString('en-US', { weekday: 'short' })
       });
       
       itemsRemoved.push({
         date: dateStr,
         count: itemsRemovedToday,
         quantity: dayQuantityRemoved,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' })
+        dayName: targetDate.toLocaleDateString('en-US', { weekday: 'short' })
       });
     }
+    
+    console.log('Final trend data being returned:');
+    console.log('Items Added:', itemsAdded.map(d => `${d.date}: ${d.count} items`));
+    console.log('Items Removed:', itemsRemoved.map(d => `${d.date}: ${d.count} items`));
     
     return {
       itemsAdded,
@@ -229,10 +255,10 @@ const generateTrendData = async () => {
     };
   } catch (error) {
     console.error('Trend data error:', error);
-    // Return safe default data
+    // Return safe default data for the last 7 days including today
     const defaultData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
+      date.setDate(date.getDate() - (6 - i)); // i=0 gives 6 days ago, i=6 gives today
       return {
         date: date.toISOString().split('T')[0],
         count: 0,

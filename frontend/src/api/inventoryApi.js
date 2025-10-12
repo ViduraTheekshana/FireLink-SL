@@ -196,6 +196,34 @@ export const inventoryApi = {
       console.error('Error fetching items by status:', error);
       throw error;
     }
+  },
+
+  // Add quantity to inventory item (Quick Adjust)
+  addItemQuantity: async (id, amount, reason = null) => {
+    try {
+      const response = await axios.post(`/api/inventory/${id}/add-quantity`, {
+        amount,
+        reason
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error adding item quantity:', error);
+      throw error;
+    }
+  },
+
+  // Remove quantity from inventory item (Quick Adjust)
+  removeItemQuantity: async (id, amount, reason = null) => {
+    try {
+      const response = await axios.post(`/api/inventory/${id}/remove-quantity`, {
+        amount,
+        reason
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error removing item quantity:', error);
+      throw error;
+    }
   }
 };
 
@@ -213,7 +241,9 @@ export const {
   getLowStockItems,
   getExpiredItems,
   getItemsByCondition,
-  getItemsByStatus
+  getItemsByStatus,
+  addItemQuantity,
+  removeItemQuantity
 } = inventoryApi;
 
 export default inventoryApi;

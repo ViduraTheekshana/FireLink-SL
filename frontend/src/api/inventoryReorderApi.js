@@ -98,3 +98,36 @@ export const getReordersBySupplier = async (supplier) => {
 export const searchReorders = async (searchTerm) => {
   return getReorders({ search: searchTerm });
 };
+
+// Send reorder report to Supply Manager
+export const sendReorderToManager = async (id, pdfData, reportData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/inventory-reorders/${id}/send-to-manager`, {
+      pdfData,
+      reportData
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Failed to send reorder to manager' };
+  }
+};
+
+// Get all reorders sent to Supply Manager (for Supply Manager to view)
+export const getSentReorders = async (params = {}) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/inventory-reorders/sent/to-manager`, { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Failed to get sent reorders' };
+  }
+};
+
+// Get specific sent reorder details with PDF (for Supply Manager to view)
+export const getSentReorderDetails = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/inventory-reorders/${id}/sent-details`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Failed to get sent reorder details' };
+  }
+};
