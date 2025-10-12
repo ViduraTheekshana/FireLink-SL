@@ -6,7 +6,7 @@
 	"scripts": {
 		"seed:all": "npm run seed:roles && npm run seed:suppliers && npm run seed:users && npm run seed:inventory && npm run seed:reorders && npm run seed:vehicle-items && npm run seed:vehicles",
 		"seed:roles": "node seeders/seedRoles.js",
-		"seed:trx": "node seeders/seedTransactions.js",
+		"seed:exp": "node seeders/seedTransactions.js",
 		"seed:suppliers": "node seeders/seedSuppliers.js",
 		"seed:users": "node seeders/seed.js",
 		"seed:inventory": "node seeders/seedInventory.js",

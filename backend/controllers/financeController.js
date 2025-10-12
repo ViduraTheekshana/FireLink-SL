@@ -109,7 +109,7 @@ const createExpense = catchAsyncErrors(async (req, res) => {
 	const { amount, type, description } = req.body;
 
 	const expense = await Expense.create({
-		id: generateUniqueId("trx"),
+		id: generateUniqueId("exp"),
 		amount,
 		type,
 		description,
