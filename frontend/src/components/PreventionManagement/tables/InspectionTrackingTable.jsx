@@ -1,15 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 
 const InspectionTrackingTable = ({ 
   applications = [], 
   loading = false, 
-  searchTerm = '', 
-  setSearchTerm = () => {}, 
-  sortField = 'fullName', 
-  setSortField = () => {}, 
-  sortDirection = 'asc', 
-  setSortDirection = () => {}, 
- 
   onMarkAsInspected = () => {}, 
   onDeleteApplication = () => {},
   onViewDetails = () => {} 
@@ -18,6 +12,11 @@ const InspectionTrackingTable = ({
   const [showInspectionModal, setShowInspectionModal] = useState(false);
   const [selectedAppForInspection, setSelectedAppForInspection] = useState(null);
   const [finalInspectionNotes, setFinalInspectionNotes] = useState('');
+  
+  // Internal search state management
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('fullName');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   // Load Google Material Icons
   useEffect(() => {
