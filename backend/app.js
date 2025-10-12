@@ -31,13 +31,24 @@ require("./models/Mission.js");
 // setting up config file
 dotenv.config({ path: "config/config.env" });
 
+// Add FRONTEND_URL to config.env if not set
+if (!process.env.FRONTEND_URL) {
+	process.env.FRONTEND_URL = "http://localhost:5173";
+}
+
 // cors
 app.use(
 	cors({
 		origin: process.env.FRONTEND_URL || "http://localhost:5173",
 		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+		exposedHeaders: ["Set-Cookie"],
 	})
 );
+
+// Handle preflight requests for all routes
+app.options("*", cors());
 
 // middleware
 app.use(express.json());

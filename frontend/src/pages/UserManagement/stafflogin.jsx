@@ -39,7 +39,13 @@ function StaffLogin() {
 				localStorage.setItem("token", data.token);
 				localStorage.setItem("staffId", data.user.staffId);
 				alert(`Login successful! Welcome ${data.user.name}`);
-				navigate("/dashboard", { state: { user: data.user } });
+				
+				// Navigate based on user position/role
+				if (data.user.position === "preventionmanager" || data.user.position === "preventionofficer") {
+					navigate("/prevention-officer-dashboard", { state: { user: data.user } });
+				} else {
+					navigate("/dashboard", { state: { user: data.user } });
+				}
 			} else {
 				alert("Login failed: " + (data.err || "Invalid credentials"));
 			}
