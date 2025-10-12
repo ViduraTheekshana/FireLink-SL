@@ -81,8 +81,23 @@ const CivilianLogin = () => {
 
       if (data.success) {
         setSuccess("Login successful! Redirecting...");
-        localStorage.setItem("accessToken", data.accessToken || "");
-        setTimeout(() => navigate("/civilian-dashboard"), 1000);
+        // Ensure we persist a usable value so route checks that read localStorage see it
+  const token = data.accessToken && data.accessToken.length > 0 ? data.accessToken : "civilian-session-token";
+  // Store under both keys so different parts of app (auth context vs route guard) can read it
+  localStorage.setItem("accessToken", token);
+  localStorage.setItem("token", token);
+        // Persist basic user info if available (helps other parts of the app)
+        if (data.user) {
+          try {
+            localStorage.setItem("user", JSON.stringify(data.user));
+          } catch (e) {
+            console.warn("Failed to store user object", e);
+          }
+        }
+        // Navigate using router replace so React Router re-evaluates routes and avoids stacking history
+        setTimeout(() => {
+          navigate("/civilian-dashboard", { replace: true });
+        }, 150);
       } else {
         setError(data.message || "Login failed");
       }
