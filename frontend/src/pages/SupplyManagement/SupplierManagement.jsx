@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Plus, Edit, Filter, Trash2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import {
 	deleteSupplier,
 	getSuppliers,
@@ -26,6 +27,8 @@ const SupplierManagement = () => {
 	const [currentSupplier, setCurrentSupplier] = useState(null);
 	const itemsPerPage = 20;
 
+	const location = useLocation();
+
 	const fetchSuppliers = async () => {
 		try {
 			setLoading(true);
@@ -37,6 +40,12 @@ const SupplierManagement = () => {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		if (location.state?.showAddModal) {
+			setShowAddModal(true);
+		}
+	}, [location.state]);
 
 	useEffect(() => {
 		fetchSuppliers();

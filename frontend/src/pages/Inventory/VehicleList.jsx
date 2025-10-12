@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getVehicles, deleteVehicle } from '../../api/inventoryVehicleApi';
+import Sidebar from '../UserManagement/Sidebar';
 
 const VehicleList = () => {
+  const navigate = useNavigate();
+
+  // Get user data for sidebar
+  const user = JSON.parse(localStorage.getItem("user"));
+  
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/staff-login");
+  };
+
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -119,7 +131,15 @@ const VehicleList = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="flex h-screen max-w-full overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 bg-gray-100 min-w-0 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-4 pt-0 pb-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
@@ -132,13 +152,13 @@ const VehicleList = () => {
               to="/inventory"
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              📦 Back to Inventory
+              Back to Inventory
             </Link>
             <Link
               to="/inventory/vehicles/add"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
             >
-              🚗 Add New Vehicle
+              Add New Vehicle
             </Link>
           </div>
         </div>
@@ -298,19 +318,19 @@ const VehicleList = () => {
                           to={`/inventory/vehicles/${vehicle._id}`}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          👁️ View
+                          View
                         </Link>
                         <Link
                           to={`/inventory/vehicles/edit/${vehicle._id}`}
                           className="text-green-600 hover:text-green-900"
                         >
-                          ✏️ Edit
+                          Edit
                         </Link>
                         <button
                           onClick={() => handleDelete(vehicle._id)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          🗑️ Delete
+                          Delete
                         </button>
                       </div>
                     </td>
@@ -350,8 +370,10 @@ const VehicleList = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
+  </div>
   );
 };
 

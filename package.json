@@ -24,10 +24,5 @@
 	"homepage": "https://github.com/ViduraTheekshana/FireLink-SL#readme",
 	"devDependencies": {
 		"concurrently": "^9.2.1"
-	},
-	"dependencies": {
-		"dotenv": "^17.2.3",
-		"jspdf": "^3.0.3",
-		"multer-gridfs-storage": "^5.0.2"
 	}
 }

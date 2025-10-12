@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const SupplyRequest = require("../models/supplyRequest");
+const SupplyRequest = require("../models/SupplyRequest");
 const connectDatabase = require("../config/database");
 const generateUniqueId = require("../utils/generateUniqueId");
 

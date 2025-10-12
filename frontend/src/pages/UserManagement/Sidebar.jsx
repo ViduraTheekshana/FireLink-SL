@@ -61,7 +61,8 @@ const Sidebar = ({ user, onLogout }) => {
       case "inventorymanager":
         links.push(
           { name: "Inventory", path: "/inventory", icon: <FaTruck /> },
-          { name: "Reorders", path: "/inventory/reorders", icon: <FaClipboardList /> }
+          { name: "Reorders", path: "/inventory/reorders", icon: <FaClipboardList /> },
+          { name: "My Profile", path: "/inventory-manager/profile", icon: <FaUser /> }
         );
         break;
 

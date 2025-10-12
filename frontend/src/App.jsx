@@ -19,6 +19,8 @@ import StaffManagementTable from "./pages/UserManagement/StaffManagementTable";
 import Profile from "./pages/UserManagement/profile";
 import Settings from "./pages/UserManagement/setting";
 import MakeTrainingSession from "./pages/TraningSessionManagement/AddingtarinningSession";
+import TrainingSessionDashboard from "./pages/TraningSessionManagement/TrainingSessionDashboard";
+import FighterDashboard from "./pages/UserManagement/FighterDashboard";
 import MissionRecords from "./pages/MissionRecords/MissionRecords";
 import SalaryManagement from "./pages/MissionRecords/SalaryManagement";
 import InventoryList from "./pages/Inventory/InventoryList";
@@ -31,6 +33,7 @@ import VehicleItemsPage from "./pages/Inventory/VehicleItemsPage";
 import ReorderPage from "./pages/Inventory/ReorderPage";
 import ReordersList from "./pages/Inventory/ReordersList";
 import InventoryLogs from "./pages/Inventory/InventoryLogs";
+import InventoryManagerProfile from "./pages/Inventory/InventoryManagerProfile";
 
 import SupplierManagement from "./pages/SupplyManagement/SupplierManagement";
 import SupplyRequests from "./pages/SupplyManagement/SupplyRequests";
@@ -40,10 +43,16 @@ import SupplierProfile from "./pages/SupplyManagement/SupplierProfile";
 import PreventionCertificateForm from "./pages/PreventionManagement/PreventionCertificateForm";
 import PreventionOfficerDashboard from "./pages/PreventionManagement/PreventionOfficerDashboardNew";
 import InspectedDocuments from "./pages/PreventionManagement/InspectedDocuments";
+import Home from "./pages/Home/Home";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
 import { Bounce, ToastContainer } from "react-toastify";
+import SupplyDashboard from "./pages/SupplyManagement/DashBoard";
+import { ProcurementReport } from "./pages/SupplyManagement/ProcurementReport";
+import Transactions from "./pages/FinanceManagement/Transaction";
+import FinancialDashboard from "./pages/FinanceManagement/FinanceDashboard";
+import BudgetAllocation from "./pages/FinanceManagement/BudgetAllocation";
 
 const App = () => {
 	const user = JSON.parse(localStorage.getItem("user"));
@@ -53,7 +62,8 @@ const App = () => {
 		<BrowserRouter>
 			<Routes>
 				{/* Public routes */}
-				<Route path="/" element={<LoginFireStaff />} />
+				<Route path="/" element={<Home />} />
+				<Route path="/home" element={<Home />} />
 				<Route path="/staff-login" element={<LoginFireStaff />} />
 				<Route path="/civilian-login" element={<CivilianLogin />} />
 				<Route path="/supplier-login" element={<SupplierLogin />} />
@@ -63,8 +73,28 @@ const App = () => {
 				<Route path="/update-user/:id" element={<UpdateUser />} />
 				<Route path="/userdetails/:id" element={<UserDetails />} />
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
+				<Route path="/profile" element={<Profile />} />
+				<Route path="/settings" element={<Settings />} />
+				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
 
-				<Route path="/civilian-dashboard" element={<CivilianDashboard />} />
+
+				<Route
+					path="/fighter-dashboard"
+					element={
+						<FighterDashboard />
+					}
+				/>
+
+				<Route
+					path="/civilian-dashboard"
+					element={
+						localStorage.getItem("accessToken") || localStorage.getItem("civilianLoggedIn") ? (
+							<CivilianDashboard />
+						) : (
+							<Navigate to="/civilian-login" replace />
+						)
+					}
+				/>
 				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 				<Route path="/inspected-documents" element={<InspectedDocuments />} />
@@ -99,6 +129,7 @@ const App = () => {
 				<Route path="/inventory/add" element={<InventoryForm />} />
 				<Route path="/inventory/vehicles" element={<VehicleList />} />
 				<Route path="/inventory/vehicles/add" element={<VehicleForm />} />
+				<Route path="/inventory/vehicles/edit/:id" element={<VehicleForm />} />
 				<Route path="/inventory/vehicles/:id" element={<VehicleDetail />} />
 				<Route path="/inventory/edit/:id" element={<InventoryForm />} />
 				<Route path="/inventory/vehicle-items" element={<VehicleItemsPage />} />
@@ -106,16 +137,56 @@ const App = () => {
 				<Route path="/inventory/reorders" element={<ReordersList />} />
 				<Route path="/inventory/reorders/list" element={<ReordersList />} />
 				<Route path="/inventory/logs" element={<InventoryLogs />} />
+				<Route path="/inventory-manager/profile" element={<InventoryManagerProfile />} />
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
-				{/* Shift Management routes */}
-				{/* <Route path="/shifts" element={<ShiftDashboard />} /> */}
-				{/* <Route path="/shifts/create" element={<CreateShift />} /> */}
-				{/* <Route path="/shifts/my-shifts" element={<MyShifts />} /> */}
-				{/* <Route path="/shifts/change-requests" element={<ChangeRequests />} /> */}
-				{/* <Route path="/shifts/messages" element={<Messages />} /> */}
+				<Route path="/staff-management" element={<StaffManagementTable />} />
+
+				{/* Finance routes */}
+				<Route
+					path="/transactions"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<Transactions />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/finance-dashboard"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<FinancialDashboard />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/budget"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<BudgetAllocation />
+						</ProtectedRoute>
+					}
+				/>
 
 				{/* Supplier routes  */}
+				<Route
+					path="/supply-dashboard"
+					element={
+						<ProtectedRoute allowedRoles={["supply_manager"]}>
+							<SupplyDashboard />
+						</ProtectedRoute>
+					}
+				/>
+
+				<Route
+					path="/procurement-report"
+					element={
+						<ProtectedRoute allowedRoles={["supply_manager"]}>
+							<ProcurementReport />
+						</ProtectedRoute>
+					}
+				/>
+
 				<Route
 					path="/suppliers"
 					element={
@@ -124,8 +195,6 @@ const App = () => {
 						</ProtectedRoute>
 					}
 				/>
-
-				<Route path="/staff-management" element={<StaffManagementTable />} />
 
 				<Route
 					path="/supply-requests"

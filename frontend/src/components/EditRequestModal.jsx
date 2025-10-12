@@ -22,11 +22,24 @@ export function EditRequestModal({
 	});
 	const handleChange = (e) => {
 		const { name, value } = e.target;
+		let processedValue = value;
+
+		if (name === "quantity") {
+			const num = parseInt(value, 10);
+			// Prevent non-numeric input or values less than 1
+			processedValue = isNaN(num) || num < 1 ? 1 : num;
+		}
+		if (name === "unit") {
+			// Use a regular expression to replace any digit [0-9] with an empty string
+			processedValue = value.replace(/[0-9]/g, "");
+		}
+
 		setFormData((prev) => ({
 			...prev,
-			[name]: name === "quantity" ? parseInt(value) : value,
+			[name]: processedValue,
 		}));
 	};
+
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		console.log("Updating request:", formData);
@@ -107,12 +120,14 @@ export function EditRequestModal({
 									required
 								>
 									<option value="">Select a type</option>
-									<option value="Uniforms">Uniforms</option>
 									<option value="Equipment">Equipment</option>
-									<option value="Vehicles">Vehicles</option>
-									<option value="Gear">Gear</option>
-									<option value="Supplies">Supplies</option>
-									<option value="Apparel">Apparel</option>
+									<option value="Vehicle Maintenance">
+										Vehicle Maintenance
+									</option>
+									<option value="Uniforms">Uniforms</option>
+									<option value="Medical Supplies">Medical Supplies</option>
+									<option value="Services">Services</option>
+									<option value="Other">Other</option>
 								</select>
 							</div>
 						</div>
@@ -167,6 +182,7 @@ export function EditRequestModal({
 								value={formData.applicationDeadline}
 								onChange={handleChange}
 								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+								min={new Date().toLocaleDateString("en-CA")}
 								required
 							/>
 						</div>

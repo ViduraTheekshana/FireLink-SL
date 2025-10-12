@@ -9,7 +9,7 @@ import {
 } from 'chart.js';
 
 // Import custom hooks and services
-import usePreventionApplications from '../../hooks/usePreventionApplications';
+import usePreventionApplications from "../../hooks/usePreventionApplications";
 
 // Import components
 import TabNavigation from '../../components/PreventionManagement/ui/TabNavigation';

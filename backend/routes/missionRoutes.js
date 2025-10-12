@@ -24,8 +24,8 @@ const validateMission = [
     .withMessage('Invalid time format (HH:MM)'),
   body('description')
     .trim()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('Description must be between 10 and 1000 characters'),
+    .isLength({ min: 10, max: 25 })
+    .withMessage('Description must be between 10 and 25 characters'),
   body('inventoryItems')
     .optional()
     .isArray()
@@ -129,35 +129,22 @@ const validateId = [
     .withMessage('Invalid mission ID format')
 ];
 
-// Routes
-// @route   POST /api/missions
-// @desc    Create a new mission record
-// @access  Private
+
 router.post('/', userOrSupplier, validateMission, createMission);
 
-// @route   GET /api/missions
-// @desc    Get all mission records with pagination and filtering
-// @access  Private
+
 router.get('/', userOrSupplier, validateQueryParams, getMissions);
 
-// @route   GET /api/missions/stats
-// @desc    Get mission statistics
-// @access  Private
+
 router.get('/stats', userOrSupplier, getMissionStats);
 
-// @route   GET /api/missions/:id
-// @desc    Get a single mission record by ID
-// @access  Private
+
 router.get('/:id', userOrSupplier, validateId, getMissionById);
 
-// @route   PUT /api/missions/:id
-// @desc    Update a mission record
-// @access  Private
+
 router.put('/:id', userOrSupplier, validateId, validateMissionUpdate, updateMission);
 
-// @route   DELETE /api/missions/:id
-// @desc    Delete a mission record
-// @access  Private
+
 router.delete('/:id', userOrSupplier, validateId, deleteMission);
 
 module.exports = router;

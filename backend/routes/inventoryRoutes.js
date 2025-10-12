@@ -8,6 +8,10 @@ const {
 	deleteItem,
 	generateReport,
 	checkItemIdExists,
+	addItemQuantity,
+	removeItemQuantity,
+	getItemsForMissions,
+	getItemByItemId,
 } = require("../controllers/inventoryController");
 
 // Import middleware
@@ -91,6 +95,35 @@ router.get(
 	generateReport
 );
 
+// Mission Records Integration Routes (MUST be before /:id route)
+// @route   GET /api/inventory/items-for-missions
+// @desc    Get available inventory items for mission records
+// @access  Private - Record Managers
+router.get(
+	"/items-for-missions",
+	protect,
+	requireAnyPermission([
+		"mission_records",
+		"inventory_management",
+		"all_access",
+	]),
+	getItemsForMissions
+);
+
+// @route   GET /api/inventory/by-item-id/:itemId
+// @desc    Get single item by item_ID for validation
+// @access  Private - Record Managers
+router.get(
+	"/by-item-id/:itemId",
+	protect,
+	requireAnyPermission([
+		"mission_records",
+		"inventory_management",
+		"all_access",
+	]),
+	getItemByItemId
+);
+
 // @route   GET /api/inventory/:id
 // @desc    Get single inventory item by ID
 // @access  Private - Anyone with inventory access
@@ -126,4 +159,32 @@ router.put(
 // @access  Private - Admin only
 router.delete("/:id", protect, requireRole("admin"), deleteItem);
 
-module.exports = router;
+// @route   POST /api/inventory/:id/add-quantity
+// @desc    Add quantity to inventory item (Quick Adjust)
+// @access  Private - Inventory Manager, Admin
+router.post(
+	"/:id/add-quantity",
+	protect,
+	requireAnyPermission([
+		"inventory_management",
+		"equipment_tracking",
+		"all_access",
+	]),
+	addItemQuantity
+);
+
+// @route   POST /api/inventory/:id/remove-quantity
+// @desc    Remove quantity from inventory item (Quick Adjust)
+// @access  Private - Inventory Manager, Admin
+router.post(
+	"/:id/remove-quantity",
+	protect,
+	requireAnyPermission([
+		"inventory_management",
+		"equipment_tracking",
+		"all_access",
+	]),
+	removeItemQuantity
+);
+
+module.exports = router;
