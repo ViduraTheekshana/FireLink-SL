@@ -6,6 +6,7 @@
 	"scripts": {
 		"seed:all": "npm run seed:roles && npm run seed:suppliers && npm run seed:users && npm run seed:inventory && npm run seed:reorders && npm run seed:vehicle-items && npm run seed:vehicles",
 		"seed:roles": "node seeders/seedRoles.js",
+		"seed:trx": "node seeders/seedTransactions.js",
 		"seed:suppliers": "node seeders/seedSuppliers.js",
 		"seed:users": "node seeders/seed.js",
 		"seed:inventory": "node seeders/seedInventory.js",
@@ -37,7 +38,8 @@
 		"nodemailer": "^7.0.6",
 		"pdfkit": "^0.17.1",
 		"twilio": "^5.8.2",
-		"validator": "^13.7.0"
+		"validator": "^13.7.0",
+		"multer-gridfs-storage": "^5.0.2"
 	},
 	"devDependencies": {
 		"nodemon": "^2.0.15"

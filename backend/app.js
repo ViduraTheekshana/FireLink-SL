@@ -8,19 +8,18 @@ const bodyParser = require("body-parser");
 
 const errorMiddleware = require("./middlewares/errors");
 
-
 const userRouter = require("./routes/UserManagement/UserRoute.js");
 const sessionRouter = require("./routes/UserManagement/TrainingSessionRoute.js");
 const attendanceRouter = require("./routes/UserManagement/AttendanceRoute.js");
 const shiftScheduleRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
-const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes"); 
+const preventionCertificateRoutes = require("./routes/preventionCertificateRoutes");
 const preventionOfficerRoutes = require("./routes/preventionOfficerRoutes");
 
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
 require("./models/UserManagement/UserReg.js");
 require("./models/UserManagement/TrainingSession.js");
-require("./models/UserManagement/ShiftSchedule.js")    
+require("./models/UserManagement/ShiftSchedule.js");
 require("./models/Mission.js"); // Mission schema
 // setting up config file
 dotenv.config({ path: "config/config.env" });
@@ -70,10 +69,11 @@ app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
 
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
 app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
-
+app.use("/api/v1/reports", require("./routes/test"));
+app.use("/api/v1/finance", require("./routes/financeRoutes"));
 
 // Prevention certificate route
-app.use("/api/prevention/certificates", preventionCertificateRoutes); 
+app.use("/api/prevention/certificates", preventionCertificateRoutes);
 app.use("/api/prevention-officer", preventionOfficerRoutes);
 
 // Middleware to handle errors
@@ -88,7 +88,6 @@ app.use("/shift-schedules", shiftScheduleRoutes);
 // Civilian login endpoint
 const civilianAuthRoutes = require("./routes/UserManagement/civilianAuthRoutes.js");
 app.use("/api/v1/civilian-auth", civilianAuthRoutes);
-
 
 app.get("/", (req, res) => {
 	res.send("Fire Handling System API running");

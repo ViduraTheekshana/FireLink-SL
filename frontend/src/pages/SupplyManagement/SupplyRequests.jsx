@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Filter, Edit, Trash2, Plus, BarChart } from "lucide-react";
+import React, { Fragment, useEffect, useState } from "react";
+import { Filter, Edit, Trash2, Plus, BarChart, Check, X } from "lucide-react";
 import { toast } from "react-toastify";
+import { useLocation } from "react-router-dom";
 import {
+	confirmRequest,
 	deleteSupplyRequest,
 	getSupplyRequests,
+	rejectRequest,
 } from "../../services/supply/supplyRequestService";
 import formatDate from "../../utils/convertDate";
 import Loader from "../../components/Loader";
@@ -19,8 +22,8 @@ import { BidComparisonModal } from "../../components/BidComparisonModal";
 const SupplyRequests = () => {
 	const [filterStatus, setFilterStatus] = useState("all");
 	const [loading, setLoading] = useState(true);
-	const [SupplyRequests, setSupplyRequests] = useState([]);
 	const [error, setError] = useState("");
+	const [SupplyRequests, setSupplyRequests] = useState([]);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -29,6 +32,8 @@ const SupplyRequests = () => {
 	const [showComparisonModal, setShowComparisonModal] = useState(false);
 	const [currentRequest, setCurrentRequest] = useState(null);
 	const itemsPerPage = 20;
+
+	const location = useLocation();
 
 	const fetchSupplyRequests = async () => {
 		setLoading(true);
@@ -41,6 +46,12 @@ const SupplyRequests = () => {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		if (location.state?.showAddModal) {
+			setShowAddModal(true);
+		}
+	}, [location.state]);
 
 	useEffect(() => {
 		fetchSupplyRequests();
@@ -100,6 +111,42 @@ const SupplyRequests = () => {
 		fetchData();
 	};
 
+	const handleAcceptRequest = () => {
+		setLoading(true);
+		const fetchData = async () => {
+			try {
+				await confirmRequest(currentRequest._id);
+				fetchSupplyRequests();
+				setCurrentRequest(null);
+				toast.success("Confirmed delivery!");
+			} catch (error) {
+				setError(extractErrorMessage(error));
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchData();
+	};
+
+	const handleRejectRequest = () => {
+		setLoading(true);
+		const fetchData = async () => {
+			try {
+				await rejectRequest(currentRequest._id);
+				fetchSupplyRequests();
+				setCurrentRequest(null);
+				toast.success("Rejected delivery!");
+			} catch (error) {
+				setError(extractErrorMessage(error));
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchData();
+	};
+
+	const statusEnum = ["Open", "Assigned", "Rejected", "Closed"];
+
 	if (loading) return <Loader />;
 	// TODO: fix 404
 
@@ -138,8 +185,11 @@ const SupplyRequests = () => {
 										}}
 									>
 										<option value="all">All</option>
-										<option value="Open">Open</option>
-										<option value="Closed">Closed</option>
+										{statusEnum.map((status) => (
+											<option key={status} value={status}>
+												{status}
+											</option>
+										))}
 									</select>
 								</div>
 							</div>
@@ -198,38 +248,67 @@ const SupplyRequests = () => {
 													</span>
 												</td>
 												<td>
-													<div className="flex items-center justify-center gap-2">
-														<button
-															className="p-1 hover:bg-gray-100 rounded"
-															onClick={() => {
-																setCurrentRequest(request);
-																setShowEditModal(true);
-															}}
-														>
-															<Edit size={18} className="text-blue-600" />
-														</button>
-														<button
-															className="p-1 hover:bg-red-100 rounded"
-															title="Delete"
-															onClick={() => {
-																setShowDeleteConfirm(true);
-																setCurrentRequest(request);
-															}}
-														>
-															<Trash2 size={18} className="text-red-500" />
-														</button>
-														{request.bids.length > 0 && (
+													<div className="flex gap-2">
+														{request.status === "Assigned" && (
+															<Fragment>
+																<button
+																	className="p-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+																	title="Approve"
+																	onClick={() => {
+																		setCurrentRequest(request);
+																		handleAcceptRequest();
+																	}}
+																>
+																	<Check size={18} />
+																</button>
+																<button
+																	className="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+																	title="Reject"
+																	onClick={() => {
+																		setCurrentRequest(request);
+																		handleRejectRequest();
+																	}}
+																>
+																	<X size={18} />
+																</button>
+															</Fragment>
+														)}
+														{request.status === "Open" && (
 															<button
+																className="p-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
 																onClick={() => {
-																	setShowComparisonModal(true);
 																	setCurrentRequest(request);
+																	setShowEditModal(true);
 																}}
-																className="p-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
-																title="View Bids"
 															>
-																<BarChart size={18} />
+																<Edit size={18} />
 															</button>
 														)}
+														{request.status === "Open" && (
+															<button
+																className="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+																title="Delete"
+																onClick={() => {
+																	setCurrentRequest(request);
+																	setShowDeleteConfirm(true);
+																}}
+															>
+																<Trash2 size={18} />
+															</button>
+														)}
+														{request.bids.length > 0 &&
+															request.status === "Open" && (
+																<button
+																	onClick={() => {
+																		setShowComparisonModal(true);
+																		setCurrentRequest(request);
+																	}}
+																	className="p-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+																	title="View Bids"
+																>
+																	<BarChart size={18} />
+																</button>
+															)}
 													</div>
 												</td>
 											</tr>

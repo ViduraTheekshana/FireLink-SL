@@ -5,14 +5,9 @@ const supplyRequestSchema = new Schema(
 	{
 		id: {
 			type: String,
-			required: true,
+			required: [true, "Request id is required"],
 			unique: true,
 			trim: true,
-		},
-		createdBy: {
-			type: Schema.Types.ObjectId,
-			ref: "User",
-			required: true,
 		},
 		title: {
 			type: String,
@@ -46,15 +41,10 @@ const supplyRequestSchema = new Schema(
 			trim: true,
 			maxLength: [15, "Unit cannot exceed 15 characters"],
 		},
-		public: {
-			type: Boolean,
-			required: true,
-			default: false,
-		},
 		status: {
 			type: String,
 			required: true,
-			enum: ["Open", "Closed"],
+			enum: ["Open", "Assigned", "Rejected", "Closed"],
 			default: "Open",
 		},
 		applicationDeadline: {
@@ -91,6 +81,14 @@ const supplyRequestSchema = new Schema(
 				},
 			},
 		],
+		deliveredAt: {
+			type: Date,
+			default: null,
+		},
+		onTime: {
+			type: Boolean,
+			default: null,
+		},
 	},
 	{
 		timestamps: true,
