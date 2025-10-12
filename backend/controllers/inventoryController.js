@@ -64,6 +64,7 @@ const createItem = async (req, res) => {
         itemName: savedItem.item_name,                              // For easy searching
         itemCategory: savedItem.category,                   // For filtering
         description: `Created new inventory item: ${savedItem.item_name}`,
+        quantityChange: savedItem.quantity, // Track the initial quantity added
         // TODO: Auth - Uncomment when auth is implemented
         // performedBy: req.user?._id || null,                                       // User who added it
         // performedByName: req.user?.name || 'System User',              // User name

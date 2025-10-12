@@ -166,15 +166,16 @@ const generateTrendData = async () => {
       
       console.log(`Checking date ${dateStr} (${targetDate.toLocaleDateString()}) - Day range: ${dayStart.toISOString()} to ${dayEnd.toISOString()}`);
       
-      // Get items added (NEW inventory records created)
-      const itemsAddedToday = await Inventory.countDocuments({
-        createdAt: {
+      // Get items added (NEW inventory records created) - Using InventoryLog for permanent record
+      const itemsAddedToday = await InventoryLog.countDocuments({
+        timestamp: {
           $gte: dayStart,
           $lt: dayEnd
-        }
+        },
+        action: 'CREATE'
       });
       
-      // Get QUANTITY added (from STOCK_CHANGE logs with positive quantityChange)
+      // Get QUANTITY added (from CREATE and STOCK_CHANGE logs with positive quantityChange)
       const quantityAddedAgg = await InventoryLog.aggregate([
         {
           $match: {
@@ -182,8 +183,10 @@ const generateTrendData = async () => {
               $gte: dayStart,
               $lt: dayEnd
             },
-            action: 'STOCK_CHANGE',
-            quantityChange: { $gt: 0 } // Only positive changes (additions)
+            $or: [
+              { action: 'CREATE', quantityChange: { $gt: 0 } }, // New items created
+              { action: 'STOCK_CHANGE', quantityChange: { $gt: 0 } } // Stock additions
+            ]
           }
         },
         {
