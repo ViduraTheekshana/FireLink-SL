@@ -158,7 +158,7 @@ exports.deleteCertificate = async (req, res) => {
 exports.getInspectedApplications = async (req, res) => {
   try {
     const inspectedApps = await PreventionCertificate.find({ status: "Inspected" })
-      .select('_id fullName contactNumber serviceType inspectionNotes inspectionDate createdAt status');
+      .select('_id fullName nic address contactNumber email serviceType constructionType urgencyLevel inspectionNotes inspectionDate createdAt status appliedDate');
     res.status(200).json({
       success: true,
       message: "Inspected applications fetched successfully",

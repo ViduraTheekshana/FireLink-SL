@@ -254,5 +254,6 @@ const preventionCertificateAPI = new PreventionCertificateAPI();
 
 // Named exports for individual functions
 export const getInspectedDocuments = () => preventionCertificateAPI.getInspectedDocuments();
+export const deleteInspectedDocument = (id) => preventionCertificateAPI.deleteApplication(id);
 
 export default preventionCertificateAPI;

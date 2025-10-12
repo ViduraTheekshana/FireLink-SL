@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getInspectedDocuments } from "../../services/preventionCertificateAPI";
+import { getInspectedDocuments, deleteInspectedDocument } from "../../services/preventionCertificateAPI";
 import Sidebar from "../UserManagement/Sidebar";
 
 const InspectedDocuments = () => {
@@ -7,6 +7,8 @@ const InspectedDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   // Get user from localStorage
   useEffect(() => {
@@ -54,6 +56,38 @@ const InspectedDocuments = () => {
     
     fetchData();
   }, []);
+
+  // Handle view details
+  const handleViewDetails = (document) => {
+    setSelectedDocument(document);
+    setShowModal(true);
+  };
+
+  // Handle close modal
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedDocument(null);
+  };
+
+  // Handle delete document
+  const handleDelete = async (documentId) => {
+    if (window.confirm('Are you sure you want to delete this inspected document?')) {
+      try {
+        const result = await deleteInspectedDocument(documentId);
+        if (result.success) {
+          // Remove the deleted document from the state
+          setDocuments(documents.filter(doc => doc._id !== documentId));
+          console.log('Document deleted successfully');
+        } else {
+          console.error('Failed to delete document:', result.error);
+          alert('Failed to delete document. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('An error occurred while deleting the document.');
+      }
+    }
+  };
 
   // Styling to match Prevention Officer Dashboard tables
   const containerStyle = {
@@ -159,6 +193,102 @@ const InspectedDocuments = () => {
     color: 'white',
   };
 
+  // Modal styles
+  const modalOverlayStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  };
+
+  const modalContentStyle = {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '24px',
+    maxWidth: '600px',
+    width: '90%',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+  };
+
+  const modalHeaderStyle = {
+    borderBottom: '1px solid #e5e7eb',
+    paddingBottom: '16px',
+    marginBottom: '20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  };
+
+  const modalTitleStyle = {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: 0,
+  };
+
+  const closeButtonStyle = {
+    background: 'none',
+    border: 'none',
+    fontSize: '24px',
+    cursor: 'pointer',
+    color: '#6b7280',
+    padding: '0',
+  };
+
+  const modalBodyStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+    marginBottom: '20px',
+  };
+
+  const fieldStyle = {
+    marginBottom: '12px',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '4px',
+  };
+
+  const valueStyle = {
+    fontSize: '14px',
+    color: '#6b7280',
+    backgroundColor: '#f9fafb',
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: '1px solid #e5e7eb',
+  };
+
+  const notesStyle = {
+    gridColumn: '1 / -1',
+  };
+
+  const deleteButtonStyle = {
+    padding: '6px 12px',
+    fontSize: '12px',
+    borderRadius: '4px',
+    border: '1px solid #dc2626',
+    backgroundColor: '#dc2626',
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
@@ -207,7 +337,6 @@ const InspectedDocuments = () => {
                   <th style={thStyle}>Contact Number</th>
                   <th style={thStyle}>Service Type</th>
                   <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Inspection Notes</th>
                   <th style={thStyle}>Inspected Date</th>
                   <th style={thStyle}>Actions</th>
                 </tr>
@@ -216,7 +345,7 @@ const InspectedDocuments = () => {
                 {documents.map((doc, index) => (
                   <tr key={doc._id || index}>
                     <td style={{ ...tdStyle, fontWeight: '600', color: '#1e293b' }}>
-                      {doc.applicationId || 'N/A'}
+                      {doc._id ? doc._id.slice(-8).toUpperCase() : 'N/A'}
                     </td>
                     <td style={{ ...tdStyle, fontWeight: '500' }}>
                       {doc.fullName || 'N/A'}
@@ -232,9 +361,6 @@ const InspectedDocuments = () => {
                         Inspected
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {doc.inspectionNotes || 'No notes provided'}
-                    </td>
                     <td style={tdStyle}>
                       {doc.inspectionDate 
                         ? new Date(doc.inspectionDate).toLocaleDateString('en-US', {
@@ -248,6 +374,7 @@ const InspectedDocuments = () => {
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
+                          onClick={() => handleViewDetails(doc)}
                           style={{
                             padding: '6px 12px',
                             fontSize: '12px',
@@ -260,6 +387,13 @@ const InspectedDocuments = () => {
                           }}
                         >
                           View Details
+                        </button>
+                        <button
+                          onClick={() => handleDelete(doc._id)}
+                          style={deleteButtonStyle}
+                          title="Delete document"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>delete</span>
                         </button>
                       </div>
                     </td>
@@ -274,6 +408,109 @@ const InspectedDocuments = () => {
       {/* End Card */}
     </div>
     {/* End Main Content */}
+
+    {/* Application Details Modal */}
+    {showModal && selectedDocument && (
+      <div style={modalOverlayStyle} onClick={handleCloseModal}>
+        <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div style={modalHeaderStyle}>
+            <h3 style={modalTitleStyle}>Application Details</h3>
+            <button style={closeButtonStyle} onClick={handleCloseModal}>
+              ×
+            </button>
+          </div>
+          
+          <div style={modalBodyStyle}>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Application ID</label>
+              <div style={valueStyle}>{selectedDocument._id ? selectedDocument._id.slice(-8).toUpperCase() : 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Full Name</label>
+              <div style={valueStyle}>{selectedDocument.fullName || 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>NIC</label>
+              <div style={valueStyle}>{selectedDocument.nic || 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Contact Number</label>
+              <div style={valueStyle}>{selectedDocument.contactNumber || 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Email</label>
+              <div style={valueStyle}>{selectedDocument.email || 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Address</label>
+              <div style={valueStyle}>{selectedDocument.address || 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Service Type</label>
+              <div style={valueStyle}>{selectedDocument.serviceType || 'Fire Prevention'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Construction Type</label>
+              <div style={valueStyle}>{selectedDocument.constructionType || 'N/A'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Urgency Level</label>
+              <div style={valueStyle}>{selectedDocument.urgencyLevel || 'Normal'}</div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Status</label>
+              <div style={valueStyle}>
+                <span style={statusBadgeStyle}>Inspected</span>
+              </div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Applied Date</label>
+              <div style={valueStyle}>
+                {selectedDocument.appliedDate 
+                  ? new Date(selectedDocument.appliedDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : 'N/A'
+                }
+              </div>
+            </div>
+            
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Inspected Date</label>
+              <div style={valueStyle}>
+                {selectedDocument.inspectionDate 
+                  ? new Date(selectedDocument.inspectionDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : 'N/A'
+                }
+              </div>
+            </div>
+            
+            <div style={{ ...fieldStyle, ...notesStyle }}>
+              <label style={labelStyle}>Inspection Notes</label>
+              <div style={{ ...valueStyle, minHeight: '80px', whiteSpace: 'pre-wrap' }}>
+                {selectedDocument.inspectionNotes || 'No notes provided'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 );
 };

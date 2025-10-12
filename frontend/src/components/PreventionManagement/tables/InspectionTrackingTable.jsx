@@ -9,15 +9,12 @@ const InspectionTrackingTable = ({
   setSortField = () => {}, 
   sortDirection = 'asc', 
   setSortDirection = () => {}, 
-  onAddInspectionNotes = () => {}, 
+ 
   onMarkAsInspected = () => {}, 
   onDeleteApplication = () => {},
   onViewDetails = () => {} 
 }) => {
-  const [editingNotes, setEditingNotes] = useState(null);
-  const [inspectionNotes, setInspectionNotes] = useState('');
-  const [showNotesModal, setShowNotesModal] = useState(false);
-  const [selectedAppForNotes, setSelectedAppForNotes] = useState(null);
+
   const [showInspectionModal, setShowInspectionModal] = useState(false);
   const [selectedAppForInspection, setSelectedAppForInspection] = useState(null);
   const [finalInspectionNotes, setFinalInspectionNotes] = useState('');
@@ -59,17 +56,7 @@ const InspectionTrackingTable = ({
     });
   }, [paymentAssignedApplications, searchTerm]);
 
-  // Handle save inspection notes
-  const handleSaveInspectionNotes = async (id) => {
-    if (!inspectionNotes.trim()) {
-      alert('Please enter inspection notes');
-      return;
-    }
 
-    await onAddInspectionNotes(id, inspectionNotes);
-    setEditingNotes(null);
-    setInspectionNotes('');
-  };
 
   // Handle mark as inspected
   const handleMarkAsInspected = async (id, notes) => {
@@ -305,14 +292,14 @@ const InspectionTrackingTable = ({
                         {app.urgencyLevel || 'Normal'}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                    <td style={{ ...tdStyle, textAlign: 'center' }}>
                       <span style={{ color: priorityColor, fontWeight: '500' }}>
                         {daysSincePayment} days
                       </span>
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                        <span style={statusBadgeStyle}>{app.status}</span>
+                        <span style={statusBadgeStyle}>Pending</span>
                       </div>
                     </td>
                     <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
@@ -331,19 +318,7 @@ const InspectionTrackingTable = ({
                           <span className="material-icons" style={{ fontSize: '16px' }}>visibility</span>
                         </button>
                         
-                        {/* Add Notes Icon Button */}
-                        <button
-                          onClick={() => {
-                            setSelectedAppForNotes(app);
-                            setInspectionNotes(app.inspectionNotes || '');
-                            setShowNotesModal(true);
-                          }}
-                          style={{ ...iconButtonStyle, backgroundColor: '#f59e0b', color: 'white' }}
-                          title="Add Notes"
-                        >
-                          <span className="material-icons" style={{ fontSize: '16px' }}>edit_note</span>
-                        </button>
-                        
+
                         {/* Delete Icon Button */}
                         <button
                           onClick={() => {
@@ -397,144 +372,7 @@ const InspectionTrackingTable = ({
         <span style={{ color: '#059669', marginLeft: '12px' }}>● Normal Priority</span>
       </div>
 
-      {/* Notes Modal */}
-      {showNotesModal && selectedAppForNotes && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            padding: '32px',
-            maxWidth: '500px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto',
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px',
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: '600',
-                color: '#1f2937',
-                margin: 0,
-              }}>
-                Inspection Notes - {selectedAppForNotes.fullName}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowNotesModal(false);
-                  setSelectedAppForNotes(null);
-                  setInspectionNotes('');
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#6b7280',
-                  padding: '4px',
-                }}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151',
-                marginBottom: '8px',
-              }}>
-                Inspection Notes
-              </label>
-              <textarea
-                value={inspectionNotes}
-                onChange={(e) => setInspectionNotes(e.target.value)}
-                placeholder="Enter detailed inspection notes here..."
-                rows="8"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  resize: 'vertical',
-                  minHeight: '120px',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-            
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px',
-              marginTop: '24px',
-            }}>
-              <button
-                onClick={() => {
-                  setShowNotesModal(false);
-                  setSelectedAppForNotes(null);
-                  setInspectionNotes('');
-                }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: '1px solid #d1d5db',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  if (inspectionNotes.trim()) {
-                    await onAddInspectionNotes(selectedAppForNotes._id, inspectionNotes);
-                    setShowNotesModal(false);
-                    setSelectedAppForNotes(null);
-                    setInspectionNotes('');
-                  }
-                }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Save Notes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Inspection Completion Modal */}
       {showInspectionModal && selectedAppForInspection && (

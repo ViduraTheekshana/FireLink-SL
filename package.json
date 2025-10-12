@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"dotenv": "^17.2.3",
+		"jspdf": "^3.0.3",
 		"multer-gridfs-storage": "^5.0.2"
 	}
 }

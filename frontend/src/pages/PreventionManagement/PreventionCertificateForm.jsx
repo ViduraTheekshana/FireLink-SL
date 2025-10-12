@@ -315,14 +315,14 @@ const PreventionCertificateForm = () => {
   };
 
   const containerStyle = {
-    maxWidth: "600px",
-    margin: "40px auto",
-    padding: "30px",
-    backgroundColor: "rgba(30, 42, 56, 0.95)",
-    backdropFilter: "blur(10px)",
-    borderRadius: "15px",
-    boxShadow: "0px 8px 25px rgba(0,0,0,0.4)",
-    border: "1px solid rgba(51, 65, 85, 0.5)",
+  maxWidth: "600px",
+  margin: "40px auto",
+  padding: "30px",
+  backgroundColor: "#354759",
+  backdropFilter: "blur(10px)",
+  borderRadius: "15px",
+  boxShadow: "0px 8px 25px rgba(0,0,0,0.4)",
+  border: "1px solid rgba(51, 65, 85, 0.5)",
   };
 
   const headingStyle = {
