@@ -32,6 +32,7 @@ const CreateSessionTab = ({ user, staffMembers, onSubmit, formData, setFormData,
           handleInputChange={handleInputChange}
           type="datetime-local"
           icon={<FiCalendar className="mr-2 text-[#c62828]" />}
+          inputProps={{ min: new Date().toISOString().slice(0,16) }}
         />
         <InputField
           label="Venue"
