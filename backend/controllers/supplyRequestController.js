@@ -406,7 +406,7 @@ const confirmDelivery = catchAsyncErrors(async (req, res, next) => {
 		);
 	}
 
-	if (supplyBudget.remainingAmount >= assignedBid.offerPrice) {
+	if (supplyBudget.remainingAmount < assignedBid.offerPrice) {
 		return next(new ErrorHandler("Budget is not Sufficient", 400));
 	}
 

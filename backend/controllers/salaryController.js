@@ -1,8 +1,11 @@
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
+const Budget = require("../models/Budget");
 const Salary = require("../models/Salary");
 const { validationResult } = require("express-validator");
+const ErrorHandler = require("../utils/errorHandler");
 
 //  CREATE salary
-exports.createSalary = async (req, res) => {
+const createSalary = async (req, res) => {
 	try {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -34,7 +37,7 @@ exports.createSalary = async (req, res) => {
 };
 
 // GET salaries
-exports.getSalaries = async (req, res) => {
+const getSalaries = async (req, res) => {
 	try {
 		const { page = 1, limit = 20, q } = req.query;
 		const query = {};
@@ -71,7 +74,7 @@ exports.getSalaries = async (req, res) => {
 };
 
 // GET all salaries
-exports.getAllSalaries = async (req, res) => {
+const getAllSalaries = async (req, res) => {
 	try {
 		const allSalaries = await Salary.find()
 			.populate("createdBy", "name email")
@@ -99,7 +102,7 @@ exports.getAllSalaries = async (req, res) => {
 };
 
 // UPDATE
-exports.updateSalary = async (req, res) => {
+const updateSalary = async (req, res) => {
 	try {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -133,7 +136,7 @@ exports.updateSalary = async (req, res) => {
 };
 
 // DELETE
-exports.deleteSalary = async (req, res) => {
+const deleteSalary = async (req, res) => {
 	try {
 		const doc = await Salary.findByIdAndDelete(req.params.id);
 		if (!doc)
@@ -149,4 +152,99 @@ exports.deleteSalary = async (req, res) => {
 			error: err.message,
 		});
 	}
+};
+
+const acceptSalary = catchAsyncErrors(async (req, res, next) => {
+	const { salaryId } = req.params;
+
+	const salary = await Salary.findById(salaryId);
+
+	if (!salary) {
+		return next(new ErrorHandler("Salary not found!", 404));
+	}
+
+	const financeBudget = await Budget.findOne({
+		user: req.user._id,
+		month: new Date().getMonth() + 1,
+		year: new Date().getFullYear(),
+	});
+
+	if (!financeBudget) {
+		return next(
+			new ErrorHandler("Budget not assigned for this month yet!", 400)
+		);
+	}
+
+	if (financeBudget.remainingAmount < salary.finalSalary) {
+		return next(new ErrorHandler("Budget is not Sufficient", 400));
+	}
+
+	salary.status = "paid";
+	financeBudget.remainingAmount -= salary.finalSalary;
+
+	salary.save();
+	financeBudget.save();
+
+	res.status(200).json({ success: true, message: "Salary paid successfully" });
+});
+
+const rejectSalary = catchAsyncErrors(async (req, res, next) => {
+	const { salaryId } = req.params;
+
+	const salary = await Salary.findById(salaryId);
+
+	if (!salary) {
+		return next(new ErrorHandler("Salary not found!", 404));
+	}
+
+	salary.status = "rejected";
+	salary.save();
+
+	res
+		.status(200)
+		.json({ success: true, message: "Salary rejected successfully" });
+});
+
+const getSalariesThisMonth = catchAsyncErrors(async (req, res, next) => {
+	const now = new Date();
+	const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+	const lastDayOfMonth = new Date(
+		now.getFullYear(),
+		now.getMonth() + 1,
+		0,
+		23,
+		59,
+		59,
+		999
+	);
+
+	const salaries = await Salary.find({
+		createdAt: {
+			$gte: firstDayOfMonth,
+			$lte: lastDayOfMonth,
+		},
+	})
+		.populate("createdBy", "name email")
+		.sort({ createdAt: -1 });
+
+	if (!salaries || salaries.length === 0) {
+		return next(new ErrorHandler("Salaries not found!", 404));
+	}
+
+	return res.status(200).json({
+		success: true,
+		totalRecords: salaries.length,
+		data: salaries,
+	});
+});
+
+module.exports = {
+	acceptSalary,
+	rejectSalary,
+	createSalary,
+	getSalaries,
+	getAllSalaries,
+	updateSalary,
+	deleteSalary,
+	getSalariesThisMonth,
 };

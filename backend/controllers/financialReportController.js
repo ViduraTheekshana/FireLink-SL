@@ -1,5 +1,9 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const Budget = require("../models/Budget");
+const Expense = require("../models/Expense");
+const Salary = require("../models/Salary");
+const SupplyRequest = require("../models/SupplyRequest");
+const ErrorHandler = require("../utils/errorHandler");
 
 const budgetAllocationData = catchAsyncErrors(async (req, res, next) => {
 	const now = new Date();
@@ -95,4 +99,136 @@ const getMonthlyUtilization = catchAsyncErrors(async (req, res, next) => {
 	});
 });
 
-module.exports = { budgetAllocationData, getMonthlyUtilization };
+const getBudgetUsage = catchAsyncErrors(async (req, res, next) => {
+	const now = new Date();
+	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+	const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+	const supplyRequests = await SupplyRequest.find({
+		status: "Closed",
+		createdAt: { $gte: startOfMonth, $lt: endOfMonth },
+	});
+
+	const supplyBudget = await Budget.findOne({
+		user: { $ne: req.user._id },
+		month: now.getMonth() + 1,
+		year: now.getFullYear(),
+	});
+
+	const financeBudget = await Budget.findOne({
+		user: req.user._id,
+		month: now.getMonth() + 1,
+		year: now.getFullYear(),
+	});
+
+	if (!supplyBudget) {
+		return next(new ErrorHandler("Assign supply budget for this month.", 400));
+	}
+
+	if (!financeBudget) {
+		return next(
+			new ErrorHandler("Budget for this month is not initialized!", 400)
+		);
+	}
+
+	const categorySpend = {};
+
+	supplyRequests.forEach((request) => {
+		const category = request.category || "unCategorized";
+
+		// Find the bid from the assigned supplier
+		let assignedBid = null;
+		if (request.assignedSupplier && request.bids?.length > 0) {
+			assignedBid = request.bids.find(
+				(bid) =>
+					bid.supplier &&
+					bid.supplier._id.toString() ===
+						request.assignedSupplier._id.toString()
+			);
+		}
+
+		const amount = assignedBid?.offerPrice || 0;
+		categorySpend[category] = (categorySpend[category] || 0) + amount;
+	});
+
+	const result = Object.entries(categorySpend).map(([name, total]) => {
+		const percentageUsed = Number(
+			(total / supplyBudget.budgetAmount) * 100
+		).toFixed(1);
+		return {
+			name,
+			totalSpend: total,
+			percentageUsed: percentageUsed,
+		};
+	});
+
+	const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+	const lastDayOfMonth = new Date(
+		now.getFullYear(),
+		now.getMonth() + 1,
+		0,
+		23,
+		59,
+		59
+	);
+
+	const expenses = await Expense.find({
+		date: {
+			$gte: firstDayOfMonth,
+			$lte: lastDayOfMonth,
+		},
+	}).sort({
+		date: -1,
+	});
+
+	const totalExpense = expenses.reduce(
+		(sum, expense) => sum + (expense.amount || 0),
+		0
+	);
+
+	const salaries = await Salary.find({
+		status: "paid",
+		createdAt: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
+	});
+
+	const totalSalary = salaries.reduce(
+		(sum, salary) => sum + salary.finalSalary,
+		0
+	);
+
+	res.json({
+		success: true,
+		data: {
+			supplyManager: result,
+			financeManager: [
+				{
+					name: "Supply Manager",
+					totalSpend: supplyBudget.budgetAmount,
+					percentageUsed: Number(
+						(supplyBudget.budgetAmount / financeBudget.budgetAmount) * 100
+					).toFixed(1),
+				},
+				{
+					name: "Expenses",
+					totalSpend: totalExpense,
+					percentageUsed: Number(
+						((totalExpense / financeBudget.budgetAmount) * 100).toFixed(1)
+					),
+				},
+				{
+					name: "Salaries",
+					totalSpend: totalSalary,
+					percentageUsed: Number(
+						((totalSalary / financeBudget.budgetAmount) * 100).toFixed(1)
+					),
+				},
+			],
+		},
+	});
+});
+
+module.exports = {
+	budgetAllocationData,
+	getMonthlyUtilization,
+	getBudgetUsage,
+};

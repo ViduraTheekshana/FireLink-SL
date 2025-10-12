@@ -120,7 +120,7 @@ const createExpense = catchAsyncErrors(async (req, res, next) => {
 		);
 	}
 
-	if (financeBudget.remainingAmount >= amount) {
+	if (financeBudget.remainingAmount < amount) {
 		return next(new ErrorHandler("Budget is not Sufficient", 400));
 	}
 

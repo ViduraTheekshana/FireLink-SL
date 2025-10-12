@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-	TrendingUpIcon,
-	TrendingDownIcon,
 	DollarSignIcon,
 	PercentIcon,
 	UserIcon,
@@ -11,7 +9,6 @@ import {
 	BarChartIcon,
 	ClipboardCheckIcon,
 	ArrowUpIcon,
-	ArrowDownIcon,
 	WalletIcon,
 } from "lucide-react";
 import {
@@ -29,7 +26,10 @@ import {
 } from "recharts";
 import Sidebar from "../../components/SideBar";
 import Loader from "../../components/Loader";
-import { getAllocationData } from "../../services/finance/financeService";
+import {
+	getAllocationData,
+	getUsageData,
+} from "../../services/finance/financeService";
 import extractErrorMessage from "../../utils/errorMessageParser";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +46,7 @@ const FinancialOverview = () => {
 		setLoading(true);
 		try {
 			const res = await getAllocationData();
+			const usageRes = await getUsageData();
 			setAllocationData(res.data);
 			setBudgetAllocationData(
 				res.data?.supplyManager
@@ -68,16 +69,35 @@ const FinancialOverview = () => {
 							},
 					  ]
 			);
-			setFinanceManagerBudget([
-				{
-					name: "Spent",
-					value: res.data.financeManager.spendAmount || 0,
-				},
-				{
-					name: "Remaining",
-					value: res.data.financeManager.remainingAmount || 0,
-				},
-			]);
+
+			setFinanceManagerBudget(() => {
+				const financeManagerData = usageRes.data?.financeManager || [];
+
+				const totalBudget =
+					res.data?.financeManagerTotalBudget ||
+					allocationData.financeManager?.totalBudget ||
+					0;
+
+				const totalSpent = financeManagerData.reduce(
+					(sum, item) => sum + item.totalSpend,
+					0
+				);
+
+				const remainingAmount = totalBudget - totalSpent;
+
+				const budgetData = [
+					...financeManagerData.map((item) => ({
+						name: item.name,
+						value: item.totalSpend,
+					})),
+					{
+						name: "Free Amount",
+						value: remainingAmount > 0 ? remainingAmount : 0,
+					},
+				];
+
+				return budgetData;
+			});
 		} catch (exception) {
 			setError(extractErrorMessage(exception));
 		} finally {
@@ -348,7 +368,7 @@ const FinancialOverview = () => {
 								<div className="h-80">
 									<ResponsiveContainer width="100%" height="100%">
 										<PieChart>
-											{/* <Pie
+											<Pie
 												data={financeManagerBudget}
 												cx="50%"
 												cy="50%"
@@ -366,19 +386,8 @@ const FinancialOverview = () => {
 														fill={FINANCE_COLORS[index % FINANCE_COLORS.length]}
 													/>
 												))}
-											</Pie> */}
-											<Pie
-												data={budgetAllocationData}
-												cx="50%"
-												cy="45%" // move slightly upward for better balance
-												outerRadius={110}
-												labelLine={false}
-												fill="#8884d8"
-												dataKey="value"
-												label={({ name, percent }) =>
-													`${name}: ${(percent * 100).toFixed(0)}%`
-												}
-											/>
+											</Pie>
+
 											<Tooltip
 												formatter={(value) => `$${value.toLocaleString()}`}
 											/>

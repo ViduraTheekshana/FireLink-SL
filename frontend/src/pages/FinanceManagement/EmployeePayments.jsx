@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import {
 	UserIcon,
 	CheckIcon,
@@ -11,110 +11,65 @@ import {
 	DollarSignIcon,
 	UsersIcon,
 	ClockIcon,
+	ChevronRightIcon,
+	ChevronLeftIcon,
 } from "lucide-react";
 import Sidebar from "../../components/SideBar";
+import extractErrorMessage from "../../utils/errorMessageParser";
+import {
+	acceptSalary,
+	getSalaries,
+	rejectSalary,
+} from "../../services/finance/financeService";
+import Loader from "../../components/Loader";
+import formatDate from "../../utils/convertDate";
+import { toast } from "react-toastify";
+
 const EmployeePayments = () => {
-	const [filter, setFilter] = useState("all");
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState("");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [filter, setFilter] = useState("");
 	const [sortField, setSortField] = useState("createdAt");
 	const [sortDirection, setSortDirection] = useState("desc");
 	const [showDetails, setShowDetails] = useState(null);
-	// Mock employee payment data
-	const [employeePayments, setEmployeePayments] = useState([
-		{
-			_id: "68e8d9cc86025282f3d0534d",
-			employeeName: "Vidura",
-			totalWorkingDays: 30,
-			daysPresent: 29,
-			daysAbsent: 1,
-			title: "salary",
-			basicSalary: 160000,
-			perDaySalary: 5333.33,
-			otHours: 7,
-			otPay: 4666.66,
-			mealAllowance: 1000,
-			transportAllowance: 2000,
-			medicalAllowance: 1000,
-			noPayLeaves: 2,
-			taxRate: 6,
-			epfRate: 8,
-			EPF: 0,
-			finalSalary: 135080,
-			status: "pending",
-			createdAt: "2023-10-10T10:02:52.355+00:00",
-		},
-		{
-			_id: "68e8d9cc86025282f3d0534e",
-			employeeName: "Sarah Johnson",
-			totalWorkingDays: 30,
-			daysPresent: 30,
-			daysAbsent: 0,
-			title: "salary",
-			basicSalary: 145000,
-			perDaySalary: 4833.33,
-			otHours: 5,
-			otPay: 3333.33,
-			mealAllowance: 1000,
-			transportAllowance: 2000,
-			medicalAllowance: 1000,
-			noPayLeaves: 0,
-			taxRate: 6,
-			epfRate: 8,
-			EPF: 0,
-			finalSalary: 128000,
-			status: "approved",
-			createdAt: "2023-10-09T09:15:22.355+00:00",
-		},
-		{
-			_id: "68e8d9cc86025282f3d0534f",
-			employeeName: "Michael Chen",
-			totalWorkingDays: 30,
-			daysPresent: 28,
-			daysAbsent: 2,
-			title: "salary",
-			basicSalary: 175000,
-			perDaySalary: 5833.33,
-			otHours: 0,
-			otPay: 0,
-			mealAllowance: 1000,
-			transportAllowance: 2000,
-			medicalAllowance: 1000,
-			noPayLeaves: 2,
-			taxRate: 6,
-			epfRate: 8,
-			EPF: 0,
-			finalSalary: 145833.34,
-			status: "pending",
-			createdAt: "2023-10-08T14:22:10.355+00:00",
-		},
-		{
-			_id: "68e8d9cc86025282f3d05350",
-			employeeName: "Jessica Williams",
-			totalWorkingDays: 30,
-			daysPresent: 27,
-			daysAbsent: 3,
-			title: "salary",
-			basicSalary: 150000,
-			perDaySalary: 5000,
-			otHours: 10,
-			otPay: 6666.67,
-			mealAllowance: 1000,
-			transportAllowance: 2000,
-			medicalAllowance: 1000,
-			noPayLeaves: 3,
-			taxRate: 6,
-			epfRate: 8,
-			EPF: 0,
-			finalSalary: 125000,
-			status: "rejected",
-			createdAt: "2023-10-07T11:45:22.355+00:00",
-		},
-	]);
-	// Filter payments based on selected filter
-	const filteredPayments =
-		filter === "all"
-			? employeePayments
-			: employeePayments.filter((p) => p.status === filter);
-	// Sort payments based on selected field and direction
+	const [employeePayments, setEmployeePayments] = useState([]);
+	const itemsPerPage = 10;
+
+	const fetchSalaryData = async () => {
+		setLoading(true);
+		try {
+			const res = await getSalaries();
+			setEmployeePayments(res.data);
+		} catch (exception) {
+			setError(extractErrorMessage(exception));
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchSalaryData();
+	}, []);
+
+	useEffect(() => {
+		if (error) {
+			toast.error(error);
+			setError("");
+		}
+	}, [error]);
+
+	const filteredPayments = employeePayments.filter((p) => {
+		const matchesStatus = filter === "" || p.status === filter;
+
+		const matchesSearch =
+			searchQuery === "" ||
+			p.employeeName.toLowerCase().includes(searchQuery.toLowerCase());
+
+		return matchesStatus && matchesSearch;
+	});
+
 	const sortedPayments = [...filteredPayments].sort((a, b) => {
 		if (sortField === "createdAt") {
 			return sortDirection === "asc"
@@ -127,7 +82,7 @@ const EmployeePayments = () => {
 		}
 		return 0;
 	});
-	// Handle sort toggle
+
 	const toggleSort = (field) => {
 		if (sortField === field) {
 			setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -136,32 +91,32 @@ const EmployeePayments = () => {
 			setSortDirection("desc");
 		}
 	};
-	// Format date for display
-	const formatDate = (dateString) => {
-		const date = new Date(dateString);
-		return date.toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		});
+
+	const handleRejection = async (salaryId) => {
+		try {
+			await rejectSalary(salaryId);
+			toast.success("Salary Rejected");
+		} catch (exception) {
+			setError(extractErrorMessage(exception));
+		} finally {
+			fetchSalaryData();
+		}
 	};
-	// Handle payment approval
-	const handleApproval = (id, status) => {
-		setEmployeePayments(
-			employeePayments.map((payment) =>
-				payment._id === id
-					? {
-							...payment,
-							status,
-					  }
-					: payment
-			)
-		);
+	const handleAccept = async (salaryId) => {
+		try {
+			await acceptSalary(salaryId);
+			toast.success("Salary Rejected");
+		} catch (exception) {
+			setError(extractErrorMessage(exception));
+		} finally {
+			fetchSalaryData();
+		}
 	};
+
 	// Get status badge color
 	const getStatusBadge = (status) => {
 		switch (status) {
-			case "approved":
+			case "paid":
 				return "bg-green-100 text-green-800";
 			case "rejected":
 				return "bg-red-100 text-red-800";
@@ -170,6 +125,28 @@ const EmployeePayments = () => {
 				return "bg-yellow-100 text-yellow-800";
 		}
 	};
+
+	const indexOfLastItem = currentPage * itemsPerPage;
+	const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+	const currentPayments = sortedPayments.slice(
+		indexOfFirstItem,
+		indexOfLastItem
+	);
+
+	const handleNextPage = () => {
+		if (indexOfLastItem < filteredTransactions.length) {
+			setCurrentPage(currentPage + 1);
+		}
+	};
+
+	const handlePrevPage = () => {
+		if (currentPage > 1) {
+			setCurrentPage(currentPage - 1);
+		}
+	};
+
+	if (loading) return <Loader />;
+
 	return (
 		<div className="flex h-screen bg-gray-100">
 			<Sidebar />
@@ -206,9 +183,9 @@ const EmployeePayments = () => {
 											Approved Payments
 										</h3>
 										<p className="text-3xl font-bold">
-											$
+											Rs.
 											{employeePayments
-												.filter((p) => p.status === "approved")
+												.filter((p) => p.status === "paid")
 												.reduce((sum, p) => sum + p.finalSalary, 0)
 												.toLocaleString()}
 										</p>
@@ -235,7 +212,7 @@ const EmployeePayments = () => {
 							</div>
 						</div>
 						<div className="bg-white rounded-lg shadow-sm p-5">
-							<div className="flex items-center justify-between mb-6 border-b pb-4">
+							<div className="flex items-center justify-between mb-6 border-b border-b-gray-200 pb-4">
 								<div className="flex items-center">
 									<div className="bg-blue-100 p-2 rounded-full mr-3">
 										<UsersIcon size={20} className="text-blue-600" />
@@ -259,30 +236,28 @@ const EmployeePayments = () => {
 										<input
 											type="text"
 											placeholder="Search employee..."
-											className="pl-10 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+											className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm"
+											value={searchQuery}
+											onChange={(e) => setSearchQuery(e.target.value)}
 										/>
 									</div>
 									<div className="flex items-center space-x-2 ml-4">
 										<FilterIcon size={16} className="text-gray-500" />
 										<span className="text-sm font-medium">Status:</span>
 										<select
-											className="border rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+											className="border border-gray-200 rounded-md px-3 py-1 text-sm"
 											value={filter}
 											onChange={(e) => setFilter(e.target.value)}
 										>
-											<option value="all">All Payments</option>
+											<option value="">All Payments</option>
 											<option value="pending">Pending</option>
-											<option value="approved">Approved</option>
+											<option value="paid">Paid</option>
 											<option value="rejected">Rejected</option>
 										</select>
 									</div>
 								</div>
-								<button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center shadow-sm transition-colors">
-									<DollarSignIcon size={16} className="mr-1" />
-									Process New Payment
-								</button>
 							</div>
-							<div className="overflow-x-auto rounded-lg border">
+							<div className="overflow-x-auto rounded-lg border border-gray-200">
 								<table className="min-w-full bg-white">
 									<thead className="bg-gray-50 text-gray-600 text-sm">
 										<tr>
@@ -332,7 +307,7 @@ const EmployeePayments = () => {
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-gray-200">
-										{sortedPayments.map((payment) => (
+										{currentPayments.map((payment) => (
 											<Fragment key={payment._id}>
 												<tr
 													className={`hover:bg-gray-50 ${
@@ -377,7 +352,7 @@ const EmployeePayments = () => {
 														</span>
 													</td>
 													<td className="py-3 px-4 text-sm font-medium">
-														${payment.finalSalary.toLocaleString()}
+														Rs.{payment.finalSalary.toLocaleString()}
 													</td>
 													<td className="py-3 px-4 text-sm">
 														{formatDate(payment.createdAt)}
@@ -397,18 +372,18 @@ const EmployeePayments = () => {
 															{payment.status === "pending" && (
 																<>
 																	<button
-																		onClick={() =>
-																			handleApproval(payment._id, "approved")
-																		}
+																		onClick={() => {
+																			handleAccept(payment._id);
+																		}}
 																		className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
 																		title="Approve"
 																	>
 																		<CheckIcon size={16} />
 																	</button>
 																	<button
-																		onClick={() =>
-																			handleApproval(payment._id, "rejected")
-																		}
+																		onClick={() => {
+																			handleRejection(payment._id);
+																		}}
 																		className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
 																		title="Reject"
 																	>
@@ -454,7 +429,8 @@ const EmployeePayments = () => {
 																				Basic Salary:
 																			</span>
 																			<span className="font-medium">
-																				${payment.basicSalary.toLocaleString()}
+																				Rs.
+																				{payment.basicSalary.toLocaleString()}
 																			</span>
 																		</div>
 																		<div className="flex justify-between">
@@ -462,7 +438,7 @@ const EmployeePayments = () => {
 																				Per Day:
 																			</span>
 																			<span>
-																				${payment.perDaySalary.toFixed(2)}
+																				Rs.{payment.perDaySalary.toFixed(2)}
 																			</span>
 																		</div>
 																		<div className="flex justify-between">
@@ -475,7 +451,7 @@ const EmployeePayments = () => {
 																			<span className="text-gray-600">
 																				OT Pay:
 																			</span>
-																			<span>${payment.otPay.toFixed(2)}</span>
+																			<span>Rs.{payment.otPay.toFixed(2)}</span>
 																		</div>
 																	</div>
 																</div>
@@ -493,7 +469,7 @@ const EmployeePayments = () => {
 																				Meal:
 																			</span>
 																			<span>
-																				$
+																				Rs.
 																				{payment.mealAllowance.toLocaleString()}
 																			</span>
 																		</div>
@@ -502,7 +478,7 @@ const EmployeePayments = () => {
 																				Transport:
 																			</span>
 																			<span>
-																				$
+																				Rs.
 																				{payment.transportAllowance.toLocaleString()}
 																			</span>
 																		</div>
@@ -511,7 +487,7 @@ const EmployeePayments = () => {
 																				Medical:
 																			</span>
 																			<span>
-																				$
+																				Rs.
 																				{payment.medicalAllowance.toLocaleString()}
 																			</span>
 																		</div>
@@ -520,7 +496,7 @@ const EmployeePayments = () => {
 																				Total:
 																			</span>
 																			<span className="font-medium">
-																				$
+																				Rs.
 																				{(
 																					payment.mealAllowance +
 																					payment.transportAllowance +
@@ -550,7 +526,7 @@ const EmployeePayments = () => {
 																						: ""
 																				}
 																			>
-																				{payment.noPayLeaves} days ($
+																				{payment.noPayLeaves} days (Rs.
 																				{(
 																					payment.noPayLeaves *
 																					payment.perDaySalary
@@ -563,7 +539,7 @@ const EmployeePayments = () => {
 																				Tax ({payment.taxRate}%):
 																			</span>
 																			<span>
-																				$
+																				Rs.
 																				{(
 																					(payment.finalSalary *
 																						payment.taxRate) /
@@ -576,7 +552,7 @@ const EmployeePayments = () => {
 																				EPF ({payment.epfRate}%):
 																			</span>
 																			<span>
-																				$
+																				Rs.
 																				{(
 																					(payment.finalSalary *
 																						payment.epfRate) /
@@ -587,19 +563,20 @@ const EmployeePayments = () => {
 																		<div className="flex justify-between font-medium pt-2 mt-1 border-t border-gray-100">
 																			<span>Final Salary:</span>
 																			<span className="text-lg text-blue-600">
-																				${payment.finalSalary.toLocaleString()}
+																				Rs.
+																				{payment.finalSalary.toLocaleString()}
 																			</span>
 																		</div>
 																	</div>
 																</div>
 															</div>
 															{payment.status === "pending" && (
-																<div className="mt-4 pt-3 border-t flex justify-end space-x-3">
+																<div className="mt-4 pt-3 border-t border-t-gray-200 flex justify-end space-x-3">
 																	<button
 																		onClick={() =>
 																			handleApproval(payment._id, "rejected")
 																		}
-																		className="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+																		className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
 																	>
 																		Reject Payment
 																	</button>
@@ -629,21 +606,37 @@ const EmployeePayments = () => {
 									</p>
 								</div>
 							)}
-							<div className="mt-4 flex justify-between items-center text-sm text-gray-600">
-								<span>
-									Showing {sortedPayments.length} of {employeePayments.length}{" "}
-									payments
-								</span>
-								<div className="flex space-x-2">
-									<button className="px-3 py-1 border rounded-md hover:bg-gray-50 transition-colors">
-										Previous
-									</button>
-									<button className="px-3 py-1 border rounded-md bg-blue-50 text-blue-600 font-medium">
-										1
-									</button>
-									<button className="px-3 py-1 border rounded-md hover:bg-gray-50 transition-colors">
-										Next
-									</button>
+							{/* pagination */}
+							<div className="p-4 border-t border-gray-200 flex justify-between items-center text-sm text-gray-600">
+								<div>
+									Showing {indexOfFirstItem + 1} to{" "}
+									{Math.min(indexOfLastItem, filteredPayments.length)} of{" "}
+									{filteredPayments.length} requests
+								</div>
+
+								<div>
+									<nav
+										className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+										aria-label="Pagination"
+									>
+										<button
+											className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+											onClick={handlePrevPage}
+											disabled={currentPage === 1}
+										>
+											<ChevronLeftIcon size={18} />
+										</button>
+										<button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+											{currentPage}
+										</button>
+										<button
+											className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+											onClick={handleNextPage}
+											disabled={indexOfLastItem >= filteredPayments.length}
+										>
+											<ChevronRightIcon size={18} />
+										</button>
+									</nav>
 								</div>
 							</div>
 						</div>

@@ -20,6 +20,7 @@ const {
 const {
 	budgetAllocationData,
 	getMonthlyUtilization,
+	getBudgetUsage,
 } = require("../controllers/financialReportController");
 
 router.use(protect);
@@ -50,6 +51,10 @@ router
 router
 	.route("/budget/utilization-data")
 	.get(authorizePositions(["finance_manager"]), getMonthlyUtilization);
+
+router
+	.route("/budget/usage-data")
+	.get(authorizePositions(["finance_manager"]), getBudgetUsage);
 
 router
 	.route("/expenses")
