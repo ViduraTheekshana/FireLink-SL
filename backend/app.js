@@ -78,7 +78,7 @@ app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
 app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
 app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
-app.use("/api/v1/reports", require("./routes/test"));
+app.use("/api/v1/supply-reports", require("./routes/supplyReportRoutes.js"));
 app.use("/api/v1/finance", require("./routes/financeRoutes"));
 
 // Prevention certificate route

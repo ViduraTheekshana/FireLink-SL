@@ -37,10 +37,10 @@
 		"multer-gridfs-storage": "^5.0.2",
 		"nanoid": "^5.1.6",
 		"nodemailer": "^7.0.6",
+		"pdf-lib": "^1.17.1",
 		"pdfkit": "^0.17.1",
 		"twilio": "^5.8.2",
-		"validator": "^13.7.0",
-		"multer-gridfs-storage": "^5.0.2"
+		"validator": "^13.7.0"
 	},
 	"devDependencies": {
 		"nodemon": "^2.0.15"

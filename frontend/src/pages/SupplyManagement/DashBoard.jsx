@@ -37,7 +37,7 @@ import {
 	getRecentRequests,
 	getRequestTrend,
 	getStats,
-} from "../../services/supply/reportService";
+} from "../../services/supply/supplyReportService";
 import extractErrorMessage from "../../utils/errorMessageParser";
 import formatDate from "../../utils/convertDate";
 import Loader from "../../components/Loader";
@@ -585,13 +585,16 @@ const SupplyDashboard = () => {
 										<UserPlus size={20} />
 										<span className="font-medium">Add Supplier</span>
 									</button>
-									<button className="flex items-center gap-3 w-full p-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md transition-colors text-left">
+									<button
+										className="flex items-center gap-3 w-full p-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md transition-colors text-left"
+										onClick={() => {
+											navigate("/procurement-report", {
+												state: { showAddModal: true },
+											});
+										}}
+									>
 										<FileBarChart size={20} />
 										<span className="font-medium">Generate Report</span>
-									</button>
-									<button className="flex items-center gap-3 w-full p-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-md transition-colors text-left">
-										<Download size={20} />
-										<span className="font-medium">Export Data</span>
 									</button>
 								</div>
 							</div>

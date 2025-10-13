@@ -53,7 +53,6 @@ import { ProcurementReport } from "./pages/SupplyManagement/ProcurementReport";
 import Expenses from "./pages/FinanceManagement/Expenses";
 import FinancialDashboard from "./pages/FinanceManagement/FinanceDashboard";
 import BudgetAllocation from "./pages/FinanceManagement/BudgetAllocation";
-import CertificationRevenue from "./pages/FinanceManagement/CertificateRevenue";
 import EmployeePayments from "./pages/FinanceManagement/EmployeePayments";
 
 const App = () => {
@@ -157,14 +156,6 @@ const App = () => {
 					element={
 						<ProtectedRoute allowedRoles={["finance_manager"]}>
 							<Expenses />
-						</ProtectedRoute>
-					}
-				/>
-				<Route
-					path="/certification-revenue"
-					element={
-						<ProtectedRoute allowedRoles={["finance_manager"]}>
-							<CertificationRevenue />
 						</ProtectedRoute>
 					}
 				/>

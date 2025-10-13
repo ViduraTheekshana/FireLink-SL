@@ -87,11 +87,6 @@ const Sidebar = () => {
 				icon: <PieChartIcon size={20} />,
 			},
 			{
-				id: "certification-revenue",
-				label: "Certification Revenue",
-				icon: <ClipboardCheckIcon size={20} />,
-			},
-			{
 				id: "employee-payments",
 				label: "Employee Payments",
 				icon: <UserIcon size={20} />,
