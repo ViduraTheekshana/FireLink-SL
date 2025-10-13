@@ -13,6 +13,7 @@ import {
 	ClockIcon,
 	ChevronRightIcon,
 	ChevronLeftIcon,
+	DownloadIcon,
 } from "lucide-react";
 import Sidebar from "../../components/SideBar";
 import extractErrorMessage from "../../utils/errorMessageParser";
@@ -24,6 +25,8 @@ import {
 import Loader from "../../components/Loader";
 import formatDate from "../../utils/convertDate";
 import { toast } from "react-toastify";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import SalarySlipPdfDocument from "./SalarySlipPdfDocument";
 
 const EmployeePayments = () => {
 	const [loading, setLoading] = useState(true);
@@ -390,6 +393,35 @@ const EmployeePayments = () => {
 																		<XIcon size={16} />
 																	</button>
 																</>
+															)}
+															{payment.status === "paid" && (
+																<PDFDownloadLink
+																	document={
+																		<SalarySlipPdfDocument slipData={payment} />
+																	}
+																	fileName={`salary_slip_${payment.employeeName.replace(
+																		/\s/g,
+																		"_"
+																	)}_${payment._id}.pdf`}
+																>
+																	{({ loading }) => (
+																		<button
+																			className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+																			title={
+																				loading
+																					? "Generating PDF..."
+																					: "Download Salary Slip"
+																			}
+																			disabled={loading}
+																		>
+																			{loading ? (
+																				"..."
+																			) : (
+																				<DownloadIcon size={16} />
+																			)}
+																		</button>
+																	)}
+																</PDFDownloadLink>
 															)}
 															<button
 																onClick={() =>

@@ -8,13 +8,11 @@ import {
 	Font,
 } from "@react-pdf/renderer";
 
-// Optional: register a clean sans-serif font (If using custom fonts, ensure the path is correct)
 Font.register({
 	family: "Helvetica",
 	src: "https://fonts.gstatic.com/s/helvetica/v6/ARIAL.TTF",
 });
 
-// Define styles
 const styles = StyleSheet.create({
 	page: {
 		padding: 30,
@@ -23,15 +21,13 @@ const styles = StyleSheet.create({
 		lineHeight: 1.5,
 		backgroundColor: "#f8f8f8",
 	},
-	// --- Header Section Styles (Two-Column Layout) ---
 	headerContainer: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "flex-start",
 		paddingBottom: 10,
-		// FIX: Added 'pt' unit
 		borderBottomWidth: "2pt",
-		borderBottomColor: "#D90429", // Red accent color
+		borderBottomColor: "#D90429",
 		marginBottom: 15,
 	},
 	companyInfo: {
@@ -40,7 +36,7 @@ const styles = StyleSheet.create({
 	companyTitle: {
 		fontSize: 16,
 		fontWeight: "bold",
-		color: "#D90429", // FireLink SL
+		color: "#D90429",
 	},
 	contactText: {
 		fontSize: 8,
@@ -56,19 +52,16 @@ const styles = StyleSheet.create({
 		color: "#555",
 		marginTop: 4,
 	},
-	// --- Body Styles ---
 	title: {
 		fontSize: 20,
 		textAlign: "center",
 		fontWeight: "bold",
 		marginBottom: 15,
 	},
-	// --- Table Styles ---
 	table: {
 		display: "table",
 		width: "auto",
 		borderStyle: "solid",
-		// FIX: Added 'pt' unit
 		borderWidth: "1pt",
 		borderColor: "#ccc",
 		borderCollapse: "collapse",
@@ -76,7 +69,6 @@ const styles = StyleSheet.create({
 	},
 	tableRow: {
 		flexDirection: "row",
-		// FIX: Added 'pt' unit
 		borderTopWidth: "1pt",
 		borderTopColor: "#ccc",
 	},
@@ -90,7 +82,6 @@ const styles = StyleSheet.create({
 		padding: 6,
 		borderStyle: "solid",
 		borderColor: "#ccc",
-		// FIX: Added 'pt' unit
 		borderRightWidth: "1pt",
 		borderBottomWidth: 0,
 		fontWeight: "normal",
@@ -103,13 +94,11 @@ const styles = StyleSheet.create({
 	tableCellAmount: {
 		textAlign: "right",
 	},
-	// --- Footer Styles ---
 	totalContainer: {
 		marginTop: 10,
 		alignSelf: "flex-end",
 		padding: 8,
 		backgroundColor: "#fff",
-		// FIX: Added 'pt' unit
 		borderWidth: "1pt",
 		borderColor: "#D90429",
 		borderRadius: 3,
@@ -123,7 +112,6 @@ const styles = StyleSheet.create({
 		marginTop: 50,
 		alignSelf: "flex-end",
 		width: 150,
-		// FIX: Added 'pt' unit
 		borderTopWidth: "1pt",
 		borderTopColor: "#000",
 		paddingTop: 5,
@@ -140,7 +128,6 @@ const styles = StyleSheet.create({
 	},
 });
 
-// Helper function for date formatting
 const formatDate = (date) => {
 	try {
 		return new Date(date).toLocaleDateString("en-GB");
@@ -149,7 +136,6 @@ const formatDate = (date) => {
 	}
 };
 
-// PDF Component
 export const ExpensePdfDocument = ({ expenses = [] }) => {
 	const total = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 	const generatedDate = formatDate(new Date());
@@ -157,8 +143,6 @@ export const ExpensePdfDocument = ({ expenses = [] }) => {
 	return (
 		<Document>
 			<Page size="A4" style={styles.page}>
-				{/* --- Header Section (Two-Column) --- */}
-				{/* Ensure all text here is ONLY within <Text> components */}
 				<View style={styles.headerContainer} fixed>
 					<View style={styles.companyInfo}>
 						<Text style={styles.companyTitle}>FireLink SL</Text>
@@ -175,12 +159,9 @@ export const ExpensePdfDocument = ({ expenses = [] }) => {
 					</View>
 				</View>
 
-				{/* --- Title --- */}
 				<Text style={styles.title}>EXPENSES</Text>
 
-				{/* --- Table --- */}
 				<View style={styles.table}>
-					{/* Table Header */}
 					<View style={[styles.tableRow, styles.tableHeader]} fixed>
 						<Text style={[styles.tableCell, styles.tableCellHeader]}>ID</Text>
 						<Text style={[styles.tableCell, styles.tableCellHeader]}>Date</Text>
@@ -199,10 +180,8 @@ export const ExpensePdfDocument = ({ expenses = [] }) => {
 						</Text>
 					</View>
 
-					{/* Expense Rows */}
 					{expenses.map((expense, index) => (
 						<View key={index} style={styles.tableRow} wrap={false}>
-							{/* FIX: Using 'id' property, which is standard for transaction IDs */}
 							<Text style={styles.tableCell}>{expense.id}</Text>
 							<Text style={styles.tableCell}>{formatDate(expense.date)}</Text>
 							<Text style={styles.tableCell}>{expense.type}</Text>
@@ -217,7 +196,6 @@ export const ExpensePdfDocument = ({ expenses = [] }) => {
 					))}
 				</View>
 
-				{/* --- Total --- */}
 				<View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
 					<View style={styles.totalContainer}>
 						<Text style={styles.totalText}>
@@ -227,12 +205,10 @@ export const ExpensePdfDocument = ({ expenses = [] }) => {
 					</View>
 				</View>
 
-				{/* --- Signature --- */}
 				<View style={styles.signatureBlock}>
 					<Text>Signature:</Text>
 				</View>
 
-				{/* --- Page Footer --- */}
 				<Text
 					style={styles.pageFooter}
 					render={({ pageNumber, totalPages }) =>
