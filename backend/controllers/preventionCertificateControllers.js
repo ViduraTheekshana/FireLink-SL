@@ -3,14 +3,22 @@ const PreventionCertificate = require("../models/preventionCertificate");
 // Civilian applies for a certificate
 exports.applyCertificate = async (req, res) => {
   try {
-    // For GridFS, we store the file ID and filename
+    console.log("=== applyCertificate endpoint hit ===");
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
+    
+    // Handle file upload (memory storage for now)
     let documents = [];
     if (req.file) {
+      console.log("File received:", req.file.originalname, "Size:", req.file.size);
       documents.push({
         fileName: req.file.originalname,
-        fileId: req.file.id,
-        filePath: req.file.filename
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        uploadDate: new Date()
       });
+    } else {
+      console.log("No file uploaded");
     }
 
     // Merge documents into request body

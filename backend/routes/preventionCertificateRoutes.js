@@ -3,22 +3,15 @@ const router = express.Router();
 const preventionController = require("../controllers/preventionCertificateControllers");
 
 const multer = require("multer");
-const { GridFsStorage } = require("multer-gridfs-storage");
-const mongoose = require("mongoose");
 
-// MongoDB URI (reuse the same as in server.js)
-const mongoURI = process.env.DB_URI || "mongodb://127.0.0.1:27017/fire_department";
-const conn = mongoose.connection;
-
-// GridFS storage for uploading photos
-const storage = new GridFsStorage({
-  url: mongoURI,
-  file: (req, file) => ({
-    filename: `${Date.now()}-${file.originalname}`,
-    bucketName: "uploads"
-  })
+// Simple file storage for now (not GridFS to avoid complications)
+const storage = multer.memoryStorage(); // Store in memory temporarily
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
 });
-const upload = multer({ storage });
 
 // Civilian applies (with single file upload)
 router.post("/apply", upload.single("photo"), preventionController.applyCertificate);
