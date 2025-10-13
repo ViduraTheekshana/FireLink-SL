@@ -1,10 +1,9 @@
 const dotenv = require("dotenv");
 const path = require("path");
-const Transaction = require("../models/Transaction");
+const Transaction = require("../models/Expense");
 const generateUniqueId = require("../utils/generateUniqueId");
 const connectDatabase = require("../config/database");
 
-// dotenv.config({ path: path.resolve(__dirname, "../config/config.env") });
 dotenv.config({ path: "../config/config.env" });
 
 const types = [
@@ -57,7 +56,7 @@ const importData = async () => {
 		const amount = getAmountByType(type);
 
 		transactions.push({
-			id: generateUniqueId("trx"),
+			id: generateUniqueId("exp"),
 			amount,
 			type,
 			description: `${type.charAt(0).toUpperCase() + type.slice(1)} expense #${

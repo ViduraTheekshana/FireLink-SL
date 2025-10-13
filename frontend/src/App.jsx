@@ -50,9 +50,10 @@ import ProtectedSupplierRoute from "./components/protectedSupplierRoute";
 import { Bounce, ToastContainer } from "react-toastify";
 import SupplyDashboard from "./pages/SupplyManagement/DashBoard";
 import { ProcurementReport } from "./pages/SupplyManagement/ProcurementReport";
-import Transactions from "./pages/FinanceManagement/Transaction";
+import Expenses from "./pages/FinanceManagement/Expenses";
 import FinancialDashboard from "./pages/FinanceManagement/FinanceDashboard";
 import BudgetAllocation from "./pages/FinanceManagement/BudgetAllocation";
+import EmployeePayments from "./pages/FinanceManagement/EmployeePayments";
 
 const App = () => {
 	const user = JSON.parse(localStorage.getItem("user"));
@@ -75,28 +76,32 @@ const App = () => {
 				<Route path="/attendance/:token" element={<AttendanceForm />} />
 				<Route path="/profile" element={<Profile />} />
 				<Route path="/settings" element={<Settings />} />
-				<Route path="/session-dashboard" element={<TrainingSessionDashboard />} />
-
-
 				<Route
-					path="/fighter-dashboard"
-					element={
-						<FighterDashboard />
-					}
+					path="/session-dashboard"
+					element={<TrainingSessionDashboard />}
 				/>
+
+				<Route path="/fighter-dashboard" element={<FighterDashboard />} />
 
 				<Route
 					path="/civilian-dashboard"
 					element={
-						localStorage.getItem("accessToken") || localStorage.getItem("civilianLoggedIn") ? (
+						localStorage.getItem("accessToken") ||
+						localStorage.getItem("civilianLoggedIn") ? (
 							<CivilianDashboard />
 						) : (
 							<Navigate to="/civilian-login" replace />
 						)
 					}
 				/>
-				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
-				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
+				<Route
+					path="/prevention-certificate-form"
+					element={<PreventionCertificateForm />}
+				/>
+				<Route
+					path="/prevention-officer-dashboard"
+					element={<PreventionOfficerDashboard />}
+				/>
 				<Route path="/inspected-documents" element={<InspectedDocuments />} />
 				<Route path="/profile" element={<DynamicDashboard />} />
 
@@ -137,17 +142,28 @@ const App = () => {
 				<Route path="/inventory/reorders" element={<ReordersList />} />
 				<Route path="/inventory/reorders/list" element={<ReordersList />} />
 				<Route path="/inventory/logs" element={<InventoryLogs />} />
-				<Route path="/inventory-manager/profile" element={<InventoryManagerProfile />} />
+				<Route
+					path="/inventory-manager/profile"
+					element={<InventoryManagerProfile />}
+				/>
 				<Route path="/inventory/:id" element={<InventoryDetail />} />
 
 				<Route path="/staff-management" element={<StaffManagementTable />} />
 
 				{/* Finance routes */}
 				<Route
-					path="/transactions"
+					path="/expenses"
 					element={
 						<ProtectedRoute allowedRoles={["finance_manager"]}>
-							<Transactions />
+							<Expenses />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/employee-payments"
+					element={
+						<ProtectedRoute allowedRoles={["finance_manager"]}>
+							<EmployeePayments />
 						</ProtectedRoute>
 					}
 				/>

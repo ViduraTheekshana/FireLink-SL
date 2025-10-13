@@ -15,22 +15,21 @@ import {
 	CartesianGrid,
 	Tooltip,
 	ResponsiveContainer,
-	BarChart,
-	Bar,
-	Cell,
-	Legend,
 } from "recharts";
 import {
+	getPdfData,
 	getProcurementKpi,
 	getRequestTrend,
-} from "../../services/supply/reportService";
+	getSupplierNames,
+} from "../../services/supply/supplyReportService";
 import { useEffect } from "react";
 import extractErrorMessage from "../../utils/errorMessageParser";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
 import Sidebar from "../../components/SideBar";
-// import * as XLSX from "xlsx";
-// import jsPDF from "jspdf";
+import { ProcurementPdfDocument } from "./ProcurementPdfDocument";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+
 export function ProcurementReport() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -40,6 +39,8 @@ export function ProcurementReport() {
 	const [statusFilter, setStatusFilter] = useState("");
 	const [kpiData, setKpiData] = useState(null);
 	const [requestsOverTimeData, setRequestsOverTimeData] = useState(null);
+	const [supplierNames, setSupplierNames] = useState([]);
+	const [pdfData, setPdfData] = useState([]);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -52,8 +53,12 @@ export function ProcurementReport() {
 					status: statusFilter,
 					supplier: supplierFilter,
 				});
+				const supNames = await getSupplierNames();
+				const reportData = await getPdfData();
 				setKpiData(kpi.data);
 				setRequestsOverTimeData(trend.data);
+				setSupplierNames(supNames.data);
+				setPdfData(reportData.data);
 			} catch (exception) {
 				setError(extractErrorMessage(exception));
 			} finally {
@@ -62,7 +67,7 @@ export function ProcurementReport() {
 		};
 
 		fetchData();
-	}, [dateRange]);
+	}, [dateRange, categoryFilter, statusFilter, supplierFilter]);
 
 	useEffect(() => {
 		if (error) {
@@ -70,6 +75,17 @@ export function ProcurementReport() {
 			setError("");
 		}
 	}, [error]);
+
+	const categoryEnum = [
+		"Equipment",
+		"Vehicle Maintenance",
+		"Uniforms",
+		"Medical Supplies",
+		"Services",
+		"Other",
+	];
+
+	const typesEnum = ["Open", "Assigned", "Rejected", "Closed"];
 
 	const supplierPerformanceData = [
 		{
@@ -121,125 +137,6 @@ export function ProcurementReport() {
 			failedCount: 1,
 		},
 	];
-	// Sort suppliers by assigned requests for the bar chart
-	const topSuppliers = [...supplierPerformanceData]
-		.sort((a, b) => b.assignedRequests - a.assignedRequests)
-		.slice(0, 5);
-	// Colors for the bar chart
-	const barColors = ["#ef4444", "#f87171", "#fca5a5", "#fecaca", "#fee2e2"];
-	// Export to Excel function
-	// const exportToExcel = () => {
-	// 	const workbook = XLSX.utils.book_new();
-	// 	// Create worksheet for KPI data
-	// 	const kpiWorksheet = XLSX.utils.json_to_sheet([
-	// 		{
-	// 			Metric: "Total Requests",
-	// 			Value: kpiData.totalRequests,
-	// 		},
-	// 		{
-	// 			Metric: "Open Requests",
-	// 			Value: kpiData.openRequests,
-	// 		},
-	// 		{
-	// 			Metric: "Closed Requests",
-	// 			Value: kpiData.closedRequests,
-	// 		},
-	// 		{
-	// 			Metric: "Overdue Requests",
-	// 			Value: kpiData.overdueRequests,
-	// 		},
-	// 	]);
-	// 	XLSX.utils.book_append_sheet(workbook, kpiWorksheet, "KPI Summary");
-	// 	// Create worksheet for requests over time
-	// 	const requestsWorksheet = XLSX.utils.json_to_sheet(requestsOverTimeData);
-	// 	XLSX.utils.book_append_sheet(
-	// 		workbook,
-	// 		requestsWorksheet,
-	// 		"Requests Over Time"
-	// 	);
-	// 	// Create worksheet for supplier performance
-	// 	const supplierWorksheet = XLSX.utils.json_to_sheet(supplierPerformanceData);
-	// 	XLSX.utils.book_append_sheet(
-	// 		workbook,
-	// 		supplierWorksheet,
-	// 		"Supplier Performance"
-	// 	);
-	// 	// Generate & download the Excel file
-	// 	XLSX.writeFile(workbook, "Procurement_Report.xlsx");
-	// };
-	// // Export to PDF function
-	// const exportToPDF = () => {
-	// 	const doc = new jsPDF();
-	// 	// Add title
-	// 	doc.setFontSize(18);
-	// 	doc.text("Procurement Performance Report", 14, 22);
-	// 	doc.setFontSize(11);
-	// 	doc.text(`Date Range: ${dateRange}`, 14, 30);
-	// 	// Add KPI summary
-	// 	doc.setFontSize(14);
-	// 	doc.text("KPI Summary", 14, 45);
-	// 	// Manually create table for KPI data
-	// 	const kpiTableData = [
-	// 		["Metric", "Value"],
-	// 		["Total Requests", kpiData.totalRequests.toString()],
-	// 		["Open Requests", kpiData.openRequests.toString()],
-	// 		["Closed Requests", kpiData.closedRequests.toString()],
-	// 		["Overdue Requests", kpiData.overdueRequests.toString()],
-	// 	];
-	// 	// Draw KPI table manually
-	// 	let y = 50;
-	// 	const colWidth = [100, 40];
-	// 	const rowHeight = 10;
-	// 	// Draw header
-	// 	doc.setFillColor(239, 68, 68);
-	// 	doc.setTextColor(255, 255, 255);
-	// 	doc.rect(14, y, colWidth[0], rowHeight, "F");
-	// 	doc.rect(14 + colWidth[0], y, colWidth[1], rowHeight, "F");
-	// 	doc.text(kpiTableData[0][0], 17, y + 7);
-	// 	doc.text(kpiTableData[0][1], 14 + colWidth[0] + 5, y + 7);
-	// 	// Draw rows
-	// 	doc.setTextColor(0, 0, 0);
-	// 	for (let i = 1; i < kpiTableData.length; i++) {
-	// 		y += rowHeight;
-	// 		doc.setFillColor(
-	// 			i % 2 === 0 ? 240 : 255,
-	// 			i % 2 === 0 ? 240 : 255,
-	// 			i % 2 === 0 ? 240 : 255
-	// 		);
-	// 		doc.rect(14, y, colWidth[0], rowHeight, "F");
-	// 		doc.rect(14 + colWidth[0], y, colWidth[1], rowHeight, "F");
-	// 		doc.text(kpiTableData[i][0], 17, y + 7);
-	// 		doc.text(kpiTableData[i][1], 14 + colWidth[0] + 5, y + 7);
-	// 	}
-	// 	// Add supplier performance table title
-	// 	y += rowHeight + 20;
-	// 	doc.setFontSize(14);
-	// 	doc.text("Supplier Performance", 14, y);
-	// 	// Create supplier performance table
-	// 	const supplierTableHeaders = [
-	// 		"Supplier Name",
-	// 		"Assigned Requests",
-	// 		"Total Value",
-	// 		"Average Value",
-	// 		"Failed Count",
-	// 	];
-	// 	// Draw simplified supplier table
-	// 	y += 10;
-	// 	doc.setFontSize(10);
-	// 	doc.text(
-	// 		"A simplified supplier performance summary is included in this report.",
-	// 		14,
-	// 		y
-	// 	);
-	// 	y += 10;
-	// 	doc.text(
-	// 		"Please export to Excel for the complete supplier performance data.",
-	// 		14,
-	// 		y
-	// 	);
-	// 	// Save the PDF
-	// 	doc.save("Procurement_Report.pdf");
-	// };
 
 	if (loading) return <Loader />;
 
@@ -282,12 +179,11 @@ export function ProcurementReport() {
 											onChange={(e) => setSupplierFilter(e.target.value)}
 										>
 											<option value="">All Suppliers</option>
-											<option>FireTech Equipment</option>
-											<option>SafetyFirst Supplies</option>
-											<option>Rescue Gear Co.</option>
-											<option>Emergency Vehicles Inc.</option>
-											<option>Hydrant Systems</option>
-											<option>Flame Resistant Apparel</option>
+											{supplierNames.map((supplier) => (
+												<option key={supplier._id} value={supplier._id}>
+													{supplier.name}
+												</option>
+											))}
 										</select>
 										<ChevronDown
 											size={14}
@@ -301,12 +197,11 @@ export function ProcurementReport() {
 											onChange={(e) => setCategoryFilter(e.target.value)}
 										>
 											<option value="">All Categories</option>
-											<option>Equipment</option>
-											<option>Supplies</option>
-											<option>Gear</option>
-											<option>Vehicles</option>
-											<option>Apparel</option>
-											<option>Medical Supplies</option>
+											{categoryEnum.map((category) => (
+												<option key={category} value={category}>
+													{category}
+												</option>
+											))}
 										</select>
 										<ChevronDown
 											size={14}
@@ -320,9 +215,11 @@ export function ProcurementReport() {
 											onChange={(e) => setStatusFilter(e.target.value)}
 										>
 											<option value="">All Status</option>
-											<option>Open</option>
-											<option>Closed</option>
-											<option>Overdue</option>
+											{typesEnum.map((type) => (
+												<option key={type} value={type}>
+													{type}
+												</option>
+											))}
 										</select>
 										<ChevronDown
 											size={14}
@@ -331,19 +228,15 @@ export function ProcurementReport() {
 									</div>
 								</div>
 								<div className="flex gap-3 ml-auto">
-									<button
-										// onClick={exportToExcel}
-										className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-									>
-										<FileSpreadsheet size={16} />
-										<span>Excel</span>
-									</button>
-									<button
-										// onClick={exportToPDF}
-										className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-									>
-										<FileText size={16} />
-										<span>PDF</span>
+									<button className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
+										<PDFDownloadLink
+											document={<ProcurementPdfDocument requests={pdfData} />}
+											fileName={`procurement-report-${
+												new Date().toISOString().split("T")[0]
+											}.pdf`}
+										>
+											<span>PDF</span>
+										</PDFDownloadLink>
 									</button>
 								</div>
 							</div>
@@ -427,105 +320,44 @@ export function ProcurementReport() {
 								</div>
 							</div>
 						</div>
-						{/* Charts Row */}
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-							{/* Line Chart */}
-							<div className="bg-white rounded-lg shadow-sm p-6">
-								<h2 className="text-lg font-semibold text-gray-800 mb-4">
-									Requests Over Time
-								</h2>
-								<div className="h-80">
-									<ResponsiveContainer width="100%" height="100%">
-										<LineChart
-											data={requestsOverTimeData}
-											margin={{
-												top: 5,
-												right: 30,
-												left: 20,
-												bottom: 5,
+						{/* Line Chart */}
+						<div className="bg-white rounded-lg shadow-sm p-6">
+							<h2 className="text-lg font-semibold text-gray-800 mb-4">
+								Requests Over Time
+							</h2>
+							<div className="h-80">
+								<ResponsiveContainer width="100%" height="100%">
+									<LineChart
+										data={requestsOverTimeData}
+										margin={{
+											top: 5,
+											right: 30,
+											left: 20,
+											bottom: 5,
+										}}
+									>
+										<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+										<XAxis dataKey="name" stroke="#9ca3af" />
+										<YAxis stroke="#9ca3af" />
+										<Tooltip
+											contentStyle={{
+												backgroundColor: "#fff",
+												border: "1px solid #e5e7eb",
+												borderRadius: "0.375rem",
+												boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
 											}}
-										>
-											<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-											<XAxis dataKey="name" stroke="#9ca3af" />
-											<YAxis stroke="#9ca3af" />
-											<Tooltip
-												contentStyle={{
-													backgroundColor: "#fff",
-													border: "1px solid #e5e7eb",
-													borderRadius: "0.375rem",
-													boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-												}}
-											/>
-											<Line
-												type="monotone"
-												dataKey="requests"
-												stroke="#ef4444"
-												strokeWidth={2}
-												activeDot={{
-													r: 6,
-												}}
-											/>
-										</LineChart>
-									</ResponsiveContainer>
-								</div>
-							</div>
-							{/* Bar Chart */}
-							<div className="bg-white rounded-lg shadow-sm p-6">
-								<h2 className="text-lg font-semibold text-gray-800 mb-4">
-									Top 5 Suppliers by Assigned Requests
-								</h2>
-								<div className="h-80">
-									<ResponsiveContainer width="100%" height="100%">
-										<BarChart
-											data={topSuppliers}
-											layout="vertical"
-											margin={{
-												top: 5,
-												right: 30,
-												left: 20,
-												bottom: 5,
+										/>
+										<Line
+											type="monotone"
+											dataKey="requests"
+											stroke="#ef4444"
+											strokeWidth={2}
+											activeDot={{
+												r: 6,
 											}}
-										>
-											<CartesianGrid
-												strokeDasharray="3 3"
-												stroke="#f0f0f0"
-												horizontal={false}
-											/>
-											<XAxis type="number" stroke="#9ca3af" />
-											<YAxis
-												dataKey="name"
-												type="category"
-												width={150}
-												stroke="#9ca3af"
-												tickLine={false}
-												axisLine={false}
-												tick={{
-													fontSize: 12,
-												}}
-											/>
-											<Tooltip
-												contentStyle={{
-													backgroundColor: "#fff",
-													border: "1px solid #e5e7eb",
-													borderRadius: "0.375rem",
-													boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-												}}
-												formatter={(value) => [
-													`${value} Requests`,
-													"Assigned Requests",
-												]}
-											/>
-											<Bar dataKey="assignedRequests" radius={[0, 4, 4, 0]}>
-												{topSuppliers.map((entry, index) => (
-													<Cell
-														key={`cell-${index}`}
-														fill={barColors[index % barColors.length]}
-													/>
-												))}
-											</Bar>
-										</BarChart>
-									</ResponsiveContainer>
-								</div>
+										/>
+									</LineChart>
+								</ResponsiveContainer>
 							</div>
 						</div>
 						{/* Supplier Performance Table */}

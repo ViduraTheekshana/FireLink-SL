@@ -3,8 +3,8 @@ const router = express.Router();
 const {
 	assignBudget,
 	getSupplyManagerBudget,
-	createTransaction,
-	getTransactions,
+	createExpense,
+	getExpenses,
 	initializeBudget,
 } = require("../controllers/financeController");
 
@@ -14,12 +14,13 @@ const validate = require("../middlewares/validation");
 
 const {
 	validateAssignBudget,
-	validateCreateTransaction,
+	validateCreateExpense,
 	validateGetSupplyManagerBudget,
 } = require("../validators/financialValidator");
 const {
 	budgetAllocationData,
 	getMonthlyUtilization,
+	getBudgetUsage,
 } = require("../controllers/financialReportController");
 
 router.use(protect);
@@ -52,13 +53,17 @@ router
 	.get(authorizePositions(["finance_manager"]), getMonthlyUtilization);
 
 router
-	.route("/transaction")
+	.route("/budget/usage-data")
+	.get(authorizePositions(["finance_manager"]), getBudgetUsage);
+
+router
+	.route("/expenses")
 	.post(
 		authorizePositions(["finance_manager"]),
-		validateCreateTransaction,
+		validateCreateExpense,
 		validate,
-		createTransaction
+		createExpense
 	)
-	.get(authorizePositions(["finance_manager"]), getTransactions);
+	.get(authorizePositions(["finance_manager"]), getExpenses);
 
 module.exports = router;

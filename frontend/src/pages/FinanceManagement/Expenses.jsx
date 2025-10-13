@@ -15,23 +15,27 @@ import {
 	CreditCardIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
+	DownloadIcon,
 } from "lucide-react";
 import Sidebar from "../../components/SideBar";
 import {
-	createTransaction,
-	getTransaction,
+	createExpense,
+	getExpenses,
 } from "../../services/finance/financeService";
 import { toast } from "react-toastify";
 import extractErrorMessage from "../../utils/errorMessageParser";
 import { useEffect } from "react";
 import Loader from "../../components/Loader";
 import formatDate from "../../utils/convertDate";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { ExpensePdfDocument } from "./ExpensePdfDocument";
 
-const Transactions = () => {
+const Expenses = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [filterType, setFilterType] = useState("");
+	const [searchQuery, setSearchQuery] = useState("");
 	const [sortField, setSortField] = useState("date");
 	const [sortDirection, setSortDirection] = useState("desc");
 	const [showAddModal, setShowAddModal] = useState(false);
@@ -41,21 +45,21 @@ const Transactions = () => {
 		amount: 0,
 		description: "",
 	});
-	const [transactions, setTransactions] = useState([]);
+	const [expenses, setExpenses] = useState([]);
 	const currentDate = new Date();
 	const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
 	const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 	const [showDatePicker, setShowDatePicker] = useState(false);
 	const itemsPerPage = 10;
 
-	const fetchTransaction = async () => {
+	const fetchExpenses = async () => {
 		setLoading(true);
 		try {
-			const transactionData = await getTransaction(
+			const transactionData = await getExpenses(
 				selectedYear,
 				selectedMonth + 1
 			);
-			setTransactions(transactionData.data);
+			setExpenses(transactionData.data);
 		} catch (exception) {
 			setError(extractErrorMessage(exception));
 		} finally {
@@ -64,7 +68,7 @@ const Transactions = () => {
 	};
 
 	useEffect(() => {
-		fetchTransaction();
+		fetchExpenses();
 	}, [selectedMonth, selectedYear]);
 
 	useEffect(() => {
@@ -74,10 +78,16 @@ const Transactions = () => {
 		}
 	}, [error]);
 
-	const filteredTransactions =
-		filterType === ""
-			? transactions
-			: transactions.filter((t) => t.type === filterType);
+	const filteredTransactions = expenses.filter((t) => {
+		const matchesType = filterType === "" || t.type === filterType;
+
+		const matchesSearch =
+			searchQuery === "" ||
+			t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			t.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+		return matchesType && matchesSearch;
+	});
 
 	const sortedTransactions = [...filteredTransactions].sort((a, b) => {
 		if (sortField === "date") {
@@ -144,8 +154,8 @@ const Transactions = () => {
 
 		const submitTransaction = async () => {
 			try {
-				await createTransaction(newTransaction);
-				fetchTransaction();
+				await createExpense(newTransaction);
+				fetchExpenses();
 				toast.success("Transaction created successfully!");
 			} catch (exception) {
 				setError(extractErrorMessage(exception));
@@ -195,15 +205,15 @@ const Transactions = () => {
 			<div className="flex flex-col flex-1 overflow-hidden">
 				<main className="flex-1 overflow-y-auto p-4 md:p-6">
 					<div className="space-y-6">
-						<h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
+						<h1 className="text-2xl font-bold text-gray-800">Expense</h1>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 							<div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
 								<div className="flex items-center justify-between">
 									<div>
 										<h3 className="text-lg font-semibold mb-1">
-											Total Transactions
+											Total Expenses
 										</h3>
-										<p className="text-3xl font-bold">{transactions.length}</p>
+										<p className="text-3xl font-bold">{expenses.length}</p>
 										<p className="text-blue-100 mt-1">Last 30 days</p>
 									</div>
 									<div className="bg-blue-400/30 p-4 rounded-full">
@@ -219,12 +229,12 @@ const Transactions = () => {
 										</h3>
 										<p className="text-3xl font-bold">
 											Rs.
-											{transactions
+											{expenses
 												.filter((t) => t.type === "emergency")
 												.reduce((sum, t) => sum + t.amount, 0)
 												.toLocaleString()}
 										</p>
-										<p className="text-red-100 mt-1">Critical funds</p>
+										<p className="text-red-100 mt-1">Critical Expenses</p>
 									</div>
 									<div className="bg-red-400/30 p-4 rounded-full">
 										<TagIcon size={32} />
@@ -239,12 +249,12 @@ const Transactions = () => {
 										</h3>
 										<p className="text-3xl font-bold">
 											Rs.
-											{transactions
+											{expenses
 												.filter((t) => t.type !== "emergency")
 												.reduce((sum, t) => sum + t.amount, 0)
 												.toLocaleString()}
 										</p>
-										<p className="text-green-100 mt-1">Operational funds</p>
+										<p className="text-green-100 mt-1">Operational Expenses</p>
 									</div>
 									<div className="bg-green-400/30 p-4 rounded-full">
 										<DollarSignIcon size={32} />
@@ -258,14 +268,12 @@ const Transactions = () => {
 									<div className="bg-blue-100 p-2 rounded-full mr-3">
 										<CreditCardIcon size={20} className="text-blue-600" />
 									</div>
-									<h2 className="text-xl font-semibold">
-										Transaction Management
-									</h2>
+									<h2 className="text-xl font-semibold">Expense Management</h2>
 								</div>
 								<div className="relative">
 									<button
 										onClick={() => setShowDatePicker(!showDatePicker)}
-										className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors text-sm"
+										className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
 									>
 										<CalendarIcon size={16} className="text-blue-600" />
 										<span>
@@ -274,7 +282,7 @@ const Transactions = () => {
 										<ChevronDownIcon size={16} className="text-gray-500" />
 									</button>
 									{showDatePicker && (
-										<div className="absolute right-0 mt-2 z-10 bg-white rounded-lg shadow-lg border p-4 w-64">
+										<div className="absolute right-0 mt-2 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-64">
 											<div className="flex justify-between items-center mb-4">
 												<button
 													onClick={handlePrevMonth}
@@ -293,20 +301,26 @@ const Transactions = () => {
 												</button>
 											</div>
 											<div className="grid grid-cols-3 gap-2">
-												{Array.from(
-													{
-														length: 12,
-													},
-													(_, i) => (
+												{Array.from({ length: 12 }, (_, i) => {
+													const isFutureMonth =
+														selectedYear === currentDate.getFullYear() &&
+														i > currentDate.getMonth();
+
+													return (
 														<button
 															key={i}
 															onClick={() => {
-																setSelectedMonth(i);
-																setShowDatePicker(false);
+																if (!isFutureMonth) {
+																	setSelectedMonth(i);
+																	setShowDatePicker(false);
+																}
 															}}
+															disabled={isFutureMonth}
 															className={`py-2 px-1 text-sm rounded-md ${
 																selectedMonth === i
 																	? "bg-blue-100 text-blue-700 font-medium"
+																	: isFutureMonth
+																	? "text-gray-300 cursor-not-allowed"
 																	: "hover:bg-gray-100"
 															}`}
 														>
@@ -314,8 +328,8 @@ const Transactions = () => {
 																month: "short",
 															})}
 														</button>
-													)
-												)}
+													);
+												})}
 											</div>
 											<div className="mt-4 grid grid-cols-2 gap-2">
 												<select
@@ -323,7 +337,7 @@ const Transactions = () => {
 													onChange={(e) =>
 														setSelectedYear(parseInt(e.target.value))
 													}
-													className="p-2 border rounded text-sm"
+													className="p-2 border border-gray-200 rounded text-sm"
 												>
 													{Array.from(
 														{
@@ -364,7 +378,9 @@ const Transactions = () => {
 										<input
 											type="text"
 											placeholder="Search transactions..."
-											className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+											className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+											value={searchQuery}
+											onChange={(e) => setSearchQuery(e.target.value)}
 										/>
 									</div>
 									<div className="flex items-center space-x-2 ml-4">
@@ -390,8 +406,18 @@ const Transactions = () => {
 										className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center shadow-sm transition-colors"
 									>
 										<PlusIcon size={16} className="mr-1" />
-										Add Transaction
+										Add Expense
 									</button>
+									<PDFDownloadLink
+										document={
+											<ExpensePdfDocument expenses={currentTransactions} />
+										}
+										fileName="expense_report.pdf"
+										className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center shadow-sm transition-colors"
+									>
+										<DownloadIcon size={16} className="mr-2" />
+										Download Expense Report
+									</PDFDownloadLink>
 								</div>
 							</div>
 							{/* Table */}
@@ -566,6 +592,7 @@ const Transactions = () => {
 													className="pl-10 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-200 p-2"
 													placeholder="0.00"
 													required
+													min={1}
 												/>
 											</div>
 										</div>
@@ -716,4 +743,4 @@ const Transactions = () => {
 	);
 };
 
-export default Transactions;
+export default Expenses;

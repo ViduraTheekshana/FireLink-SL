@@ -26,8 +26,12 @@ const salarySchema = new mongoose.Schema(
 		epfAmount: { type: Number, default: 0 },
 
 		finalSalary: { type: Number, required: true, min: 0 },
-
-		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "UserReg" },
+		status: {
+			type: String,
+			enum: ["pending", "rejected", "paid"],
+			default: "pending",
+		},
+		createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 	},
 	{ timestamps: true }
 );
