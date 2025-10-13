@@ -228,17 +228,13 @@ export function ProcurementReport() {
 									</div>
 								</div>
 								<div className="flex gap-3 ml-auto">
-									<button
-										// onClick={}
-										className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-									>
+									<button className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
 										<PDFDownloadLink
 											document={<ProcurementPdfDocument requests={pdfData} />}
 											fileName={`procurement-report-${
 												new Date().toISOString().split("T")[0]
 											}.pdf`}
 										>
-											{/* <FileText size={16} /> */}
 											<span>PDF</span>
 										</PDFDownloadLink>
 									</button>

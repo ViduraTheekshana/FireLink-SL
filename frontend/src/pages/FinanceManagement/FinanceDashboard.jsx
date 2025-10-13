@@ -116,14 +116,6 @@ const FinancialOverview = () => {
 		}
 	}, [error]);
 
-	// Certificate revenue data for the current month
-	const certificationRevenue = {
-		currentMonth: 6800,
-		previousMonth: 5200,
-		percentageChange: 30.77,
-		isIncrease: true,
-	};
-
 	const COLORS = [
 		"#0088FE",
 		"#00C49F",
@@ -133,69 +125,6 @@ const FinancialOverview = () => {
 		"#82CA9D",
 	];
 	const FINANCE_COLORS = ["#8884D8", "#82CA9D", "#ffc658"];
-	// Monthly expense and revenue trend data
-	const monthlyFinancialData = [
-		{
-			name: "Jan",
-			expenses: 152000,
-			revenue: 158000,
-		},
-		{
-			name: "Feb",
-			expenses: 156000,
-			revenue: 162000,
-		},
-		{
-			name: "Mar",
-			expenses: 158000,
-			revenue: 165000,
-		},
-		{
-			name: "Apr",
-			expenses: 160000,
-			revenue: 168000,
-		},
-		{
-			name: "May",
-			expenses: 162000,
-			revenue: 170000,
-		},
-		{
-			name: "Jun",
-			expenses: 164000,
-			revenue: 173000,
-		},
-		{
-			name: "Jul",
-			expenses: 168000,
-			revenue: 176000,
-		},
-		{
-			name: "Aug",
-			expenses: 172000,
-			revenue: 180000,
-		},
-		{
-			name: "Sep",
-			expenses: 176000,
-			revenue: 184000,
-		},
-		{
-			name: "Oct",
-			expenses: 178000,
-			revenue: 188000,
-		},
-		{
-			name: "Nov",
-			expenses: 182000,
-			revenue: 192000,
-		},
-		{
-			name: "Dec",
-			expenses: 185000,
-			revenue: 196000,
-		},
-	];
 
 	if (loading) return <Loader />;
 
@@ -209,7 +138,7 @@ const FinancialOverview = () => {
 							Finance Overview
 						</h1>
 						{/* Summary Cards */}
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 							<div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-md">
 								<div className="flex items-center justify-between">
 									<div>
@@ -250,21 +179,6 @@ const FinancialOverview = () => {
 									</div>
 									<div className="bg-amber-400/30 p-4 rounded-full">
 										<PercentIcon size={32} />
-									</div>
-								</div>
-							</div>
-							<div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white shadow-md">
-								<div className="flex items-center justify-between">
-									<div>
-										<h3 className="text-lg font-semibold mb-1">
-											Certificate Revenue
-										</h3>
-										<p className="text-3xl font-bold">
-											${certificationRevenue.currentMonth.toLocaleString()}
-										</p>
-									</div>
-									<div className="bg-green-400/30 p-4 rounded-full">
-										<ClipboardCheckIcon size={32} />
 									</div>
 								</div>
 							</div>

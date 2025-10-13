@@ -20,7 +20,7 @@ const DynamicDashboard = () => {
 			navigate("/staff-login");
 		}
 		if (user.position === "supply_manager") {
-			navigate("/suppliers", { state: { user } });
+			navigate("/supply-dashboard", { state: { user } });
 		}
 		if (user.position === "finance_manager") {
 			navigate("/finance-dashboard", { state: { user } });

@@ -15,6 +15,7 @@ import {
 	CreditCardIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
+	DownloadIcon,
 } from "lucide-react";
 import Sidebar from "../../components/SideBar";
 import {
@@ -26,6 +27,8 @@ import extractErrorMessage from "../../utils/errorMessageParser";
 import { useEffect } from "react";
 import Loader from "../../components/Loader";
 import formatDate from "../../utils/convertDate";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { ExpensePdfDocument } from "./ExpensePdfDocument";
 
 const Expenses = () => {
 	const [loading, setLoading] = useState(true);
@@ -202,13 +205,13 @@ const Expenses = () => {
 			<div className="flex flex-col flex-1 overflow-hidden">
 				<main className="flex-1 overflow-y-auto p-4 md:p-6">
 					<div className="space-y-6">
-						<h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
+						<h1 className="text-2xl font-bold text-gray-800">Expense</h1>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 							<div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
 								<div className="flex items-center justify-between">
 									<div>
 										<h3 className="text-lg font-semibold mb-1">
-											Total Transactions
+											Total Expenses
 										</h3>
 										<p className="text-3xl font-bold">{expenses.length}</p>
 										<p className="text-blue-100 mt-1">Last 30 days</p>
@@ -265,9 +268,7 @@ const Expenses = () => {
 									<div className="bg-blue-100 p-2 rounded-full mr-3">
 										<CreditCardIcon size={20} className="text-blue-600" />
 									</div>
-									<h2 className="text-xl font-semibold">
-										Transaction Management
-									</h2>
+									<h2 className="text-xl font-semibold">Expense Management</h2>
 								</div>
 								<div className="relative">
 									<button
@@ -405,8 +406,18 @@ const Expenses = () => {
 										className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center shadow-sm transition-colors"
 									>
 										<PlusIcon size={16} className="mr-1" />
-										Add Transaction
+										Add Expense
 									</button>
+									<PDFDownloadLink
+										document={
+											<ExpensePdfDocument expenses={currentTransactions} />
+										}
+										fileName="expense_report.pdf"
+										className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center shadow-sm transition-colors"
+									>
+										<DownloadIcon size={16} className="mr-2" />
+										Download Expense Report
+									</PDFDownloadLink>
 								</div>
 							</div>
 							{/* Table */}
@@ -581,6 +592,7 @@ const Expenses = () => {
 													className="pl-10 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border border-gray-200 p-2"
 													placeholder="0.00"
 													required
+													min={1}
 												/>
 											</div>
 										</div>
