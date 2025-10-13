@@ -95,7 +95,7 @@ const App = () => {
 						)
 					}
 				/>
-				<Route path="/prevention-certificate-form" element={<PreventionCertificateForm />} />
+         <Route path="/apply-permit" element={<PreventionCertificateForm />} />
 				<Route path="/prevention-officer-dashboard" element={<PreventionOfficerDashboard />} />
 				<Route path="/inspected-documents" element={<InspectedDocuments />} />
 				<Route path="/profile" element={<DynamicDashboard />} />
