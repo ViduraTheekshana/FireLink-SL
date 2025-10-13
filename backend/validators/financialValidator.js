@@ -29,7 +29,7 @@ const validateGetSupplyManagerBudget = [
 		.withMessage("Year must be a valid number"),
 ];
 
-const validateCreateTransaction = [
+const validateCreateExpense = [
 	body("amount")
 		.notEmpty()
 		.withMessage("Amount is required")
@@ -38,9 +38,9 @@ const validateCreateTransaction = [
 
 	body("type")
 		.notEmpty()
-		.withMessage("Transaction type is required")
+		.withMessage("Expense type is required")
 		.isIn(typeEnum)
-		.withMessage("Invalid transaction type"),
+		.withMessage("Invalid expense type"),
 
 	body("description")
 		.optional()
@@ -51,7 +51,7 @@ const validateCreateTransaction = [
 ];
 
 module.exports = {
-	validateCreateTransaction,
+	validateCreateExpense,
 	validateGetSupplyManagerBudget,
 	validateAssignBudget,
 };

@@ -1,6 +1,6 @@
 import React from "react";
 
-const InputField = ({ label, name, value, handleInputChange, type = "text", icon }) => (
+const InputField = ({ label, name, value, handleInputChange, type = "text", icon, inputProps = {} }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
       {icon} {label} *
@@ -12,6 +12,7 @@ const InputField = ({ label, name, value, handleInputChange, type = "text", icon
       onChange={handleInputChange}
       required
       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition"
+      {...inputProps}
       placeholder={`Enter ${label.toLowerCase()}`}
     />
   </div>

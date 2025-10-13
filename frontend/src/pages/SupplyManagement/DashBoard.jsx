@@ -37,7 +37,7 @@ import {
 	getRecentRequests,
 	getRequestTrend,
 	getStats,
-} from "../../services/supply/reportService";
+} from "../../services/supply/supplyReportService";
 import extractErrorMessage from "../../utils/errorMessageParser";
 import formatDate from "../../utils/convertDate";
 import Loader from "../../components/Loader";
@@ -128,21 +128,6 @@ const SupplyDashboard = () => {
 							<h1 className="text-2xl font-bold text-gray-800">
 								Supply Manager Dashboard
 							</h1>
-							<div className="flex items-center gap-4">
-								<button className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
-									<Bell size={20} className="text-gray-600" />
-									<span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-								</button>
-								<div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 px-2 rounded-full">
-									<div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white">
-										<User size={16} />
-									</div>
-									<span className="text-sm font-medium hidden md:block">
-										John Doe
-									</span>
-									<Settings size={16} className="text-gray-500" />
-								</div>
-							</div>
 						</div>
 						{/* KPI Cards */}
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -585,13 +570,16 @@ const SupplyDashboard = () => {
 										<UserPlus size={20} />
 										<span className="font-medium">Add Supplier</span>
 									</button>
-									<button className="flex items-center gap-3 w-full p-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md transition-colors text-left">
+									<button
+										className="flex items-center gap-3 w-full p-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md transition-colors text-left"
+										onClick={() => {
+											navigate("/procurement-report", {
+												state: { showAddModal: true },
+											});
+										}}
+									>
 										<FileBarChart size={20} />
 										<span className="font-medium">Generate Report</span>
-									</button>
-									<button className="flex items-center gap-3 w-full p-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-md transition-colors text-left">
-										<Download size={20} />
-										<span className="font-medium">Export Data</span>
 									</button>
 								</div>
 							</div>

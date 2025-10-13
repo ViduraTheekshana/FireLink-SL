@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -17,9 +16,6 @@ const preventionOfficerRoutes = require("./routes/preventionOfficerRoutes");
 const shiftChangeRoutes = require("./routes/UserManagement/shiftChangeRoutes.js");
 const shiftRoutes = require("./routes/UserManagement/ShiftScheduleRoute.js");
 
-
-
-// connect to database
 // Register schemas BEFORE routes
 require("./models/UserManagement/Attendance.js"); // Attendance schema
 require("./models/UserManagement/UserReg.js");
@@ -61,7 +57,6 @@ app.use((req, res, next) => {
 
 // import all routes
 const mission = require("./routes/missionRoutes");
-
 const salaryRoutes = require("./routes/salaryRoutes");
 
 // mount routes
@@ -71,21 +66,16 @@ app.use("/api/v1/salaries", salaryRoutes);
 // Mount dashboard stats FIRST to avoid being captured by dynamic :id route in inventoryRoutes
 app.use("/api/inventory", require("./routes/inventoryDashboardRoutes"));
 app.use("/api/inventory", require("./routes/inventoryRoutes"));
-
 app.use("/api/inventory-reorders", require("./routes/inventoryReorderRoutes"));
-
 app.use(
 	"/api/inventory-vehicle-items",
 	require("./routes/inventoryVehicleItemsRoutes")
 );
-
 app.use("/api/inventory-vehicles", require("./routes/inventoryVehicleRoutes"));
-
 app.use("/api/inventory-logs", require("./routes/inventoryLogRoutes"));
-
 app.use("/api/v1/supplier", require("./routes/supplierRoutes"));
 app.use("/api/v1/supply-requests", require("./routes/supplyRequestRoutes"));
-app.use("/api/v1/reports", require("./routes/test"));
+app.use("/api/v1/supply-reports", require("./routes/supplyReportRoutes.js"));
 app.use("/api/v1/finance", require("./routes/financeRoutes"));
 
 // Prevention certificate route

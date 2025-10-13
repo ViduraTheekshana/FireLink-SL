@@ -167,7 +167,6 @@ useEffect(() => {
             <div>
              
               <p><b>Full Name:</b> {officer.name || "N/A"}</p>
-              <p><b>Age:</b> {officer.age || "N/A"}</p>
               <p><b>Phone:</b> {officer.phone || "N/A"}</p>
             </div>
 
@@ -176,14 +175,11 @@ useEffect(() => {
              
               <p><b>Email:</b> {officer.gmail || "N/A"}</p>
               <p><b>Position:</b> {officer.position || "N/A"}</p>
-              <p><b>Status:</b> {officer.status || "N/A"}</p>
+
             </div>
 
             {/* Address */}
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-                Address
-              </h2>
-              <p>{officer.address || "N/A"}</p>
+              
           </div>
           <div className="flex flex-wrap gap-4 justify-center">  
  

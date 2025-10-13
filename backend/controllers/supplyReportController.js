@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+const { PDFDocument, StandardFonts, rgb } = require("pdf-lib");
 const SupplyRequest = require("../models/SupplyRequest");
 const Supplier = require("../models/Supplier");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
@@ -41,7 +44,7 @@ const getSupplyRequestsTrend = catchAsyncErrors(async (req, res) => {
 		createdAt: { $gte: startDate, $lte: endDate },
 	};
 
-	if (supplier) filter.supplier = supplier;
+	if (supplier) filter.assignedSupplier = supplier;
 	if (category) filter.category = category;
 	if (status) filter.status = status;
 
@@ -421,9 +424,58 @@ const procurementKpi = catchAsyncErrors(async (req, res) => {
 	});
 });
 
+const getSupplierNames = catchAsyncErrors(async (req, res, next) => {
+	const supplierNames = await Supplier.find().select("name");
+
+	res.status(200).json({ success: true, data: supplierNames });
+});
+
+const getPdfData = catchAsyncErrors(async (req, res, next) => {
+	const now = new Date();
+	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+	const endOfMonth = new Date(
+		now.getFullYear(),
+		now.getMonth() + 1,
+		0,
+		23,
+		59,
+		59
+	);
+
+	const requests = await SupplyRequest.find({
+		status: "Closed",
+		deliveredAt: { $gte: startOfMonth, $lte: endOfMonth },
+	}).populate("assignedSupplier");
+
+	const formatted = requests.map((req) => {
+		let price = 0;
+
+		if (req.assignedSupplier && req.bids?.length) {
+			const assignedBid = req.bids.find(
+				(bid) => bid.supplier.toString() === req.assignedSupplier._id.toString()
+			);
+			price = assignedBid?.offerPrice || 0;
+		}
+
+		return {
+			id: req.id,
+			category: req.category,
+			deliveredDate: req.deliveredAt
+				? req.deliveredAt.toISOString().split("T")[0]
+				: null,
+			supplierName: req.assignedSupplier?.name || "N/A",
+			price,
+		};
+	});
+
+	res.status(200).json({ success: true, data: formatted });
+});
+
 module.exports = {
 	getSupplyRequestsTrend,
 	getDashboardStats,
 	getAlerts,
 	procurementKpi,
+	getSupplierNames,
+	getPdfData,
 };

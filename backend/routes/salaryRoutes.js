@@ -8,15 +8,25 @@ const {
 	getAllSalaries,
 	updateSalary,
 	deleteSalary,
+	getSalariesThisMonth,
+	acceptSalary,
+	rejectSalary,
 } = require("../controllers/salaryController");
 
 const { userOrSupplier } = require("../middlewares/auth");
+const { authorizePositions } = require("../middlewares/roleMiddleware");
+const { protect } = require("../middlewares/authMiddleware");
 
 const validateSalary = [
-	body("employeeName").trim().isLength({ min: 2 }).withMessage("Employee name required"),
+	body("employeeName")
+		.trim()
+		.isLength({ min: 2 })
+		.withMessage("Employee name required"),
 	body("email").isEmail().withMessage("Valid email is required"),
 	body("role").trim().isLength({ min: 2 }).withMessage("Role is required"),
-	body("totalWorkingDays").isInt({ min: 1 }).withMessage("Total working days must be >= 1"),
+	body("totalWorkingDays")
+		.isInt({ min: 1 })
+		.withMessage("Total working days must be >= 1"),
 	body("daysPresent").isInt({ min: 0 }),
 	body("daysAbsent").isInt({ min: 0 }),
 	body("basicSalary").isFloat({ min: 0 }),
@@ -36,7 +46,32 @@ const validateSalary = [
 router.post("/", userOrSupplier, validateSalary, createSalary);
 router.get("/", userOrSupplier, getSalaries);
 router.get("/all", userOrSupplier, getAllSalaries);
-router.put("/:id", userOrSupplier, [param("id").isMongoId(), ...validateSalary], updateSalary);
+router.get(
+	"/current",
+	protect,
+	authorizePositions(["finance_manager"]),
+	getSalariesThisMonth
+);
+router.get(
+	"/:salaryId/accept",
+	protect,
+	authorizePositions(["finance_manager"]),
+	[param("salaryId").isMongoId()],
+	acceptSalary
+);
+router.get(
+	"/:salaryId/reject",
+	protect,
+	authorizePositions(["finance_manager"]),
+	[param("salaryId").isMongoId()],
+	rejectSalary
+);
+router.put(
+	"/:id",
+	userOrSupplier,
+	[param("id").isMongoId(), ...validateSalary],
+	updateSalary
+);
 router.delete("/:id", userOrSupplier, [param("id").isMongoId()], deleteSalary);
 
 module.exports = router;

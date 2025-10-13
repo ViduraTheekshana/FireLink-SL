@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const supplyRequestSchema = new Schema(
+const SupplyRequestSchema = new Schema(
 	{
 		id: {
 			type: String,
@@ -95,9 +95,9 @@ const supplyRequestSchema = new Schema(
 	}
 );
 
-supplyRequestSchema.index({ status: 1 });
-supplyRequestSchema.index({ category: 1 });
-supplyRequestSchema.index({ applicationDeadline: 1 });
-supplyRequestSchema.index({ title: "text", description: "text" });
+SupplyRequestSchema.index({ status: 1 });
+SupplyRequestSchema.index({ category: 1 });
+SupplyRequestSchema.index({ applicationDeadline: 1 });
+SupplyRequestSchema.index({ title: "text", description: "text" });
 
-module.exports = mongoose.model("SupplyRequest", supplyRequestSchema);
+module.exports = mongoose.model("SupplyRequest", SupplyRequestSchema);

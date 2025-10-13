@@ -24,6 +24,7 @@ import Sidebar from "../../components/SideBar";
 import {
 	assignBudget,
 	getAllocationData,
+	getUsageData,
 	getUtilizationData,
 } from "../../services/finance/financeService";
 import extractErrorMessage from "../../utils/errorMessageParser";
@@ -35,33 +36,20 @@ const BudgetAllocation = () => {
 	const [showFinanceManagerModal, setShowFinanceManagerModal] = useState(false);
 	const [allocationData, setAllocationData] = useState({});
 	const [utilizationData, setUtilizationData] = useState({});
+	const [usageData, setUsageData] = useState({});
 	const [isAllocated, setIsAllocated] = useState(false);
 	const [sliderValue, setSliderValue] = useState(50000);
-	const [financeAllocation, setFinanceAllocation] = useState({
-		salaries: 850000,
-		operationalTransactions: 150000,
-		emergencyTransactions: 50000,
-	});
-	const [tempAllocation, setTempAllocation] = useState({
-		...financeAllocation,
-	});
-	// Supply Manager budget data and state
-	const [supplyAllocation, setSupplyAllocation] = useState({
-		emergencyEquipment: 420000,
-		regularSupplies: 300000,
-		maintenance: 250000,
-		trainingMaterials: 150000,
-		officeSupplies: 80000,
-	});
 
 	const fetchAllocationData = async () => {
 		setLoading(true);
 		try {
 			const res = await getAllocationData();
 			const utilRes = await getUtilizationData();
+			const usageRes = await getUsageData();
 			setAllocationData(res.data);
 			setIsAllocated(!!res.data.supplyManager.totalBudget);
 			setUtilizationData(utilRes.data);
+			setUsageData(usageRes.data);
 		} catch (exception) {
 			setError(extractErrorMessage(exception));
 		} finally {
@@ -79,57 +67,6 @@ const BudgetAllocation = () => {
 			setError("");
 		}
 	}, [error]);
-
-	// Supply Manager budget data (single user allocation instead of departments)
-	const supplyManager = {
-		categories: [
-			{
-				name: "Emergency Equipment",
-				allocated: supplyAllocation.emergencyEquipment,
-				spent: 310000,
-			},
-			{
-				name: "Regular Supplies",
-				allocated: supplyAllocation.regularSupplies,
-				spent: 245000,
-			},
-			{
-				name: "Maintenance",
-				allocated: supplyAllocation.maintenance,
-				spent: 203000,
-			},
-			{
-				name: "Training Materials",
-				allocated: supplyAllocation.trainingMaterials,
-				spent: 125000,
-			},
-			{
-				name: "Office Supplies",
-				allocated: supplyAllocation.officeSupplies,
-				spent: 70000,
-			},
-		],
-	};
-	// Finance Manager budget data
-	const financeManager = {
-		categories: [
-			{
-				name: "Employee Salaries",
-				allocated: financeAllocation.salaries,
-				spent: 650000,
-			},
-			{
-				name: "Operational Transactions",
-				allocated: financeAllocation.operationalTransactions,
-				spent: 105000,
-			},
-			{
-				name: "Emergency Transactions",
-				allocated: financeAllocation.emergencyTransactions,
-				spent: 25000,
-			},
-		],
-	};
 
 	const handleAssignBudget = async () => {
 		try {
@@ -239,7 +176,7 @@ const BudgetAllocation = () => {
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 							{/* Supply Manager Budget Card */}
 							<div className="bg-white rounded-xl p-6">
-								<div className="flex items-center justify-between mb-5 border-b pb-3">
+								<div className="flex items-center justify-between mb-5 border-b border-b-gray-200 pb-3">
 									<div className="flex items-center">
 										<div className="bg-blue-100 p-3 rounded-full mr-3">
 											<UserIcon size={22} className="text-blue-600" />
@@ -276,7 +213,7 @@ const BudgetAllocation = () => {
 
 								{/* Category-wise usage */}
 								<div className="space-y-3">
-									{supplyManager.categories.map((category, index) => (
+									{usageData.supplyManager.map((category, index) => (
 										<div
 											key={index}
 											className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-100 hover:border-blue-200 transition-colors shadow-sm"
@@ -286,18 +223,12 @@ const BudgetAllocation = () => {
 													{category.name}
 												</p>
 												<p className="text-xs text-gray-500">
-													Spent: Rs.{category.spent.toLocaleString()}
+													Spent: Rs.{category.totalSpend.toLocaleString()}
 												</p>
 											</div>
 											<div className="flex items-center gap-2">
-												<span className="text-xs bg-blue-100 text-blue-800 font-medium px-2 py-1 rounded">
-													Total: Rs.{category.allocated.toLocaleString()}
-												</span>
 												<span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-													{Math.round(
-														(category.spent / category.allocated) * 100
-													)}
-													%
+													{category.percentageUsed}%
 												</span>
 											</div>
 										</div>
@@ -307,7 +238,7 @@ const BudgetAllocation = () => {
 
 							{/* Finance Manager Budget Card */}
 							<div className="bg-white rounded-xl p-6">
-								<div className="flex items-center justify-between mb-5 border-b pb-3">
+								<div className="flex items-center justify-between mb-5 border-b border-b-gray-200 pb-3">
 									<div className="flex items-center">
 										<div className="bg-purple-100 p-3 rounded-full mr-3">
 											<UsersIcon size={22} className="text-purple-600" />
@@ -344,7 +275,7 @@ const BudgetAllocation = () => {
 
 								{/* Category-wise usage */}
 								<div className="space-y-3">
-									{financeManager.categories.map((category, index) => (
+									{usageData.financeManager.map((category, index) => (
 										<div
 											key={index}
 											className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-100 hover:border-purple-200 transition-colors shadow-sm"
@@ -354,18 +285,12 @@ const BudgetAllocation = () => {
 													{category.name}
 												</p>
 												<p className="text-xs text-gray-500">
-													Spent: Rs.{category.spent.toLocaleString()}
+													Spent: Rs.{category.totalSpend.toLocaleString()}
 												</p>
 											</div>
 											<div className="flex items-center gap-2">
-												<span className="text-xs bg-purple-100 text-purple-800 font-medium px-2 py-1 rounded">
-													Total: Rs.{category.allocated.toLocaleString()}
-												</span>
 												<span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-													{Math.round(
-														(category.spent / category.allocated) * 100
-													)}
-													%
+													{category.percentageUsed}%
 												</span>
 											</div>
 										</div>
@@ -376,9 +301,6 @@ const BudgetAllocation = () => {
 										<button
 											className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-md transition-colors flex items-center"
 											onClick={() => {
-												setTempAllocation({
-													...financeAllocation,
-												});
 												setShowFinanceManagerModal(true);
 											}}
 										>
@@ -392,7 +314,7 @@ const BudgetAllocation = () => {
 
 						{/* Monthly Utilization Chart */}
 						<div className="bg-white rounded-lg shadow-sm p-5 shadow-md">
-							<div className="flex items-center justify-between mb-6 border-b pb-4">
+							<div className="flex items-center justify-between mb-6 border-b border-b-gray-200 pb-4">
 								<div className="flex items-center">
 									<div className="bg-green-100 p-2 rounded-full mr-3">
 										<BarChartIcon size={20} className="text-green-600" />

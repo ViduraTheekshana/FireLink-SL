@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
-const TransactionSchema = new mongoose.Schema(
+const ExpenseSchema = new mongoose.Schema(
 	{
 		id: {
 			type: String,
-			required: [true, "Transaction id is required"],
+			required: [true, "Expense id is required"],
 			unique: true,
 		},
 		amount: { type: Number, required: true },
@@ -27,4 +27,4 @@ const TransactionSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-module.exports = mongoose.model("Transaction", TransactionSchema);
+module.exports = mongoose.model("Expense", ExpenseSchema);

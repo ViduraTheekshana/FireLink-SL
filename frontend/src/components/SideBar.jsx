@@ -77,14 +77,19 @@ const Sidebar = () => {
 				icon: <PieChartIcon size={20} />,
 			},
 			{
-				id: "transactions",
-				label: "Transactions",
+				id: "expenses",
+				label: "Expenses",
 				icon: <CreditCardIcon size={20} />,
 			},
 			{
 				id: "budget",
 				label: "Budget Allocation",
 				icon: <PieChartIcon size={20} />,
+			},
+			{
+				id: "employee-payments",
+				label: "Employee Payments",
+				icon: <UserIcon size={20} />,
 			},
 		];
 	}

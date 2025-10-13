@@ -9,13 +9,13 @@ const BudgetSchema = new mongoose.Schema(
 		},
 		user: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "User",
+			ref: "Users",
 			required: true,
 		},
 		budgetAmount: { type: Number, required: true },
 		remainingAmount: { type: Number, required: true },
 		revenue: { type: Number },
-		month: { type: Number, required: true },
+		month: { type: Number, required: true }, // index starts at 1
 		year: { type: Number, required: true },
 	},
 	{ timestamps: true }
