@@ -54,6 +54,7 @@ import Expenses from "./pages/FinanceManagement/Expenses";
 import FinancialDashboard from "./pages/FinanceManagement/FinanceDashboard";
 import BudgetAllocation from "./pages/FinanceManagement/BudgetAllocation";
 import EmployeePayments from "./pages/FinanceManagement/EmployeePayments";
+import { LocationsPage } from "./pages/Home/Location";
 
 const App = () => {
 	const user = JSON.parse(localStorage.getItem("user"));
@@ -65,6 +66,7 @@ const App = () => {
 				{/* Public routes */}
 				<Route path="/" element={<Home />} />
 				<Route path="/home" element={<Home />} />
+				<Route path="/locations" element={<LocationsPage />} />
 				<Route path="/staff-login" element={<LoginFireStaff />} />
 				<Route path="/civilian-login" element={<CivilianLogin />} />
 				<Route path="/supplier-login" element={<SupplierLogin />} />

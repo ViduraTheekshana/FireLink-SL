@@ -148,7 +148,7 @@ const Sidebar = () => {
 					))}
 				</nav>
 			</div>
-			<div className="border-t border-gray-700 py-2 mt-auto">
+			<div className="border-t border-gray-700 py-2 mt-[100%]">
 				{bottomMenuItems.map((item) => (
 					<button
 						key={item.id}
